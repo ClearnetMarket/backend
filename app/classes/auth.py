@@ -1,8 +1,8 @@
-# coding=utf-8
-from werkzeug.security import generate_password_hash, check_password_hash
+
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app
-from app import db, ma
+from flask_login import UserMixin, AnonymousUserMixin
+from app import db, ma, login_manager
 from datetime import datetime
 from uuid import uuid4
 
@@ -66,7 +66,7 @@ class Auth_AccountSeedWords_Schema(ma.SQLAlchemyAutoSchema):
     word04 = ma.auto_field()
     word05 = ma.auto_field()
 
-class Auth_User(db.Model):
+class Auth_User(UserMixin, db.Model):
     __tablename__ = 'auth_users'
     __bind_key__ = 'clearnet'
     __table_args__ = {"schema": "public"}
@@ -156,14 +156,18 @@ class Auth_User(db.Model):
         self.confirmed = confirmed
         self.passwordpinallowed = passwordpinallowed
 
-    @staticmethod
-    def cryptpassword(password):
-        return generate_password_hash(password)
 
-    @staticmethod
-    def decryptpassword(pwdhash, password):
-        return check_password_hash(pwdhash, password)
+    def is_authenticated(self):
+        return True
 
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return self.id
 
     def generate_auth_token(self, expiration):
         s = Serializer(current_app.config['SECRET_KEY'],
@@ -214,3 +218,9 @@ class Auth_User_Schema(ma.SQLAlchemyAutoSchema):
     shopping_timer = ma.auto_field()
     confirmed = ma.auto_field()
 
+class AnonymousUser(AnonymousUserMixin):
+    def __init__(self):
+        self.username = 'Guest'
+
+
+login_manager.anonymous_user = AnonymousUser

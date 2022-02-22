@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from werkzeug.routing import BaseConverter
 import decimal
 from config import ApplicationConfig
-
+from flask_login import LoginManager
 
 app = Flask(__name__,
             static_url_path='',
@@ -75,8 +75,23 @@ bcrypt = Bcrypt(app)
 server_session = Session(app)
 mail = Mail(app)
 ma = Marshmallow(app)
-CORS(app)
-cors = CORS(app,  resources={r"/*": {"origins": "*"}})
+
+login_manager = LoginManager(app)
+login_manager.session_protection = 'strong'
+login_manager.anonymous_user = "Guest"
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    from app.classes.auth import Auth_User
+    x = db.session.query(Auth_User).filter(Auth_User.id == int(user_id)).first()
+    return x
+
+
+CORS(app,
+ expose_headers=["Content-Type", "X-CSRFToken"],
+  support_credentials=True, 
+  resources={r"*": {"origins": "*"}})
 
 # bind a function after each request, even if an exception is encountered.
 @app.teardown_request

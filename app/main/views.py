@@ -1,20 +1,17 @@
-from flask import url_for, request, session, jsonify, Response
-from app.main import main
-from app import db, app, UPLOADED_FILES_DEST
-from datetime import datetime
-import os
-from decimal import Decimal
-from sqlalchemy.sql.expression import func
+from flask import  jsonify, Response
+from app import app
+from flask_wtf.csrf import generate_csrf
 
-# models
-from app.classes.category import Category_Categories, Category_Categories_Schema
+
 
 
 
 @app.after_request
-def after_request(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
+def add_headers(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     return response
+
 
 @app.route('/robots.txt')
 @app.route('/sitemap.xml')
@@ -29,6 +26,14 @@ def static_from_root():
     ])))
 
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
-    return jsonify({"hello": "world"})
+    return jsonify({"ping": "pong"})
+
+
+@app.route('/csrf', methods=['GET'])
+def get_csrf():
+    token = generate_csrf()
+    response = jsonify({"detail: CSRF cookie set"})
+    response.headers.set("X_CSRFToken", token)
+    return response
