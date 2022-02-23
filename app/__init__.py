@@ -63,9 +63,9 @@ app.config['SESSION_PERMANENT'] = ApplicationConfig.SESSION_PERMANENT
 app.config['SESSION_USE_SIGNER'] = ApplicationConfig.SESSION_USE_SIGNER
 app.config['SESSION_REDIS'] = ApplicationConfig.SESSION_REDIS
 
-app.config['CORS_ORIGINS'] = ApplicationConfig.CORS_ORIGINS
-app.config['CORS_SEND_WILDCARD'] = ApplicationConfig.CORS_SEND_WILDCARD
-app.config['CORS_SUPPORT_CREDENTIALS'] = ApplicationConfig.CORS_SUPPORT_CREDENTIALS
+# app.config['CORS_ORIGINS'] = ApplicationConfig.CORS_ORIGINS
+# app.config['CORS_SEND_WILDCARD'] = ApplicationConfig.CORS_SEND_WILDCARD
+# app.config['CORS_SUPPORT_CREDENTIALS'] = ApplicationConfig.CORS_SUPPORT_CREDENTIALS
 
 
 
@@ -87,11 +87,9 @@ def load_user(user_id):
     x = db.session.query(Auth_User).filter(Auth_User.id == int(user_id)).first()
     return x
 
-
 CORS(app,
- expose_headers=["Content-Type", "X-CSRFToken"],
-  support_credentials=True, 
-  resources={r"*": {"origins": "*"}})
+     headers=['Content-Type', 'Authorization'], 
+     expose_headers='Authorization')
 
 # bind a function after each request, even if an exception is encountered.
 @app.teardown_request

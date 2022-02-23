@@ -1,4 +1,5 @@
 
+from email.policy import default
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app
 from flask_login import UserMixin, AnonymousUserMixin
@@ -75,7 +76,8 @@ class Auth_User(UserMixin, db.Model):
                    autoincrement=True,
                    primary_key=True,
                    unique=True)
-    uuid = db.Column(db.String(32))
+    uuid = db.Column(db.String(32), default=get_uuid)
+    api_key = db.Column(db.TEXT)
     username = db.Column(db.VARCHAR(40))
     password_hash = db.Column(db.TEXT)
     member_since = db.Column(db.TIMESTAMP(), default=datetime.utcnow())
@@ -83,7 +85,7 @@ class Auth_User(UserMixin, db.Model):
     wallet_pin = db.Column(db.VARCHAR(5))
     profileimage = db.Column(db.VARCHAR(100))
     bio = db.Column(db.TEXT)
-    country = db.Column(db.VARCHAR(100))
+    country = db.Column(db.INTEGER)
     currency = db.Column(db.INTEGER)
     vendor_account = db.Column(db.INTEGER)
     selling_from = db.Column(db.VARCHAR(100))
@@ -110,6 +112,7 @@ class Auth_User(UserMixin, db.Model):
                  profileimage,
                  stringuserdir,
                  bio,
+                 api_key,
                  country,
                  currency,
                  vendor_account,
@@ -137,6 +140,7 @@ class Auth_User(UserMixin, db.Model):
         self.profileimage = profileimage
         self.stringuserdir = stringuserdir
         self.bio = bio
+        self.api_key= api_key
         self.country = country
         self.currency = currency
         self.vendor_account = vendor_account
