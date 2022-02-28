@@ -1,14 +1,14 @@
-from flask import  jsonify, Response
-from app import app
+from flask import  jsonify, Response, request
+from app import app, login_manager
 from flask_wtf.csrf import generate_csrf
-
-
-
+from flask_login import login_required
+from app.classes.auth import Auth_User
+from flask_cors import cross_origin
 
 
 @app.after_request
 def add_headers(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:8080'
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     response.headers['Access-Control-Allow-Headers'] = 'Authorization, Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS, HEAD'
@@ -29,9 +29,12 @@ def static_from_root():
     ])))
 
 
-@app.route('/', methods=['GET'])
+@app.route('/index', methods=['GET'])
+@login_required
 def index():
-    return jsonify({"ping": "pong"})
+    return jsonify({"ping": "pong"}), 200
+
+
 
 
 @app.route('/csrf', methods=['GET'])

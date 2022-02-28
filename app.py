@@ -2,7 +2,7 @@
 from app import app
 
 
-PORT = 5005
+PORT = 5000
 HOST = '0.0.0.0'
 use_reloader = True
 DEBUG = True

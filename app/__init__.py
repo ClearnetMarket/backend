@@ -11,6 +11,7 @@ from werkzeug.routing import BaseConverter
 import decimal
 from config import ApplicationConfig
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__,
             static_url_path='',
@@ -40,7 +41,6 @@ app.jinja_env.autoescape = True
 
 
 # configuration
-app.url_map.converters['regex'] = RegexConverter
 UPLOADED_FILES_DEST_USER= ApplicationConfig.UPLOADED_FILES_DEST_USER
 UPLOADED_FILES_DEST_ITEM = ApplicationConfig.UPLOADED_FILES_DEST_ITEM
 UPLOADED_FILES_DEST =   ApplicationConfig.UPLOADED_FILES_DEST
@@ -63,10 +63,6 @@ app.config['SESSION_PERMANENT'] = ApplicationConfig.SESSION_PERMANENT
 app.config['SESSION_USE_SIGNER'] = ApplicationConfig.SESSION_USE_SIGNER
 app.config['SESSION_REDIS'] = ApplicationConfig.SESSION_REDIS
 
-# app.config['CORS_ORIGINS'] = ApplicationConfig.CORS_ORIGINS
-# app.config['CORS_SEND_WILDCARD'] = ApplicationConfig.CORS_SEND_WILDCARD
-# app.config['CORS_SUPPORT_CREDENTIALS'] = ApplicationConfig.CORS_SUPPORT_CREDENTIALS
-
 
 
 session.configure(bind=ApplicationConfig.SQLALCHEMY_DATABASE_URI_0)
@@ -75,21 +71,47 @@ bcrypt = Bcrypt(app)
 server_session = Session(app)
 mail = Mail(app)
 ma = Marshmallow(app)
+#csrf = CSRFProtect(app)
+
 
 login_manager = LoginManager(app)
 login_manager.session_protection = 'strong'
 login_manager.anonymous_user = "Guest"
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    from app.classes.auth import Auth_User
-    x = db.session.query(Auth_User).filter(Auth_User.id == int(user_id)).first()
-    return x
+@login_manager.request_loader
+def load_user_from_request(request):
 
-CORS(app,
-     headers=['Content-Type', 'Authorization'], 
-     expose_headers='Authorization')
+    from app.classes.auth import Auth_User
+    # first, try to login using the api_key url arg
+
+    api_key = request.args.get('api_key')
+
+    if api_key:
+
+        user = Auth_User.query.filter_by(api_key=api_key).first()
+        if user:
+            return user
+
+    # next, try to login using Basic Auth
+    api_key_auth = request.headers.get('Authorization')
+
+    if api_key_auth:
+        api_key = api_key_auth.replace('bearer ', '', 1)
+        user = Auth_User.query.filter_by(api_key=api_key).first()
+        if user:
+            return user
+
+    return None
+
+
+api_main = {
+    "origins": ['http://localhost:8080'],
+    "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
+    "allow_headers": ['Authorization, authorization, Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers']
+}
+cors = CORS(app,  supports_credentials=True, resources={r'/*': api_main})
+
 
 # bind a function after each request, even if an exception is encountered.
 @app.teardown_request
@@ -146,6 +168,7 @@ app.register_blueprint(main_blueprint, url_prefix='/main')
 #
 from .auth import auth as auth_blueprint
 app.register_blueprint(auth_blueprint, url_prefix='/auth')
+
 
 from .orders import orders as orders_blueprint
 app.register_blueprint(orders_blueprint, url_prefix='/orders')

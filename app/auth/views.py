@@ -1,7 +1,8 @@
 from flask import request, session, jsonify
-from flask_login import current_user, logout_user, login_user
+from flask_login import current_user, logout_user, login_user, login_required
+from flask_cors import cross_origin
 from app.auth import auth
-from app import db, bcrypt, UPLOADED_FILES_DEST_USER, login_manager
+from app import db, bcrypt, login_manager
 from datetime import datetime
 import os
 import base64
@@ -9,8 +10,7 @@ import functools
 from sqlalchemy.sql.expression import func
 from sqlalchemy.orm.exc import UnmappedInstanceError
 from app.common.functions import mkdir_p, userimagelocation
-from app.common.decorators import \
-    login_required
+
 # models
 from app.classes.models import Query_WordList, Query_Country_Schema, Query_Country, Query_CurrencyList, Query_CurrencyList_Schema
 from app.classes.item import Item_MarketItem
@@ -33,51 +33,29 @@ from app.classes.auth import \
 from app.wallet_bch.wallet_bch_work import bch_create_wallet
 from app.wallet_btc.wallet_btc_work import btc_create_wallet
 from app.wallet_xmr.wallet_xmr_work import xmr_create_wallet
-from flask_cors import cross_origin
+from uuid import uuid4
 
 
-# @auth.route("/getsession", methods=["GET"])
-# @login_manager.request_loader
-# def check_session():
-#     print("checking user...")
-#     x = request.headers
-#     y = (x["Authorization"][7:])
-#     print(session)
-#     if session['_id'] == y:
+@auth.route("/getsessionlogged", methods=["GET"])
+@login_required
+def check_session_logged():
+    try:
+        print(current_user.id)
+        print(current_user.username)
+        return jsonify({"status": "success"}),200
+    except Exception as e:
+        print(str(e))
+        return jsonify({"error": "BAD"}), 401
 
-#         print("found")
-#         print(x['Authorization'])
 
-
-#     if current_user.is_authenticated:
-#         print("checking user...")
-#         return jsonify({
-#         "login": True,
-#         'user': {'user_id': current_user.uuid,
-#                 'user_name': current_user.username,
-#                 'user_email': current_user.email,
-#                 'profile_image': current_user.profileimage,
-#                 'country': current_user.country,
-#                 'currency': current_user.currency,
-#          },
-#         'token': session['_id']
-#     }), 200
-
-#     else:
-#         print('not authenticated')
-#         return jsonify({"login": False})
-
-@auth.route("/getsession", methods=["GET"])
-@cross_origin()
-@login_manager.request_loader
+@auth.route("/whoami", methods=["GET"])
+@login_required
 def check_session():
-   # next, try to login using Basic Auth
+    print("checking sedsion.....")
     api_key = request.headers.get('Authorization')
     if api_key:
         api_key = api_key.replace('Basic ', '', 1)
-        print(api_key)
         user_exists = Auth_User.query.filter(Auth_User.api_key==api_key).first() is not None
-      
         if user_exists:
             user = Auth_User.query.filter(Auth_User.api_key==api_key).first()
             print(user.username)
@@ -90,6 +68,7 @@ def check_session():
                     'profile_image': user.profileimage,
                     'country': user.country,
                     'currency': user.currency,
+                    'token': user.api_key
             },
             'token': user.api_key
                 }), 200
@@ -99,31 +78,32 @@ def check_session():
         return jsonify({"status": "error"})
 
 
-@auth.route("/logout", methods=["GET"])
+
+@auth.route("/logout", methods=["POST"])
 def logout():
+   
     try:
-        current_user.is_authenticated = False
         logout_user()
         return jsonify({'status': 'logged out'}), 200
-    except UnmappedInstanceError:
+    except Exception as e:
+        print(str(e))
+        return jsonify({"error", 'error'}), 400
 
-        return jsonify({'status': 'error'}), 400
 
 @auth.route("/login", methods=["POST"])
-def auth_login_user_post():
+def login():
 
     username = request.json["username"]
     password = request.json["password"]
+    user = Auth_User.query.filter_by(username=username).first() is not None
+
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
     user = Auth_User.query.filter_by(username=username).first()
-    print("logging in")
-    print(username)
-    print(password)
-    if user is None:
-        return jsonify({"error": "Unauthorized"})
     if not bcrypt.check_password_hash(user.password_hash, password):
-        x = int(user.fails)
-        y = x + 1
-        user.fails = y
+        current_fails = int(user.fails)
+        new_fails = current_fails + 1
+        user.fails = new_fails
         db.session.add(user)
         db.session.commit()
         return jsonify({"error": "Unauthorized"}), 401
@@ -144,31 +124,28 @@ def auth_login_user_post():
                 'profile_image': user.profileimage,
                 'country': user.country,
                 'currency': user.currency,
+                'token': user.api_key
          },
-        'token': session['_id']
+         'token': user.api_key
     }), 200
 
 @auth.route("/register", methods=["POST"])
 def register_user():
 
-    from uuid import uuid4
     now = datetime.utcnow()
     shard = 1
-
-
-    x =  uuid4().hex
-    y = uuid4().hex
-    c = uuid4().hex
-    key = x+y+c
-
+    
     username = request.json["username"]
     email = request.json["email"]
     password = request.json["password"]
     currency = request.json["currency"]
     country = request.json["country"]
 
-    currency_value = currency['value']
-    country_value = country['numericcode']
+    part_one_code =  uuid4().hex
+    part_two_code = uuid4().hex
+    part_three_code = uuid4().hex
+    key = part_one_code + part_two_code + part_three_code
+
     user_exists_email = Auth_User.query.filter_by(email=email).first() is not None
     if user_exists_email:
         return jsonify({"error": "User already exists"}), 409
@@ -180,7 +157,7 @@ def register_user():
 
     new_user = Auth_User(
             username=username,
-            email='',
+            email=email,
             password_hash=hashed_password,
             member_since=now,
             wallet_pin='',
@@ -188,8 +165,8 @@ def register_user():
             stringuserdir=0,
             bio='',
             api_key=key,
-            country=country_value,
-            currency=currency_value,
+            country=country,
+            currency=currency,
             vendor_account=0,
             selling_from=0,
             last_seen=now,
@@ -316,7 +293,6 @@ def register_user():
     login_user(new_user)
     current_user.is_authenticated()
     current_user.is_active()
-    print(session)
     return jsonify({
         "login": True,
         'user': {'user_id': new_user.uuid,
@@ -333,7 +309,7 @@ def register_user():
 
 
 
-@auth.route("/login", methods=["GET"])
+@auth.route("/account-seed", methods=["GET"])
 @login_required
 def account_seed():
     user_id = session.get("user_id")
@@ -344,7 +320,9 @@ def account_seed():
     if request.method == 'GET':
         if userseed is None:
             word_list = []
-            get_words = Query_WordList.query.order_by(func.random()).limit(6)
+            get_words = Query_WordList.query\
+            .order_by(func.random())\
+            .limit(6)
             for f in get_words:
                 word_list.append(f.text)
             word00 = str(word_list[0]).lower()
@@ -384,14 +362,14 @@ def account_seed():
 @auth.route("/accountseedconfirm", methods=["POST"])
 @login_required
 def confirm_seed():
-    user_id = session.get("user_id")
+
     user = Auth_User.query \
-        .filter(Auth_User.id == user_id)\
+        .filter(Auth_User.id == current_user.id)\
         .first()
 
     if request.method == 'POST':
         userseed = db.session.query(Auth_AccountSeedWords) \
-            .filter(user.id == Auth_AccountSeedWords.user_id)\
+            .filter(Auth_AccountSeedWords.user_id==user.id)\
             .first() is not None
         if userseed:
             word0 = request.json["word0"]
@@ -450,31 +428,9 @@ def change_pin():
         return jsonify({"error": "Must unlock account to change password"}), 409
 
 
-@auth.route('/change-password', methods=['POST'])
-@login_required
-def change_password():
-    if request.method == 'POST':
-        user_id = session.get("user_id")
-        user = Auth_User.query \
-            .filter(Auth_User.id == user_id) \
-            .first()
-        if user.passwordpinallowed == 1:
-            new_password = request.json["newpassword"]
-
-            hashed_password = bcrypt.generate_password_hash(new_password)
-
-            user.password_hash = hashed_password
-            user.passwordpinallowed = 0
-            db.session.add(user)
-            db.session.commit()
-
-            return jsonify({"status": "success"}), 200
-        else:
-            return jsonify({"error": "Must unlock account to change password"}), 409
 
 
 @auth.route('/unlock-account', methods=['POST'])
-@login_required
 def retrieve_seed_to_unlock_account():
 
     if request.method == 'POST':
@@ -508,6 +464,32 @@ def retrieve_seed_to_unlock_account():
             return jsonify({'status': 'Account Unlocked'}), 200
         else:
             return jsonify({'error': 'Incorrect Seed'}), 409
+
+
+@auth.route('/change-password', methods=['POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+    
+        user = Auth_User.query \
+            .filter(Auth_User.id == current_user.id) \
+            .first()
+        if user.passwordpinallowed == 1:
+            new_password = request.json["password"]
+            new_password_confirm = request.json["password"]
+            if str(new_password) == str(new_password_confirm):
+                hashed_password = bcrypt.generate_password_hash(new_password)
+
+                user.password_hash = hashed_password
+                user.passwordpinallowed = 0
+                db.session.add(user)
+                db.session.commit()
+
+                return jsonify({"status": "success"}), 200
+            else:
+                return jsonify({"error": "Password Error"}), 401
+        else:
+            return jsonify({"error": "Must unlock account to change password"}), 409
 
 
 @auth.route("/vacation-on", methods=["POST"])
@@ -568,7 +550,6 @@ def vacation_off():
 
 
 @auth.route('/query/country', methods=['GET'])
-@cross_origin(supports_credentials=True)
 def get_country_list():
     """
     Returns list of Countrys
@@ -582,7 +563,6 @@ def get_country_list():
 
 
 @auth.route('/query/currency', methods=['GET'])
-@cross_origin(supports_credentials=True)
 def get_currency_list():
     """
     Returns list of currencys 
@@ -596,3 +576,5 @@ def get_currency_list():
         currency_schema = Query_CurrencyList_Schema(many=True)
     
         return jsonify(currency_schema.dump(currency_list))
+
+
