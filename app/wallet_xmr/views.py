@@ -15,8 +15,33 @@ from app.classes.wallet_xmr import\
     Xmr_Transactions,\
     Xmr_Transactions_Schema,\
     Xmr_Wallet, \
-    Xmr_WalletFee
+    Xmr_WalletFee,  \
+    Xmr_Prices
 # end models
+
+
+@wallet_xmr.route('/price', methods=['GET'])
+
+def xmr_price_usd():
+    """
+    Gets current price of bitcoin cash
+    :return:
+    """
+
+    price_xmr_usd = Xmr_Prices.query.filter_by(currency_id=0).first()
+    if price_xmr_usd.price > 0:
+        try:
+            price_xmr_usd = str(price_xmr_usd.price)
+        except:
+            price_xmr_usd = 0
+        return jsonify({
+            "price_xmr_usd": price_xmr_usd,
+        })
+    else:
+        return jsonify({
+            "price_xmr_usd": 'error',
+        })
+
 
 @wallet_xmr.route('/balance', methods=['GET'])
 @login_required
@@ -31,8 +56,8 @@ def xmr_balance_plus_unconfirmed():
         likemoneyinthebank(user_id=user_id)
         db.session.commit()
     try:
-        userbalance = Decimal(userwallet.currentbalance)
-        unconfirmed = Decimal(userwallet.unconfirmed)
+        userbalance = str(userwallet.currentbalance)
+        unconfirmed = str(userwallet.unconfirmed)
     except:
         userbalance = 0
         unconfirmed = 0

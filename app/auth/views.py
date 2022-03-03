@@ -12,16 +12,18 @@ from sqlalchemy.orm.exc import UnmappedInstanceError
 from app.common.functions import mkdir_p, userimagelocation
 
 # models
-from app.classes.models import Query_WordList, Query_Country_Schema, Query_Country, Query_CurrencyList, Query_CurrencyList_Schema
+from app.classes.models import Query_WordList,\
+    Query_Country_Schema, \
+    Query_Country,\
+    Query_CurrencyList,\
+    Query_CurrencyList_Schema
 from app.classes.item import Item_MarketItem
 from app.achs.a import newbie
-from app.classes.userdata import \
-    UserData_History
+from app.classes.userdata import UserData_History
 
 from app.classes.profile import Profile_StatisticsUser
 
-from app.classes.checkout import \
-    Checkout_ShoppingCartTotal
+from app.classes.checkout import  Checkout_ShoppingCartTotal
 from app.classes.achievements import \
     Achievements_UserAchievements, \
     Achievements_WhichAch
@@ -36,35 +38,26 @@ from app.wallet_xmr.wallet_xmr_work import xmr_create_wallet
 from uuid import uuid4
 
 
-@auth.route("/getsessionlogged", methods=["GET"])
-@login_required
-def check_session_logged():
-    try:
-        print(current_user.id)
-        print(current_user.username)
-        return jsonify({"status": "success"}),200
-    except Exception as e:
-        print(str(e))
-        return jsonify({"error": "BAD"}), 401
 
 
 @auth.route("/whoami", methods=["GET"])
 @login_required
 def check_session():
-    print("checking sedsion.....")
+
     api_key = request.headers.get('Authorization')
     if api_key:
-        api_key = api_key.replace('Basic ', '', 1)
+        api_key = api_key.replace('bearer ', '', 1)
         user_exists = Auth_User.query.filter(Auth_User.api_key==api_key).first() is not None
         if user_exists:
             user = Auth_User.query.filter(Auth_User.api_key==api_key).first()
-            print(user.username)
-            print(user.id)
+
+            print(f"YOU ARE {user.username}")
             return jsonify({
             "login": True,
             'user': {'user_id': user.uuid,
                     'user_name': user.username,
                     'user_email': user.email,
+                    'user_admin': user.admin_role,
                     'profile_image': user.profileimage,
                     'country': user.country,
                     'currency': user.currency,
@@ -73,10 +66,9 @@ def check_session():
             'token': user.api_key
                 }), 200
         else:
-            return jsonify({"status": "error. user not found"})
+            return jsonify({"status": "error. user not found"}), 409
     else:
-        return jsonify({"status": "error"})
-
+        return jsonify({"status": "error"}), 409
 
 
 @auth.route("/logout", methods=["POST"])
@@ -124,10 +116,12 @@ def login():
                 'profile_image': user.profileimage,
                 'country': user.country,
                 'currency': user.currency,
+                'admin_role': user.admin_role,
                 'token': user.api_key
          },
          'token': user.api_key
     }), 200
+
 
 @auth.route("/register", methods=["POST"])
 def register_user():
@@ -187,27 +181,27 @@ def register_user():
 
     db.session.add(new_user)
     db.session.commit()
-    # db.session.flush()
+    db.session.flush()
 
-    # # create user stats
-    # stats = Profile_StatisticsUser(
-    #     username=new_user.username,
-    #     totalitemsbought=0,
-    #     totalbtcspent=0,
-    #     totalbtcrecieved=0,
-    #     totalbtccashspent=0,
-    #     totalbtccashrecieved=0,
-    #     totalreviews=0,
-    #     startedbuying=now,
-    #     diffpartners=0,
-    #     totalachievements=0,
-    #     user_id=new_user.id,
-    #     userrating=0,
-    #     totaltrades=0,
-    #     disputecount=0,
-    #     itemsflagged=0,
-    #     totalusdspent=0,
-    # )
+    # create user stats
+    stats = Profile_StatisticsUser(
+        username=new_user.username,
+        totalitemsbought=0,
+        totalbtcspent=0,
+        totalbtcrecieved=0,
+        totalbtccashspent=0,
+        totalbtccashrecieved=0,
+        totalreviews=0,
+        startedbuying=now,
+        diffpartners=0,
+        totalachievements=0,
+        user_id=new_user.id,
+        userrating=0,
+        totaltrades=0,
+        disputecount=0,
+        itemsflagged=0,
+        totalusdspent=0,
+    )
 
     # # create which achs they pick
     # achselect = Achievements_WhichAch(
@@ -301,12 +295,11 @@ def register_user():
                 'profile_image': new_user.profileimage,
                 'country': new_user.country,
                 'currency': new_user.currency,
+                'admin_role': new_user.admin_role,
+                'token': new_user.api_key
          },
         'token':  new_user.currency
     }), 200
-
-
-
 
 
 @auth.route("/account-seed", methods=["GET"])
@@ -399,37 +392,6 @@ def confirm_seed():
             return jsonify({"error": "Seed does not exist"}), 409
 
 
-@auth.route('/change-pin', methods=['POST'])
-@login_required
-def change_pin():
-
-    if request.method == 'POST':
-        user_id = session.get("user_id")
-        user = Auth_User.query \
-            .filter(Auth_User.id == user_id) \
-            .first()
-
-        old_pin = request.json["old_pin"]
-        new_pin = request.json["new_pin"]
-        password = request.json["password"]
-        if user.passwordpinallowed == 1:
-            if not bcrypt.check_password_hash(user.password, password):
-                return jsonify({"error": "Unauthorized"}), 401
-            if not bcrypt.check_password_hash(user.wallet_pin, old_pin):
-                return jsonify({"error": "Unauthorized"}), 401
-
-            hashed_pin = bcrypt.generate_password_hash(new_pin)
-            user.wallet_pin = hashed_pin
-            user.passwordpinallowed = 0
-            db.session.add(user)
-            db.session.commit()
-
-            return jsonify({"status": "success"}), 409
-        return jsonify({"error": "Must unlock account to change password"}), 409
-
-
-
-
 @auth.route('/unlock-account', methods=['POST'])
 def retrieve_seed_to_unlock_account():
 
@@ -474,22 +436,50 @@ def change_password():
         user = Auth_User.query \
             .filter(Auth_User.id == current_user.id) \
             .first()
-        if user.passwordpinallowed == 1:
-            new_password = request.json["password"]
-            new_password_confirm = request.json["password"]
-            if str(new_password) == str(new_password_confirm):
-                hashed_password = bcrypt.generate_password_hash(new_password)
+      
+        new_password = request.json["password"]
+        new_password_confirm = request.json["password_confirm"]
+        if str(new_password) == str(new_password_confirm):
+            hashed_password = bcrypt.generate_password_hash(new_password)
 
-                user.password_hash = hashed_password
-                user.passwordpinallowed = 0
-                db.session.add(user)
-                db.session.commit()
+            user.password_hash = hashed_password
+            user.passwordpinallowed = 0
+            db.session.add(user)
+            db.session.commit()
 
-                return jsonify({"status": "success"}), 200
-            else:
-                return jsonify({"error": "Password Error"}), 401
+            return jsonify({"status": "success"}), 200
+    
         else:
-            return jsonify({"error": "Must unlock account to change password"}), 409
+            return jsonify({"error": "Incorrect Passwords"}), 409
+
+
+@auth.route('/change-pin', methods=['POST'])
+@login_required
+def change_pin():
+
+    if request.method == 'POST':
+        user_id = session.get("user_id")
+        user = Auth_User.query \
+            .filter(Auth_User.id == user_id) \
+            .first()
+
+        old_pin = request.json["old_pin"]
+        new_pin = request.json["new_pin"]
+        password = request.json["password"]
+        if user.passwordpinallowed == 1:
+            if not bcrypt.check_password_hash(user.password, password):
+                return jsonify({"error": "Unauthorized"}), 401
+            if not bcrypt.check_password_hash(user.wallet_pin, old_pin):
+                return jsonify({"error": "Unauthorized"}), 401
+
+            hashed_pin = bcrypt.generate_password_hash(new_pin)
+            user.wallet_pin = hashed_pin
+            user.passwordpinallowed = 0
+            db.session.add(user)
+            db.session.commit()
+
+            return jsonify({"status": "success"}), 409
+        return jsonify({"error": "Must unlock account to change password"}), 409
 
 
 @auth.route("/vacation-on", methods=["POST"])
@@ -568,7 +558,6 @@ def get_currency_list():
     Returns list of currencys 
     :return:
     """
-    print(request.data)
     if request.method == 'GET':
 
         currency_list = Query_CurrencyList.query.order_by(Query_CurrencyList.value.asc()).all()

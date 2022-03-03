@@ -11,8 +11,35 @@ from decimal import Decimal
 # models
 from app.classes.auth import Auth_User
 
-from app.classes.wallet_btc import Btc_TransactionsBtc, Btc_TransactionsBtc_Schema, Btc_Wallet, Btc_WalletFee
+from app.classes.wallet_btc import \
+    Btc_TransactionsBtc,\
+    Btc_TransactionsBtc_Schema,\
+    Btc_Wallet, \
+    Btc_WalletFee, \
+    Btc_Prices
 # end models
+
+@wallet_btc.route('/price', methods=['GET'])
+
+def btc_price_usd():
+    """
+    Gets current price of bitcoin cash
+    :return:
+    """
+
+    price_btc_usd = Btc_Prices.query.filter_by(currency_id=0).first()
+    if price_btc_usd.price > 0:
+        try:
+            price_btc_usd = str(price_btc_usd.price)
+        except:
+            price_btc_usd = 0
+        return jsonify({
+            "btc_price_usd": price_btc_usd,
+        })
+    else:
+        return jsonify({
+            "btc_price_usd": 'error',
+        })
 
 
 @wallet_btc.route('/balance', methods=['GET'])
@@ -28,8 +55,8 @@ def btc_balance_plus_unconfirmed():
         likemoneyinthebank(user_id=user_id)
         db.session.commit()
     try:
-        userbalance = Decimal(userwallet.currentbalance)
-        unconfirmed = Decimal(userwallet.unconfirmed)
+        userbalance = str(userwallet.currentbalance)
+        unconfirmed = str(userwallet.unconfirmed)
     except Exception as e:
         print(str(e))
         userbalance = 0

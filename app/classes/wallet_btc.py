@@ -3,17 +3,22 @@ from datetime import datetime
 
 
 class Btc_Prices(db.Model):
-    __tablename__ = 'btc_prices'
-    __bind_key__ = 'avengers'
+    __tablename__ = 'btc_price'
+    __bind_key__ = 'clearnet'
     __table_args__ = {"schema": "public"}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     price = db.Column(db.DECIMAL(50, 2))
+    currency_id = db.Column(db.INTEGER)
+    percent_change_twentyfour = db.Column(db.DECIMAL(50, 2))
 
 class Btc_Prices_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Btc_Prices
     id = ma.auto_field()
     price = ma.auto_field()
+    currency_id = ma.auto_field()
+    percent_change_twentyfour = ma.auto_field()
+
 
 
 class Btc_Wallet(db.Model):

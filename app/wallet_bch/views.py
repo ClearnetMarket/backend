@@ -15,8 +15,33 @@ from app.classes.wallet_bch import\
     Bch_WalletTransactions,\
     Bch_WalletTransactions_Schema, \
     Bch_Wallet,\
-    Bch_WalletFee
+    Bch_WalletFee, \
+    Bch_Prices
 # end models
+
+@wallet_bch.route('/price', methods=['GET'])
+
+def bch_price_usd():
+    """
+    Gets current price of bitcoin cash
+    :return:
+    """
+
+    price_bch_usd = Bch_Prices.query.filter_by(currency_id=0).first()
+
+    if price_bch_usd.price > 0:
+        try:
+            price_bch_usd = str(price_bch_usd.price)
+        except:
+            price_bch_usd = 0
+ 
+        return jsonify({
+            "bch_price_usd": price_bch_usd,
+        })
+    else:
+        return jsonify({
+            "bch_price_usd": '0',
+        })
 
 
 @wallet_bch.route('/balance', methods=['GET'])
@@ -32,8 +57,8 @@ def bch_balance_plus_unconfirmed():
         likemoneyinthebank(user_id=user_id)
         db.session.commit()
     try:
-        userbalance = Decimal(userwallet.currentbalance)
-        unconfirmed = Decimal(userwallet.unconfirmed)
+        userbalance = str(userwallet.currentbalance)
+        unconfirmed = str(userwallet.unconfirmed)
     except:
         userbalance = 0
         unconfirmed = 0

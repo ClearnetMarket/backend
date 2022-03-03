@@ -205,3 +205,25 @@ class Vendor_EbaySearchItem(db.Model):
 class Vendor_EbaySearchItem_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Vendor_EbaySearchItem
+
+
+class Vendor_Notification(db.Model):
+    __tablename__ = 'vendor_notification_alert'
+    __bind_key__ = 'clearnet'
+    __table_args__ = {"schema": "public"}
+    """
+    Used to inform vendor of new issues on vendor bar
+    """
+    id = db.Column(db.Integer,  primary_key=True,autoincrement=True, unique=True, nullable=False)
+    dateadded = db.Column(db.TIMESTAMP())
+    user_id = db.Column(db.INTEGER) 
+    new_feedback = db.Column(db.INTEGER)
+    new_disputes = db.Column(db.INTEGER)
+    new_orders = db.Column(db.INTEGER)
+    new_returns = db.Column(db.INTEGER)
+
+
+
+class Vendor_Notification_Schema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Vendor_EbaySearchItem

@@ -4,17 +4,21 @@ from datetime import datetime
 
 
 class Xmr_Prices(db.Model):
-    __tablename__ = 'xmr_prices'
+    __tablename__ = 'xmr_price'
     __bind_key__ = 'clearnet'
     __table_args__ = {"schema": "public"}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     price = db.Column(db.DECIMAL(50, 2))
+    currency_id = db.Column(db.INTEGER)
+    percent_change_twentyfour = db.Column(db.DECIMAL(50, 2))
 
 class Xmr_Prices_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Xmr_Prices
     id = ma.auto_field()
     price = ma.auto_field()
+    currency_id = ma.auto_field()
+    percent_change_twentyfour = ma.auto_field()
 
 
 class Xmr_Wallet(db.Model):

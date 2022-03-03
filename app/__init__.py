@@ -185,8 +185,8 @@ app.register_blueprint(customerservice_blueprint, url_prefix='/customer-service'
 from .category import category as category_blueprint
 app.register_blueprint(category_blueprint, url_prefix='/category')
 
-# from .userdata import userdata as userdata_blueprint
-# app.register_blueprint(userdata_blueprint, url_prefix='/info')
+from .userdata import userdata as userdata_blueprint
+app.register_blueprint(userdata_blueprint, url_prefix='/info')
 #
 # from .message import message as message_blueprint
 # app.register_blueprint(message_blueprint, url_prefix='/message')
@@ -203,11 +203,11 @@ app.register_blueprint(category_blueprint, url_prefix='/category')
 # from .checkout import checkout as checkout_blueprint
 # app.register_blueprint(checkout_blueprint, url_prefix='/checkout')
 #
-# from .vendorcreate import vendorcreate as vendorcreate_blueprint
-# app.register_blueprint(vendorcreate_blueprint, url_prefix='/vendor-create')
-#
-# from .vendorcreateitem import vendorcreateitem as vendorcreateitem_blueprint
-# app.register_blueprint(vendorcreateitem_blueprint, url_prefix='/vendor-create-item')
+from .vendorcreate import vendorcreate as vendorcreate_blueprint
+app.register_blueprint(vendorcreate_blueprint, url_prefix='/vendorcreate')
+
+from .vendorcreateitem import vendorcreateitem as vendorcreateitem_blueprint
+app.register_blueprint(vendorcreateitem_blueprint, url_prefix='/vendorcreateitem')
 #
 # from .vendorverification import vendorverification as vendorverification_blueprint
 # app.register_blueprint(vendorverification_blueprint, url_prefix='/vendor-verification')
