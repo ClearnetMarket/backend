@@ -39,6 +39,8 @@ class Item_MarketItem(db.Model):
     created = db.Column(db.TIMESTAMP())
 
     vendor_name = db.Column(db.String(140))
+    vendor_display_name = db.Column(db.String(140))
+    vendor_uuid = db.Column(db.String(140))
     vendor_id = db.Column(db.INTEGER)
 
     category_name_0 = db.Column(db.VARCHAR(140))
@@ -49,7 +51,7 @@ class Item_MarketItem(db.Model):
     destination_country_two = db.Column(db.INTEGER)
     destination_country_three = db.Column(db.INTEGER)
     destination_country_four = db.Column(db.INTEGER)
-    destination_country_five = db.Column(db.INTEGER)
+
 
     item_title = db.Column(db.VARCHAR(500))
     item_count = db.Column(db.INTEGER)
@@ -63,11 +65,17 @@ class Item_MarketItem(db.Model):
     digital_currency_2 = db.Column(db.BOOLEAN)
     digital_currency_3 = db.Column(db.BOOLEAN)
 
-    image_one = db.Column(db.VARCHAR(100))
-    image_two = db.Column(db.VARCHAR(100))
-    image_three = db.Column(db.VARCHAR(100))
-    image_four = db.Column(db.VARCHAR(100))
-    image_five = db.Column(db.VARCHAR(100))
+    image_one_server = db.Column(db.VARCHAR(2000))
+    image_two_server = db.Column(db.VARCHAR(2000))
+    image_three_server = db.Column(db.VARCHAR(2000))
+    image_four_server = db.Column(db.VARCHAR(2000))
+
+
+    image_one_url = db.Column(db.VARCHAR(3000))
+    image_two_url = db.Column(db.VARCHAR(3000))
+    image_three_url = db.Column(db.VARCHAR(3000))
+    image_four_url = db.Column(db.VARCHAR(3000))
+  
 
     shipping_free = db.Column(db.BOOLEAN)
     shipping_two = db.Column(db.BOOLEAN)
@@ -99,65 +107,21 @@ class Item_MarketItem(db.Model):
 class Item_MarketItem_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Item_MarketItem
+            
+        fields = ('uuid', 'online', 'created', 'price', 'vendor_name',
+                     'node_id',
+                    'origin_country','destination_country_one', 
+                    'destination_country_two', 'destination_country_three',
+                    'destination_country_four', 'destination_country_five',
+                     'item_title', 'item_count', 'item_description',
+                    'item_condition', 'keywords', 'price', 'currency', 
+                    'digital_currency_1', 'digital_currency_2', 'digital_currency_3',
+                    'image_one_url', 'image_two_url', 'image_three_url', 'image_four_url',
+                    'image_one_server', 'image_two_server', 'image_three_server', 'image_four_server',
+                    'shipping_free','shipping_two', 'shipping_three', 'shipping_info_0', 'shipping_day_0','shipping_info_2', 
+                    'shipping_price_2', 'shipping_day_2', 'shipping_info_3', 'shipping_price_3', 'shipping_day_3', 'view_count', 
+                    'item_rating', 'review_count', 
+                    'total_sold', 
 
 
-    uuid = ma.auto_field()
-    online = ma.auto_field()
-    created = db.Column(db.TIMESTAMP())
-    price = db.Column(db.DECIMAL(20, 2))
-    vendor_name = ma.auto_field()
-    vendor_id = ma.auto_field()
-
-    string_node_id = ma.auto_field()
-
-    origin_country = ma.auto_field()
-    destination_country_one = ma.auto_field()
-    destination_country_two = ma.auto_field()
-    destination_country_three = ma.auto_field()
-    destination_country_four = ma.auto_field()
-    destination_country_five = ma.auto_field()
-
-    item_title = ma.auto_field()
-    item_count = ma.auto_field()
-    item_description = ma.auto_field()
-    keywords = ma.auto_field()
-    item_condition = ma.auto_field()
-
-    image_one = ma.auto_field()
-    image_two = ma.auto_field()
-    image_three = ma.auto_field()
-    image_four = ma.auto_field()
-    image_five = ma.auto_field()
-
-
-
-    view_count = ma.auto_field()
-    item_rating = ma.auto_field()
-    review_count = ma.auto_field()
-    total_sold = ma.auto_field()
-
-    shipping_free = ma.auto_field()
-    shipping_two = ma.auto_field()
-    shipping_three = ma.auto_field()
-
-    shipping_info_0 = ma.auto_field()
-    shipping_day_0 = ma.auto_field()
-
-    shipping_info_2 = ma.auto_field()
-    shipping_price_2 = ma.auto_field()
-    shipping_day_2 = ma.auto_field()
-
-    shipping_info_3 = ma.auto_field()
-    shipping_price_3 = ma.auto_field()
-    shipping_day_3 = ma.auto_field()
-
-
-
-    currency = ma.auto_field()
-    digital_currency_1 = ma.auto_field()
-    digital_currency_2 = ma.auto_field()
-    digital_currency_3 = ma.auto_field()
-
-    # Category_Categories
-    category_name_0 = ma.auto_field()
-    category_id_0 = ma.auto_field()
+                    )

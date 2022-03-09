@@ -5,7 +5,7 @@ from app.vendorcreate import vendorcreate
 from app import UPLOADED_FILES_DEST, UPLOADED_FILES_DEST_ITEM
 from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.utils import secure_filename
-from decimal import Decimal
+# from decimal import Decimal
 
 
 from app.common.decorators import login_required

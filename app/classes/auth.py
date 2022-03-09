@@ -78,6 +78,7 @@ class Auth_User(UserMixin, db.Model):
     uuid = db.Column(db.String(32), default=get_uuid)
     api_key = db.Column(db.TEXT)
     username = db.Column(db.VARCHAR(40))
+    display_name = db.Column(db.VARCHAR(140))
     password_hash = db.Column(db.TEXT)
     member_since = db.Column(db.TIMESTAMP(), default=datetime.utcnow())
     email = db.Column(db.VARCHAR(350))
@@ -109,7 +110,7 @@ class Auth_User(UserMixin, db.Model):
                  email,
                  wallet_pin,
                  profileimage,
-                 stringuserdir,
+
                  bio,
                  api_key,
                  country,
@@ -137,7 +138,7 @@ class Auth_User(UserMixin, db.Model):
         self.email = email
         self.wallet_pin = wallet_pin
         self.profileimage = profileimage
-        self.stringuserdir = stringuserdir
+
         self.bio = bio
         self.api_key= api_key
         self.country = country

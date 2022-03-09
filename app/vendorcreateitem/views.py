@@ -90,7 +90,8 @@ def create_item():
                 string_node_id=1,
                 vendor_name=current_user.username,
                 vendor_id=current_user.id,
-
+                vendor_uuid=current_user.uuid,
+                vendor_display_name=current_user.display_name,
                 item_title='',
                 item_count=0,
                 item_description='',
@@ -113,11 +114,18 @@ def create_item():
                 shipping_day_2=0,
                 shipping_price_3=0,
                 shipping_day_3=0,
-                image_one='',
-                image_two='',
-                image_three='',
-                image_four='',
-                image_five='',
+                image_one_url=None,
+                image_two_url=None,
+                image_three_url=None,
+                image_four_url=None,
+
+
+                image_one_server=None,
+                image_two_server=None,
+                image_three_server=None,
+                image_four_server=None,
+                image_five_server=None,
+
                 origin_country=current_user.country,
                 destination_country_one=0,
                 destination_country_two=0,
@@ -310,11 +318,13 @@ def create_item_info(uuid):
 
             item_description = request.json["item_description"]
             # create image of item in database
-
             
             the_item.created=now,
+
             the_item.vendor_name=current_user.username,
             the_item.vendor_id=current_user.id,
+            the_item.vendor_uuid=current_user.uuid,
+            the_item.vendor_display_name=current_user.display_name,
 
             the_item.item_title=title,
             the_item.item_count=item_count,
@@ -338,7 +348,6 @@ def create_item_info(uuid):
             the_item.shipping_day_2=shipping_2_days,
             the_item.shipping_price_3=shipping_3_price,
             the_item.shipping_day_3=shipping_3_days,
-
     
             the_item.destination_country_one=shipping_to_country_one,
             the_item.destination_country_two=shipping_to_country_two,
@@ -346,12 +355,10 @@ def create_item_info(uuid):
             the_item.destination_country_four=shipping_to_country_four,
             the_item.destination_country_five=shipping_to_country_five,
 
-
-
             getimagesubfolder = itemlocation(x=the_item.id)
             directoryifitemlisting = os.path.join(UPLOADED_FILES_DEST_ITEM, getimagesubfolder, (str(the_item.uuid)))
-          
 
+            mkdir_p(directoryifitemlisting)
             # add image to database
             db.session.add(theitem)
             db.session.commit()
@@ -362,7 +369,6 @@ def create_item_info(uuid):
 
 
 @vendorcreateitem.route('/create-item-images/<string:uuid>', methods=['POST', 'OPTIONS'])
-
 def create_item_images(uuid):
     """
     Creates the Vendor Item
@@ -370,11 +376,9 @@ def create_item_images(uuid):
     # next, try to login using Basic Auth
   
     api_key_auth = request.headers.get('Authorization')
-    print(f"API KEY AUTH IS {api_key_auth}")
     if api_key_auth:
         api_key = api_key_auth.replace('bearer ', '', 1)
         current_user = Auth_User.query.filter_by(api_key=api_key).first()
-        print(f"Current User is {current_user.id}")
         see_if_user_allowed = Item_MarketItem.query.filter(Item_MarketItem.uuid==uuid, Item_MarketItem.vendor_id == current_user.id).first() is not None
         if see_if_user_allowed:
             item = Item_MarketItem.query\
@@ -385,40 +389,32 @@ def create_item_images(uuid):
             item.string_node_id = getimagesubfolder
             # directory of image
             directoryifitemlisting = os.path.join(UPLOADED_FILES_DEST_ITEM, getimagesubfolder, (str(item.uuid)))
-            
+            # create the image
             mkdir_p(directoryifitemlisting)
-            print(request.files)
+
             try:
                 image_main = request.files['main_image']
-                print(f"Image main is {image_main}")
-               
                 image1(formdata=image_main, item=item, directoryifitemlisting=directoryifitemlisting)
-                print("Made it")
             except Exception as e: 
                 pass
 
             try:
                 image_two = request.files['image_two']
-                if image_two.filename:
-                    image2(formdata=image_two, item=item, directoryifitemlisting=directoryifitemlisting)
+                image2(formdata=image_two, item=item, directoryifitemlisting=directoryifitemlisting)
             except Exception as e: 
                 pass
 
             try:    
                 image_three = request.files['image_three']
-                if image_three.filename:
-                    image3(formdata=image_three, item=item, directoryifitemlisting=directoryifitemlisting)
+                image3(formdata=image_three, item=item, directoryifitemlisting=directoryifitemlisting)
             except Exception as e: 
                 pass
         
             try:
                 image_four = request.files['image_four']
-                if image_four.filename:
-                    image4(formdata=image_four,  item=item,  directoryifitemlisting=directoryifitemlisting)
+                image4(formdata=image_four,  item=item,  directoryifitemlisting=directoryifitemlisting)
             except Exception as e: 
                 pass
-
-        
 
             db.session.add(item)
             db.session.commit()
@@ -428,3 +424,74 @@ def create_item_images(uuid):
             return jsonify({"error": 'no_api_key'})
     else:
         return jsonify({"error": 'no_api_key'})
+
+
+
+@vendorcreateitem.route('/delete-image/<string:uuid>/<string:imagename>', methods=['DELETE'])
+@login_required
+def delete_item_images(uuid, imagename):
+    """
+    gets specific id and image, it will delete on the server accordingly
+    :param id:
+    :param img:
+    :return:
+    """
+    item = db.session.query(Item_MarketItem).filter_by(uuid=uuid).first()
+    if item:
+        if item.vendor_id == current_user.id:
+            # get folder for item id
+            specific_folder = str(item.uuid)
+            # get node location
+            getitemlocation = itemlocation(x=item.id)
+            # get path of item on folder
+            pathtofile = os.path.join(UPLOADED_FILES_DEST_ITEM, getitemlocation, specific_folder, imagename)
+
+            ext_1 = '_225x.jpg'
+            ext_2 = '_500x.jpg'
+            file0 = pathtofile + ".jpg"
+            file1 = pathtofile + ext_1
+            file2 = pathtofile + ext_2
+
+            if len(imagename) > 20:
+                if item.image_one_server == imagename:
+                    os.remove(file0)
+                    os.remove(file1)
+                    os.remove(file2)
+                    item.image_one_server = None
+                    item.image_one_url = None
+                    db.session.add(item)
+                    db.session.commit()
+                if item.image_two_server == imagename:
+                    os.remove(file0)
+                    os.remove(file1)
+                    os.remove(file2)
+                    item.image_two_server = None
+                    item.image_two_url = None
+                    db.session.add(item)
+                    db.session.commit()
+                if item.image_three_server == imagename:
+                    os.remove(file0)
+                    os.remove(file1)
+                    os.remove(file2)
+                    item.image_three_server = None
+                    item.image_three_url = None
+                    db.session.add(item)
+                    db.session.commit()
+                if item.image_four_server == imagename:
+                    os.remove(file0)
+                    os.remove(file1)
+                    os.remove(file2)
+                    item.image_four_server = None
+                    item.image_four_url = None
+                    db.session.add(item)
+                    db.session.commit()
+                
+                 
+                return jsonify({"status": 'Image Deleted'})
+            else:
+                return jsonify({"error": 'No Images match description'})
+        else:
+             return jsonify({"error": 'Not Authorized'})
+    else:
+        return jsonify({"error": 'Large Error'})
+

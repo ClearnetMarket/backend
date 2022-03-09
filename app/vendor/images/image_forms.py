@@ -117,9 +117,8 @@ def image1(formdata, item, directoryifitemlisting):
     id_pic1 = id_generator_picture1()
     # if the form has an image
     if formdata:
-        deleteimg_noredirect(id=item.id, img=item.image_one)
+        deleteimg_noredirect(id=item.id, img=item.image_one_server)
         filename = secure_filename(formdata.filename)
-        print(f" filename is {filename}")
         # saves it to location
         imagepath = os.path.join(directoryifitemlisting, filename)
         formdata.save(imagepath)
@@ -135,24 +134,25 @@ def image1(formdata, item, directoryifitemlisting):
         os.rename(filenamenewfull, newfileNameDestination)
 
         if len(formdata.filename) > 2:
-            item.image_one = id_pic1
+            item.image_one_server = id_pic1
+            item.image_one_url = 'http://www.clearnetmarket.com/item/'+ item.uuid + '/' + id_pic1 + "_250x.jpg"
             db.session.add(item)
             imagespider(base_path=directoryifitemlisting)
         else:
-            item.image_one = "0"
+            item.image_one_server = None
     else:
         # nothing no changes
-        if len(item.image_one) > 5:
+        if len(item.image_one_server) > 5:
             pass
         else:
             # no image change to 0
-            item.image_one = "0"
+            item.image_one_server = None
 
 
 def image2(formdata, item, directoryifitemlisting):
     id_pic2 = id_generator_picture2()
     if formdata:
-        deleteimg_noredirect(id=item.id, img=item.image_two)
+        deleteimg_noredirect(id=item.id, img=item.image_two_server)
         filename = secure_filename(formdata.filename)
         # makes directory (generic location + auction number id as folder)
         # saves it to location
@@ -170,23 +170,24 @@ def image2(formdata, item, directoryifitemlisting):
         # renames file
         os.rename(filenamenewfull, newfileNameDestination2)
         if len(formdata.filename) > 2:
-            item.image_two = id_pic2
+            item.image_two_server = id_pic2
+            item.image_two_url = 'http://www.clearnetmarket.com/item/'+ item.uuid + '/' + id_pic2 + "_250x.jpg"
             db.session.add(item)
             imagespider(base_path=directoryifitemlisting)
         else:
-            item.image_two = "0"
+            item.image_two_server = None
     else:
         if item.image_two:
-            if len(item.image_two) > 5:
+            if len(item.image_two_server) > 5:
                 pass
         else:
-            item.image_two = "0"
+            item.image_two_server = None
 
 
 def image3(formdata, item, directoryifitemlisting):
     id_pic3 = id_generator_picture3()
     if formdata:
-        deleteimg_noredirect(id=item.id, img=item.image_three)
+        deleteimg_noredirect(id=item.id, img=item.image_three_server)
         filename = secure_filename(formdata.filename)
         # makes directory (generic location + auction number id as folder)
         # saves it to location
@@ -206,24 +207,24 @@ def image3(formdata, item, directoryifitemlisting):
         os.rename(filenamenewfull, newfileNameDestination)
         if len(formdata.filename) > 5:
             # add profile to db
-            item.image_three = id_pic3
+            item.image_three_server = id_pic3
+            item.image_three_url = 'http://www.clearnetmarket.com/item/'+ item.uuid + '/' + id_pic3 + "_250x.jpg"
             db.session.add(item)
             imagespider(base_path=directoryifitemlisting)
         else:
-            item.image_three = "0"
-
+            item.image_three_server = None
     else:
-        if item.image_three is not None:
-            if len(item.image_three) > 5:
+        if item.image_three_server is not None:
+            if len(item.image_three_server) > 5:
                 pass
         else:
-            item.image_three = "0"
+            item.image_three_server = None
 
 
 def image4(formdata, item, directoryifitemlisting):
     id_pic4 = id_generator_picture4()
     if formdata:
-        deleteimg_noredirect(id=item.id, img=item.image_four)
+        deleteimg_noredirect(id=item.id, img=item.image_four_server)
         filename = secure_filename(formdata.filename)
         # makes directory (generic location + auction number id as folder)
         # saves it to location
@@ -243,23 +244,24 @@ def image4(formdata, item, directoryifitemlisting):
         if len(formdata.filename) > 2:
 
             # add profile to db
-            item.image_four = id_pic4
+            item.image_four_server = id_pic4
+            item.image_four_url = 'http://www.clearnetmarket.com/item/'+ item.uuid + '/' + id_pic4 + "_250x.jpg"
             db.session.add(item)
             imagespider(base_path=directoryifitemlisting)
         else:
-            item.image_four = "0"
+            item.image_four_server = None
     else:
-        if item.image_four:
-            if len(item.image_four) > 5:
+        if item.image_four_server:
+            if len(item.image_four_server) > 5:
                 pass
         else:
-            item.image_four = "0"
+            item.image_four_server = None
 
 
 def image5(formdata, item, directoryifitemlisting):
     id_pic5 = id_generator_picture5()
     if formdata:
-        deleteimg_noredirect(id=item.id, img=item.image_five)
+        deleteimg_noredirect(id=item.id, img=item.image_five_server)
         filename = secure_filename(formdata.filename)
         # makes directory (generic location + auction number id as folder)
         # saves it to location
@@ -279,14 +281,15 @@ def image5(formdata, item, directoryifitemlisting):
         if len(formdata.filename) > 2:
 
             # add profile to db
-            item.image_five = id_pic5
+            item.image_five_server = id_pic5
+            item.image_five_url = 'http://www.clearnetmarket.com/item/'+ item.uuid + '/' + id_pic5 + "_250x.jpg"
             db.session.add(item)
             imagespider(base_path=directoryifitemlisting)
         else:
-            item.image_five = "0"
+            item.image_five_server = "0"
     else:
-        if item.image_five:
-            if len(item.image_five) > 5:
+        if item.image_five_server:
+            if len(item.image_five_server) > 5:
                 pass
         else:
-            item.image_five = "0"
+            item.image_five_server = "0"
