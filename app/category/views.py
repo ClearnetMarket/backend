@@ -17,7 +17,7 @@ def get_categories_sidebar():
 
         get_cats = db.session\
             .query(Category_Categories)\
-            .filter(Category_Categories.id != 1000, Category_Categories.id != 0)\
+            .filter(Category_Categories.value != 1000, Category_Categories.value != 0)\
             .order_by(Category_Categories.name.asc())\
             .all()
         cats_schema = Category_Categories_Schema(many=True)

@@ -43,8 +43,9 @@ from uuid import uuid4
 @auth.route("/whoami", methods=["GET"])
 @login_required
 def check_session():
-
+   
     api_key = request.headers.get('Authorization')
+
     if api_key:
         api_key = api_key.replace('bearer ', '', 1)
         user_exists = Auth_User.query.filter(Auth_User.api_key==api_key).first() is not None
@@ -84,44 +85,46 @@ def logout():
 
 @auth.route("/login", methods=["POST"])
 def login():
+    if request.method == "POST":
+        print("here")
+        username = request.json["username"]
+        password = request.json["password"]
+        user = Auth_User.query.filter_by(username=username).first() is not None
 
-    username = request.json["username"]
-    password = request.json["password"]
-    user = Auth_User.query.filter_by(username=username).first() is not None
+        if not user:
+            return jsonify({"error": "Unauthorized"}), 401
+        user = Auth_User.query.filter_by(username=username).first()
+        if not bcrypt.check_password_hash(user.password_hash, password):
+            current_fails = int(user.fails)
+            new_fails = current_fails + 1
+            user.fails = new_fails
+            db.session.add(user)
+            db.session.commit()
+            return jsonify({"error": "Unauthorized"}), 401
 
-    if not user:
-        return jsonify({"error": "Unauthorized"}), 401
-    user = Auth_User.query.filter_by(username=username).first()
-    if not bcrypt.check_password_hash(user.password_hash, password):
-        current_fails = int(user.fails)
-        new_fails = current_fails + 1
-        user.fails = new_fails
+        user.locked = 0
+        user.fails = 0
         db.session.add(user)
         db.session.commit()
-        return jsonify({"error": "Unauthorized"}), 401
-
-    user.locked = 0
-    user.fails = 0
-    db.session.add(user)
-    db.session.commit()
-   
-    login_user(user)
-    current_user.is_authenticated()
-    current_user.is_active()
-    return jsonify({
-        "login": True,
-        'user': {'user_id': user.uuid,
-                'user_name': user.username,
-                'user_email': user.email,
-                'profile_image': user.profileimage,
-                'country': user.country,
-                'currency': user.currency,
-                'admin_role': user.admin_role,
-                'token': user.api_key
-         },
-         'token': user.api_key
-    }), 200
-
+    
+        login_user(user)
+        current_user.is_authenticated()
+        current_user.is_active()
+        return jsonify({
+            "login": True,
+            'user': {'user_id': user.uuid,
+                    'user_name': user.username,
+                    'user_email': user.email,
+                    'profile_image': user.profileimage,
+                    'country': user.country,
+                    'currency': user.currency,
+                    'admin_role': user.admin_role,
+                    'token': user.api_key
+            },
+            'token': user.api_key
+        }), 200
+    else:
+        print("bummer")
 
 @auth.route("/register", methods=["POST"])
 def register_user():

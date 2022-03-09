@@ -1,5 +1,5 @@
 # coding=utf-8
-from flask import Flask, jsonify, json
+from flask import Flask, jsonify, json, request
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
@@ -63,7 +63,7 @@ app.config['SESSION_PERMANENT'] = ApplicationConfig.SESSION_PERMANENT
 app.config['SESSION_USE_SIGNER'] = ApplicationConfig.SESSION_USE_SIGNER
 app.config['SESSION_REDIS'] = ApplicationConfig.SESSION_REDIS
 
-
+app.config['ORIGIN_URL'] = ApplicationConfig.ORIGIN_URL
 
 session.configure(bind=ApplicationConfig.SQLALCHEMY_DATABASE_URI_0)
 db = SQLAlchemy(app)
@@ -95,7 +95,7 @@ def load_user_from_request(request):
 
     # next, try to login using Basic Auth
     api_key_auth = request.headers.get('Authorization')
-
+    print(api_key_auth)
     if api_key_auth:
         api_key = api_key_auth.replace('bearer ', '', 1)
         user = Auth_User.query.filter_by(api_key=api_key).first()
@@ -104,11 +104,10 @@ def load_user_from_request(request):
 
     return None
 
-
 api_main = {
-    "origins": ['http://localhost:8080'],
+    "origins": [ApplicationConfig.ORIGIN_URL],
     "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
-    "allow_headers": ['Authorization, authorization, Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers']
+    "allow_headers": ['Authorization', 'authorization', 'Content-Type', 'Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers']
 }
 cors = CORS(app,  supports_credentials=True, resources={r'/*': api_main})
 

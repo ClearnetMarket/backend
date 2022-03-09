@@ -282,14 +282,14 @@ class Query_Currency(db.Model):
     __bind_key__ = 'clearnet'
     __table_args__ = {"schema": "public"}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    code = db.Column(db.Integer)
+    value = db.Column(db.Integer)
     symbol = db.Column(db.VARCHAR(140))
 
 class Query_Currency_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Query_Currency
     id = ma.auto_field()
-    code = ma.auto_field()
+    value = ma.auto_field()
     symbol = ma.auto_field()
 
 class Query_Country(db.Model):
@@ -299,7 +299,7 @@ class Query_Country(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     ab = db.Column(db.VARCHAR(10))
     name = db.Column(db.VARCHAR(140))
-    numericcode = db.Column(db.INTEGER)
+    value = db.Column(db.INTEGER)
 
 class Query_Country_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -307,4 +307,4 @@ class Query_Country_Schema(ma.SQLAlchemyAutoSchema):
     id = ma.auto_field()
     ab = ma.auto_field()
     name = ma.auto_field()
-    numericcode = ma.auto_field()
+    value = ma.auto_field()

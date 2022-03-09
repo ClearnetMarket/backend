@@ -23,9 +23,9 @@ def userdata_country_currency():
             .filter(Auth_User.id == current_user.id)\
             .first()
 
-        currency = Query_Currency.query.filter(userdata.currency==Query_Currency.code).first()
+        currency = Query_Currency.query.filter(userdata.currency==Query_Currency.value).first()
         currency_name = currency.symbol
-        country = Query_Country.query.filter(userdata.country==Query_Country.numericcode).first()
+        country = Query_Country.query.filter(userdata.country==Query_Country.value).first()
         countryname =  country.name
         return jsonify(
             {'country': countryname,
@@ -72,7 +72,7 @@ def userdata_update():
         except:
             new_currency_id = None
         try:
-            new_country_id = request.json["country"]['numericcode']
+            new_country_id = request.json["country"]['value']
         except:
             new_country_id = None
 
