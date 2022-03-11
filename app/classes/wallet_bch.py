@@ -18,7 +18,7 @@ class Bch_Wallet(db.Model):
     locked = db.Column(db.INTEGER)
     transactioncount = db.Column(db.INTEGER)
     unconfirmed = db.Column(db.DECIMAL(20, 8))
-    shard = db.Column(db.INTEGER)
+  
 
 class Bch_Wallet_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -35,7 +35,7 @@ class Bch_Wallet_Schema(ma.SQLAlchemyAutoSchema):
     locked = ma.auto_field()
     transactioncount = ma.auto_field()
     unconfirmed = ma.auto_field()
-    shard = ma.auto_field()
+   
 
 
 class Bch_Prices(db.Model):
@@ -121,7 +121,6 @@ class Bch_WalletAddresses(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     bchaddress = db.Column(db.VARCHAR(500))
     status = db.Column(db.INTEGER)
-    shard = db.Column(db.INTEGER)
 
 
 class Bch_WalletFee(db.Model):

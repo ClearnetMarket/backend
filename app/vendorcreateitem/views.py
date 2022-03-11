@@ -1,22 +1,19 @@
 
-from datetime import date
 from flask import request, jsonify
 from flask_login import current_user
 from app.vendorcreateitem import vendorcreateitem
 from app import UPLOADED_FILES_DEST_ITEM
-from werkzeug.datastructures import MultiDict
 import os
+from datetime import datetime
+import shutil
 from app.common.decorators import login_required
 from app.common.functions import mkdir_p,itemlocation
-
-    
 # models
 from app.classes.item import Item_MarketItem
 from app.classes.auth import Auth_User
-from app.classes.wallet_bch import *
 from app.classes.models import *
-from app.classes.category import *
-from app.vendor.images.image_forms import image1, image2, image3, image4, image5
+from app.classes.category import Category_Categories, Category_Categories_Schema
+from app.vendor.images.image_forms import image1, image2, image3, image4
 
 
 @vendorcreateitem.route('/query/country', methods=['GET'])
@@ -80,14 +77,16 @@ def vendorcreateitem_get_item_category_list():
 def create_item():
     if request.method == 'GET':
         now = datetime.utcnow()
-        see_if_empty_item = Item_MarketItem.query.filter(Item_MarketItem.vendor_id == current_user.id,Item_MarketItem.item_title =='').first()
+        see_if_empty_item = Item_MarketItem.query\
+        .filter(Item_MarketItem.vendor_id == current_user.id,Item_MarketItem.item_title =='')\
+        .first()
         if see_if_empty_item:
             return jsonify({"status": 'success',
                             'item_id': see_if_empty_item.uuid})
         else:
             createnewitemtemp = Item_MarketItem(            
                 created = now,
-                string_node_id=1,
+                node=1,
                 vendor_name=current_user.username,
                 vendor_id=current_user.id,
                 vendor_uuid=current_user.uuid,
@@ -124,7 +123,7 @@ def create_item():
                 image_two_server=None,
                 image_three_server=None,
                 image_four_server=None,
-                image_five_server=None,
+           
 
                 origin_country=current_user.country,
                 destination_country_one=0,
@@ -155,53 +154,51 @@ def create_item_info(uuid):
     Creates the Vendor Item
     """
 
-    print(request.data)
-    print(request.files)
+
+    
     api_key_auth = request.headers.get('authorization')
     if api_key_auth:
         api_key = api_key_auth.replace('bearer ', '', 1)
         current_user = Auth_User.query.filter_by(api_key=api_key).first()
-        see_if_user_allowed = Item_MarketItem.query.filter(Item_MarketItem.uuid==uuid, Item_MarketItem.vendor_id == current_user.id).first() is not None
+        see_if_user_allowed = Item_MarketItem.query\
+            .filter(Item_MarketItem.uuid==uuid, Item_MarketItem.vendor_id == current_user.id)\
+            .first() is not None
         if see_if_user_allowed:
-
-      
-            if uuid == request.json["item_id"]:
-                print("matches")
-            the_item = Item_MarketItem.query.filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id).first()
             now = datetime.utcnow()
     
-            title = request.json["title"]
+      # Shipping three toggle
 
             # accept bitcoin
-            if request.json["digital_currency_1"] == '':
+            digital_currency_1 = request.json["digital_currency_1"]
+            if digital_currency_1 == '':
                 digital_currency_1 = False
-            else:
-                digital_currency_1 = request.json["digital_currency_1"]
-                if digital_currency_1 is True:
-                    digital_currency_1 = True
-                else:
-                    digital_currency_1 = False
-
+        
             # accept bitcoin cash
-            if request.json["digital_currency_2"] == '':
-                digital_currency_2 = False
-            else:
-                digital_currency_2 = request.json["digital_currency_2"]
-                if digital_currency_2 is True:
-                    digital_currency_2 = True
-                else:
-                    digital_currency_2 = False
-                    
+            digital_currency_2 = request.json["digital_currency_2"]
+            if digital_currency_2 == '':
+                digital_currency_2 = False   
+   
             # accept monero
-            if request.json["digital_currency_3"] == '':
+            digital_currency_3 =  request.json["digital_currency_3"] 
+            if digital_currency_3 == '':
                 digital_currency_3 = False
-            else:   
-                digital_currency_3 = request.json["digital_currency_3"]
-                if digital_currency_3 is True:
-                    digital_currency_3 = True
-                else:
-                    digital_currency_3 = False
+            # Free shipping toggle
+            free_shipping = request.json["free_shipping"]
+         
+            if free_shipping == '':
+                free_shipping = False
+                    
+            shipping_2= request.json["shipping_2"]
+            if shipping_2 == '':
+                shipping_2 = False
 
+            title = request.json["title"]
+
+            shipping_3= request.json["shipping_3"]
+            if shipping_3 == '':
+                shipping_3 = False
+         
+            title = request.json["title"]
             # Item Condition Query
             if request.json["item_condition"] == '':
                 return jsonify({ "status": 'error'})
@@ -215,7 +212,6 @@ def create_item_info(uuid):
             if item_count > 0:
                 item_count=int(item_count)
             else:
-                print("12345")
                 return jsonify({ "status": 'error'})
         
             # Category
@@ -228,7 +224,9 @@ def create_item_info(uuid):
 
                 category = request.json["category_id_0"]
                 category = category['value']
-                get_category_query = Category_Categories.query.filter(Category_Categories.value == category).first_or_404()
+                get_category_query = Category_Categories.query\
+                .filter(Category_Categories.value == category)\
+                .first_or_404()
                 category_value = get_category_query.value
                 category_name = get_category_query.name
 
@@ -238,24 +236,12 @@ def create_item_info(uuid):
             # Keywords
             keywords = request.json["keywords"]
     
-            # Free shipping toggle
-            if request.json["free_shipping"] == '':
-                free_shipping = False
-            else:
-                free_shipping = request.json["free_shipping"]
-                if free_shipping is True:
-                    free_shipping = True
-                else:
-                    free_shipping = False
-
+          
             # Free shipping days
             free_shipping_days = request.json["free_shipping_days"]
+            if free_shipping_days == '':
+                free_shipping_days = 0
 
-            # Shipping two toggle
-            if request.json["shipping_2"] == '':
-                shipping_2 = False
-            else:
-                shipping_2 = request.json["shipping_2"]
 
             # Shipping two days
             shipping_2_days = request.json["shipping_2_days"]
@@ -265,12 +251,8 @@ def create_item_info(uuid):
             shipping_2_price = request.json["shipping_2_price"]
             if shipping_2_price == '':
                 shipping_2_price = 0
-            # Shipping three toggle
-            if request.json["shipping_3"] == '':
-                shipping_3 = False
-            else:
-                shipping_3 = request.json["shipping_3"] 
 
+          
             # Shipping three days
             shipping_3_days = request.json["shipping_3_days"]
             if shipping_3_days == '':
@@ -318,51 +300,58 @@ def create_item_info(uuid):
 
             item_description = request.json["item_description"]
             # create image of item in database
-            
-            the_item.created=now,
+            item = Item_MarketItem.query\
+                .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id)\
+                .first()
 
-            the_item.vendor_name=current_user.username,
-            the_item.vendor_id=current_user.id,
-            the_item.vendor_uuid=current_user.uuid,
-            the_item.vendor_display_name=current_user.display_name,
+            item.created=now
+            item.vendor_name=current_user.username
+            item.vendor_id=current_user.id
+            item.vendor_uuid=current_user.uuid
+            item.vendor_display_name=current_user.display_name
 
-            the_item.item_title=title,
-            the_item.item_count=item_count,
-            the_item.item_description=item_description,
-            the_item.item_condition=item_condition,
-            the_item.keywords=keywords,
-            the_item.category_name_0=category_name,
-            the_item.category_id_0=category_value,
+            item.item_title=title
+            item.item_count=item_count
+            item.item_description=item_description
+            item.item_condition=item_condition
+            item.keywords=keywords
+            item.category_name_0=category_name
+            item.category_id_0=category_value
 
-            the_item.price=price,
-            the_item.currency=current_user.currency,
-            the_item.digital_currency_1=digital_currency_1,
-            the_item.digital_currency_2=digital_currency_2,
-            the_item.digital_currency_3=digital_currency_3,
+            item.price=price
+            item.currency=current_user.currency
 
-            the_item.shipping_free=free_shipping,
-            the_item.shipping_day_0=free_shipping_days,
-            the_item.shipping_two=shipping_2,
-            the_item.shipping_three=shipping_3,
-            the_item.shipping_price_2=shipping_2_price,
-            the_item.shipping_day_2=shipping_2_days,
-            the_item.shipping_price_3=shipping_3_price,
-            the_item.shipping_day_3=shipping_3_days,
-    
-            the_item.destination_country_one=shipping_to_country_one,
-            the_item.destination_country_two=shipping_to_country_two,
-            the_item.destination_country_three=shipping_to_country_three,
-            the_item.destination_country_four=shipping_to_country_four,
-            the_item.destination_country_five=shipping_to_country_five,
+            item.digital_currency_1=digital_currency_1
+            item.digital_currency_2=digital_currency_2
+            item.digital_currency_3=digital_currency_3
 
-            getimagesubfolder = itemlocation(x=the_item.id)
-            directoryifitemlisting = os.path.join(UPLOADED_FILES_DEST_ITEM, getimagesubfolder, (str(the_item.uuid)))
+            item.shipping_free=free_shipping
+            item.shipping_two=shipping_2
+            item.shipping_three=shipping_3
 
-            mkdir_p(directoryifitemlisting)
-            # add image to database
-            db.session.add(theitem)
+
+            item.shipping_day_0=free_shipping_days
+
+      
+            item.shipping_price_2=shipping_2_price
+            item.shipping_day_2=shipping_2_days
+            item.shipping_price_3=shipping_3_price
+            item.shipping_day_3=shipping_3_days
+
+            item.destination_country_one=shipping_to_country_one
+            item.destination_country_two=shipping_to_country_two
+            item.destination_country_three=shipping_to_country_three
+            item.destination_country_four=shipping_to_country_four
+            item.destination_country_five=shipping_to_country_five
+
+ 
+            # add  to database
+            db.session.add(item)
             db.session.commit()
 
+            getimagesubfolder = itemlocation(x=item.id)
+            directoryifitemlisting = os.path.join(UPLOADED_FILES_DEST_ITEM, getimagesubfolder, (str(item.uuid)))
+            mkdir_p(directoryifitemlisting)
             return jsonify({"status": 'success'}), 200
         else:
             return jsonify({"error": 'Not Logged In'}), 401
@@ -386,7 +375,7 @@ def create_item_images(uuid):
                 .first()
             # node location
             getimagesubfolder = itemlocation(x=item.id)
-            item.string_node_id = getimagesubfolder
+            item.node = getimagesubfolder
             # directory of image
             directoryifitemlisting = os.path.join(UPLOADED_FILES_DEST_ITEM, getimagesubfolder, (str(item.uuid)))
             # create the image

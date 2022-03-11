@@ -37,10 +37,8 @@ def btc_wallet_status(user_id):
                 and userswallet.address2status == 0 \
                 and userswallet.address2status == 0:
                 btc_create_wallet(user_id=user_id)
-                if getuser.shard is None:
-                    getuser.shard = 1
-                    db.session.add(getuser)
 
+            
         except Exception as e:
             userswallet.address1 = ''
             userswallet.address1status = 0
@@ -62,7 +60,7 @@ def btc_create_wallet(user_id):
     :param user_id:
     :return:
     """
-    current_shard = 1
+
     userswallet = db.session\
                     .query(Btc_Wallet)\
                     .filter(Btc_Wallet.user_id == user_id)\
@@ -72,8 +70,7 @@ def btc_create_wallet(user_id):
         # find a new clean address
         getnewaddress = db.session\
             .query(Btc_WalletAddresses) \
-            .filter(Btc_WalletAddresses.status == 0, 
-                    Btc_WalletAddresses.shard == userswallet.shard) \
+            .filter(Btc_WalletAddresses.status == 0) \
             .first()
 
         # sets users wallet with this
@@ -82,9 +79,7 @@ def btc_create_wallet(user_id):
         db.session.add(userswallet)
 
         # update address in listing as used
-        getnewaddress.shard = current_shard
         getnewaddress.user_id = user_id
-        getnewaddress.status = current_shard
         db.session.add(getnewaddress)
         db.session.flush()
     else:
@@ -100,7 +95,6 @@ def btc_create_wallet(user_id):
                                         address3='',
                                         address3status=0,
                                         locked=0,
-                                        shard=current_shard,
                                         transactioncount=0
                                         )
         db.session.add(btc_walletcreate)
@@ -123,15 +117,13 @@ def btc_create_wallet(user_id):
 
         getnewaddress = db.session \
             .query(Btc_WalletAddresses) \
-            .filter(Btc_WalletAddresses.status == 0,
-                    Btc_WalletAddresses.shard == btc_walletcreate.shard) \
+            .filter(Btc_WalletAddresses.status == 0) \
             .first()
 
         btc_walletcreate.address1 = getnewaddress.btcaddress
         btc_walletcreate.address1status = 1
         db.session.add(btc_walletcreate)
 
-        getnewaddress.shard = current_shard
         getnewaddress.user_id = user_id
         getnewaddress.status = 1
         db.session.add(getnewaddress)
@@ -170,7 +162,6 @@ def btc_send_coin(user_id, sendto, amount, comment):
             comment=0,
             created=timestamp,
             txtcomment=strcomment,
-            shard=userswallet.shard
         )
 
         db.session.add(wallet)
@@ -225,7 +216,6 @@ def btc_send_coin_to_escrow(amount, comment, user_id):
                                     amount=amount,
                                     user_id=user_id,
                                     comment='Sent Coin To Escrow',
-                                    shard=userswallet.shard,
                                     orderid=oid,
                                     balance=newbalance
                                     )
@@ -276,7 +266,6 @@ def btc_send_coin_to_user_as_admin(amount, comment, user_id):
                             amount=amount,
                             user_id=user_id,
                             comment=comment,
-                            shard=userswallet.shard,
                             orderid=0,
                             balance=newbalance
                             )
@@ -309,7 +298,6 @@ def btc_take_coin_to_user_as_admin(amount, comment, user_id):
                             amount=amount,
                             user_id=user_id,
                             comment=comment,
-                            shard=userswallet.shard,
                             orderid=0,
                             balance=newbalance
                             )
@@ -365,7 +353,6 @@ def btc_send_coin_for_ad(amount, user_id, comment):
                                 amount=amount,
                                 user_id=user.id,
                                 comment=commentstring,
-                                shard=user.shard_btccash,
                                 orderid=0,
                                 balance=newbalance
                                 )
@@ -425,7 +412,6 @@ def btc_send_coin_to_holdings(amount, user_id, comment):
                                 amount=amount,
                                 user_id=user.id,
                                 comment=commentstring,
-                                shard=user.shard_btccash,
                                 orderid=0,
                                 balance=newbalance
                                 )
@@ -484,7 +470,6 @@ def btc_send_coin_from_holdings(amount, user_id, comment):
                             amount=amount,
                             user_id=user.id,
                             comment=commentstring,
-                            shard=user.shard_btccash,
                             orderid=0,
                             balance=newbalance
                             )
@@ -505,7 +490,7 @@ def btc_send_coin_from_holdings(amount, user_id, comment):
     db.session.add(holdingsaccount)
 
 
-def btc_send_coin_to_clearnet(amount, comment, shard):
+def btc_send_coin_to_clearnet(amount, comment):
     """
     # TO clearnet_webapp
     # this function will move the coin from clearnets escrow to profit account
@@ -541,7 +526,6 @@ def btc_send_coin_to_clearnet(amount, comment, shard):
         amount=amount,
         user_id=1,
         comment='Sent Coin to clearnet profit',
-        shard=shard,
         orderid=oid,
         balance=0
     )
@@ -575,7 +559,6 @@ def btc_send_coin_to_user(amount, comment, user_id):
                             amount=amount,
                             user_id=user_id,
                             comment='Transaction',
-                            shard=userswallet.shard,
                             orderid=oid,
                             balance=newbalance
                             )
@@ -611,7 +594,6 @@ def btc_send_coin_to_affiliate(amount, comment, user_id):
                             amount=amount,
                             user_id=user_id,
                             comment='Transaction',
-                            shard=userswallet.shard,
                             orderid=oid,
                             balance=newbalance
                             )

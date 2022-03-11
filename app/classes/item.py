@@ -35,7 +35,7 @@ class Item_MarketItem(db.Model):
 
     uuid = db.Column(db.String(32), default=get_uuid_item)
     online = db.Column(db.INTEGER)
-    string_node_id = db.Column(db.VARCHAR(40))
+    node = db.Column(db.VARCHAR(40))
     created = db.Column(db.TIMESTAMP())
 
     vendor_name = db.Column(db.String(140))
@@ -51,7 +51,7 @@ class Item_MarketItem(db.Model):
     destination_country_two = db.Column(db.INTEGER)
     destination_country_three = db.Column(db.INTEGER)
     destination_country_four = db.Column(db.INTEGER)
-
+    destination_country_five = db.Column(db.INTEGER)
 
     item_title = db.Column(db.VARCHAR(500))
     item_count = db.Column(db.INTEGER)
@@ -61,26 +61,24 @@ class Item_MarketItem(db.Model):
 
     price = db.Column(db.DECIMAL(20, 2))
     currency = db.Column(db.INTEGER)
+
     digital_currency_1 = db.Column(db.BOOLEAN)
     digital_currency_2 = db.Column(db.BOOLEAN)
     digital_currency_3 = db.Column(db.BOOLEAN)
+    shipping_free = db.Column(db.BOOLEAN)
+    shipping_two = db.Column(db.BOOLEAN)
+    shipping_three = db.Column(db.BOOLEAN)
 
     image_one_server = db.Column(db.VARCHAR(2000))
     image_two_server = db.Column(db.VARCHAR(2000))
     image_three_server = db.Column(db.VARCHAR(2000))
     image_four_server = db.Column(db.VARCHAR(2000))
 
-
     image_one_url = db.Column(db.VARCHAR(3000))
     image_two_url = db.Column(db.VARCHAR(3000))
     image_three_url = db.Column(db.VARCHAR(3000))
     image_four_url = db.Column(db.VARCHAR(3000))
   
-
-    shipping_free = db.Column(db.BOOLEAN)
-    shipping_two = db.Column(db.BOOLEAN)
-    shipping_three = db.Column(db.BOOLEAN)
-
     shipping_info_0 = db.Column(db.VARCHAR(500))
     shipping_day_0 = db.Column(db.INTEGER)
 
@@ -108,8 +106,7 @@ class Item_MarketItem_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Item_MarketItem
             
-        fields = ('uuid', 'online', 'created', 'price', 'vendor_name',
-                     'node_id',
+        fields = ('uuid', 'online', 'created', 'price', 'vendor_name', 'node_id',
                     'origin_country','destination_country_one', 
                     'destination_country_two', 'destination_country_three',
                     'destination_country_four', 'destination_country_five',
@@ -120,8 +117,8 @@ class Item_MarketItem_Schema(ma.SQLAlchemyAutoSchema):
                     'image_one_server', 'image_two_server', 'image_three_server', 'image_four_server',
                     'shipping_free','shipping_two', 'shipping_three', 'shipping_info_0', 'shipping_day_0','shipping_info_2', 
                     'shipping_price_2', 'shipping_day_2', 'shipping_info_3', 'shipping_price_3', 'shipping_day_3', 'view_count', 
-                    'item_rating', 'review_count', 
-                    'total_sold', 
-
-
+                    'item_rating', 'review_count',  'total_sold', 
                     )
+                    
+item_schema = Item_MarketItem_Schema()
+items_schema = Item_MarketItem_Schema(many=True)

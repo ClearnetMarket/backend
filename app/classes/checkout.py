@@ -111,27 +111,23 @@ class Checkout_ShoppingCartTotal(db.Model):
                    primary_key=True,
                    autoincrement=True,
                    unique=True)
-    customer = db.Column(db.INTEGER)
+
+    customer_id = db.Column(db.INTEGER)
     # btc
-    btc_sumofitem = db.Column(db.INTEGER)
-    btcprice = db.Column(db.DECIMAL(20, 8))
-    shippingbtcprice = db.Column(db.DECIMAL(20, 8))
-    totalbtcprice = db.Column(db.DECIMAL(20, 8))
+    btc_sum_of_item = db.Column(db.INTEGER)
+    btc_price = db.Column(db.DECIMAL(20, 8))
+    btc_shipping_price = db.Column(db.DECIMAL(20, 8))
+    btc_total_price = db.Column(db.DECIMAL(20, 8))
     # bch
-    btc_cash_sumofitem = db.Column(db.INTEGER)
-    btc_cash_price = db.Column(db.DECIMAL(20, 8))
-    shipping_btc_cashprice = db.Column(db.DECIMAL(20, 8))
-    total_btc_cash_price = db.Column(db.DECIMAL(20, 8))
+    bch_sum_of_item = db.Column(db.INTEGER)
+    bch_price = db.Column(db.DECIMAL(20, 8))
+    bch_shipping_price = db.Column(db.DECIMAL(20, 8))
+    bch_total_price = db.Column(db.DECIMAL(20, 8))
     # xmr
-    xmr_sumofitem = db.Column(db.INTEGER)
-    xmrprice = db.Column(db.DECIMAL(20, 12))
-    shippingxmrprice = db.Column(db.DECIMAL(20, 12))
-    totalxmrprice = db.Column(db.DECIMAL(20, 12))
-    # affiliate stuff
-    percent_off_order = db.Column(db.DECIMAL(6, 2))
-    btc_cash_off = db.Column(db.DECIMAL(20, 8))
-    btc_off = db.Column(db.DECIMAL(20, 8))
-    xmr_off = db.Column(db.DECIMAL(20, 12))
+    xmr_sum_of_item = db.Column(db.INTEGER)
+    xmr_price = db.Column(db.DECIMAL(20, 12))
+    xmr_shipping_price = db.Column(db.DECIMAL(20, 12))
+    xmr_total_price = db.Column(db.DECIMAL(20, 12))
 
 
 class Checkout_ShoppingCartTotal_Schema(ma.SQLAlchemyAutoSchema):
@@ -139,24 +135,20 @@ class Checkout_ShoppingCartTotal_Schema(ma.SQLAlchemyAutoSchema):
         model = Checkout_ShoppingCartTotal
 
     id = ma.auto_field()
-    customer = ma.auto_field()
+    customer_id = ma.auto_field()
     # btc
-    btc_sumofitem = ma.auto_field()
-    btcprice = ma.auto_field()
-    shippingbtcprice = ma.auto_field()
-    totalbtcprice = ma.auto_field()
+    btc_sum_of_item = ma.auto_field()
+    btc_price = ma.auto_field()
+    btc_shipping_price = ma.auto_field()
+    btc_total_price = ma.auto_field()
     # bch
-    btc_cash_sumofitem = ma.auto_field()
-    btc_cash_price = ma.auto_field()
-    shipping_btc_cashprice = ma.auto_field()
-    total_btc_cash_price = ma.auto_field()
+    bch_sum_of_item = ma.auto_field()
+    bch_price = ma.auto_field()
+    bch_shipping_price = ma.auto_field()
+    bch_total_price = ma.auto_field()
     # xmr
-    xmr_sumofitem = ma.auto_field()
-    xmrprice = ma.auto_field()
-    shippingxmrprice = ma.auto_field()
-    totalxmrprice = ma.auto_field()
-    # affiliate stuff
-    percent_off_order = ma.auto_field()
-    btc_cash_off = ma.auto_field()
-    btc_off = ma.auto_field()
-    xmr_off = ma.auto_field()
+    xmr_sum_of_item = ma.auto_field()
+    xmr_price = ma.auto_field()
+    xmr_shipping_price = ma.auto_field()
+    xmr_total_price = ma.auto_field()
+

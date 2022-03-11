@@ -99,7 +99,7 @@ class Auth_User(UserMixin, db.Model):
     shopping_timer = db.Column(db.TIMESTAMP())
     shard = db.Column(db.INTEGER)
     usernode = db.Column(db.INTEGER)
-    affiliate_account = db.Column(db.INTEGER)
+
     confirmed = db.Column(db.INTEGER)
     passwordpinallowed = db.Column(db.INTEGER)
 
@@ -110,7 +110,7 @@ class Auth_User(UserMixin, db.Model):
                  email,
                  wallet_pin,
                  profileimage,
-
+                display_name,
                  bio,
                  api_key,
                  country,
@@ -128,7 +128,7 @@ class Auth_User(UserMixin, db.Model):
                  lasttraded_timer,
                  shard,
                  usernode,
-                 affiliate_account,
+           
                  confirmed,
                  passwordpinallowed,
                  ):
@@ -138,7 +138,7 @@ class Auth_User(UserMixin, db.Model):
         self.email = email
         self.wallet_pin = wallet_pin
         self.profileimage = profileimage
-
+        self.display_name = display_name
         self.bio = bio
         self.api_key= api_key
         self.country = country
@@ -156,7 +156,7 @@ class Auth_User(UserMixin, db.Model):
         self.lasttraded_timer = lasttraded_timer
         self.shard = shard
         self.usernode = usernode
-        self.affiliate_account = affiliate_account
+
         self.confirmed = confirmed
         self.passwordpinallowed = passwordpinallowed
 

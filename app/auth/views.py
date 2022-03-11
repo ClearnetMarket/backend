@@ -1,16 +1,12 @@
 from flask import request, session, jsonify
 from flask_login import current_user, logout_user, login_user, login_required
-from flask_cors import cross_origin
 from app.auth import auth
-from app import db, bcrypt, login_manager
+from app import db, bcrypt, UPLOADED_FILES_DEST_USER
 from datetime import datetime
 import os
-import base64
-import functools
+from uuid import uuid4
 from sqlalchemy.sql.expression import func
-from sqlalchemy.orm.exc import UnmappedInstanceError
 from app.common.functions import mkdir_p, userimagelocation
-
 # models
 from app.classes.models import Query_WordList,\
     Query_Country_Schema, \
@@ -18,15 +14,9 @@ from app.classes.models import Query_WordList,\
     Query_CurrencyList,\
     Query_CurrencyList_Schema
 from app.classes.item import Item_MarketItem
-from app.achs.a import newbie
 from app.classes.userdata import UserData_History
-
 from app.classes.profile import Profile_StatisticsUser
-
 from app.classes.checkout import  Checkout_ShoppingCartTotal
-from app.classes.achievements import \
-    Achievements_UserAchievements, \
-    Achievements_WhichAch
 from app.classes.auth import \
     Auth_User, \
     Auth_UserFees, \
@@ -35,9 +25,6 @@ from app.classes.auth import \
 from app.wallet_bch.wallet_bch_work import bch_create_wallet
 from app.wallet_btc.wallet_btc_work import btc_create_wallet
 from app.wallet_xmr.wallet_xmr_work import xmr_create_wallet
-from uuid import uuid4
-
-
 
 
 @auth.route("/whoami", methods=["GET"])
@@ -67,9 +54,9 @@ def check_session():
             'token': user.api_key
                 }), 200
         else:
-            return jsonify({"status": "error. user not found"}), 409
+            return jsonify({"status": "error. user not found"}), 401
     else:
-        return jsonify({"status": "error"}), 409
+        return jsonify({"status": "error"}), 401
 
 
 @auth.route("/logout", methods=["POST"])
@@ -130,13 +117,17 @@ def login():
 def register_user():
 
     now = datetime.utcnow()
-    shard = 1
+
     
     username = request.json["username"]
     email = request.json["email"]
     password = request.json["password"]
-    currency = request.json["currency"]
-    country = request.json["country"]
+    currency = request.json["currency"]['value']
+
+    country = request.json["country"]['value']
+
+    display_username = request.json["display_username"]
+    pin = request.json["pin"]
 
     part_one_code =  uuid4().hex
     part_two_code = uuid4().hex
@@ -154,18 +145,18 @@ def register_user():
 
     new_user = Auth_User(
             username=username,
+            display_name=display_username,
             email=email,
             password_hash=hashed_password,
             member_since=now,
-            wallet_pin='',
+            wallet_pin=pin,
             profileimage='user-unknown.png',
-            stringuserdir=0,
             bio='',
             api_key=key,
             country=country,
             currency=currency,
             vendor_account=0,
-            selling_from=0,
+            selling_from=country,
             last_seen=now,
             admin=0,
             admin_role=0,
@@ -175,15 +166,13 @@ def register_user():
             vacation=0,
             shopping_timer=now,
             lasttraded_timer=now,
-            shard=shard,
+            shard=1,
             usernode=0,
-            affiliate_account=0,
             confirmed=0,
             passwordpinallowed=0
              )
 
     db.session.add(new_user)
-    db.session.commit()
     db.session.flush()
 
     # create user stats
@@ -206,90 +195,73 @@ def register_user():
         totalusdspent=0,
     )
 
-    # # create which achs they pick
-    # achselect = Achievements_WhichAch(
-    #     user_id=new_user.id,
-    #     ach1='0',
-    #     ach2='0',
-    #     ach3='0',
-    #     ach4='0',
-    #     ach5='0',
-    #     ach1_cat='0',
-    #     ach2_cat='0',
-    #     ach3_cat='0',
-    #     ach4_cat='0',
-    #     ach5_cat='0',
-    # )
+    # create browser history
+    browserhistory = UserData_History(
+        user_id=new_user.id,
+        recentcat1=1,
+        recentcat1date=now,
+        recentcat2=2,
+        recentcat2date=now,
+        recentcat3=3,
+        recentcat3date=now,
+        recentcat4=4,
+        recentcat4date=now,
+        recentcat5=7,
+        recentcat5date=now,
+    )
 
-    # # create users achs
-    # ach = Achievements_UserAchievements(
-    #     user_id=new_user.id,
-    #     username=new_user.username,
-    #     experiencepoints=0,
-    #     level=1,
-    # )
+    # create checkout_shopping_cart for user
+    newcart = Checkout_ShoppingCartTotal(
+        customer_id = new_user.id,
+        # btc
+        btc_sum_of_item=0,
+        btc_price=0,
+        btc_shipping_price=0,
+        btc_total_price=0,
+        # bch
+        bch_sum_of_item=0,
+        bch_price=0,
+        bch_shipping_price=0,
+        bch_total_price=0,
+        # xmr
+        xmr_sum_of_item=0,
+        xmr_price=0,
+        xmr_shipping_price=0,
+        xmr_total_price=0,
+        )
 
-    # # create browser history
-    # browserhistory = UserData_History(
-    #     user_id=new_user.id,
-    #     recentcat1=1,
-    #     recentcat1date=now,
-    #     recentcat2=2,
-    #     recentcat2date=now,
-    #     recentcat3=3,
-    #     recentcat3date=now,
-    #     recentcat4=4,
-    #     recentcat4date=now,
-    #     recentcat5=7,
-    #     recentcat5date=now,
-    # )
+    # user fees
+    setfees = Auth_UserFees(user_id=new_user.id,
+                            buyerfee=0,
+                            buyerfee_time=now,
+                            vendorfee=3,
+                            vendorfee_time=now,
+                            )
 
-    # # create checkout_shopping_cart for user
-    # newcart = Checkout_ShoppingCartTotal(
-    #     customer=new_user.id,
-    #     btc_cash_sumofitem=0,
-    #     btc_cash_price=0,
-    #     shipping_btc_cashprice=0,
-    #     total_btc_cash_price=0,
-    #     percent_off_order=0,
-    #     btc_cash_off=0,
-    # )
+    db.session.add(setfees)
+    db.session.add(browserhistory)
+    db.session.add(stats)
+    db.session.add(newcart)
 
-    # setfees = Auth_UserFees(user_id=new_user.id,
-    #                         buyerfee=0,
-    #                         buyerfee_time=now,
-    #                         vendorfee=2,
-    #                         vendorfee_time=now,
-    #                         )
+    # creates wallets in the database cash wallet in db
+    bch_create_wallet(user_id=new_user.id)
+    btc_create_wallet(user_id=new_user.id)
+    xmr_create_wallet(user_id=new_user.id)
 
-    # db.session.add(setfees)
-    # db.session.add(ach)
-    # db.session.add(browserhistory)
-    # db.session.add(achselect)
-    # db.session.add(stats)
-    # db.session.add(newcart)
+    db.session.commit()
 
-    # # creates wallets in the database cash wallet in db
-    # bch_create_wallet(user_id=new_user.id)
-    # btc_create_wallet(user_id=new_user.id)
-    # xmr_create_wallet(user_id=new_user.id)
+    # create user directory
+    getuserlocation = userimagelocation(user_id=new_user.id)
+    userfolderlocation = os.path.join(UPLOADED_FILES_DEST_USER,
+                                      getuserlocation,
+                                      str(new_user.id))
+    mkdir_p(path=userfolderlocation)
 
-    # # achievement
-    # newbie(user_id=new_user.id)
-    # # make a user a directory
-    # db.session.commit()
-
-
-    # getuserlocation = userimagelocation(user_id=new_user.id)
-    # userfolderlocation = os.path.join(UPLOADED_FILES_DEST_USER,
-    #                                   getuserlocation,
-    #                                   str(new_user.id))
-    # mkdir_p(path=userfolderlocation)
-
-   
+    # log user in as active not sure if needed with api
     login_user(new_user)
     current_user.is_authenticated()
     current_user.is_active()
+
     return jsonify({
         "login": True,
         'user': {'user_id': new_user.uuid,
@@ -308,10 +280,9 @@ def register_user():
 @auth.route("/account-seed", methods=["GET"])
 @login_required
 def account_seed():
-    user_id = session.get("user_id")
-
+    
     userseed = Auth_AccountSeedWords.query \
-        .filter(Auth_AccountSeedWords.user_id == user_id) \
+        .filter(Auth_AccountSeedWords.user_id == current_user.id) \
         .first()
     if request.method == 'GET':
         if userseed is None:
@@ -327,7 +298,7 @@ def account_seed():
             word03 = str(word_list[3]).lower()
             word04 = str(word_list[4]).lower()
             word05 = str(word_list[5]).lower()
-            addseedtodb = Auth_AccountSeedWords(user_id=user_id,
+            addseedtodb = Auth_AccountSeedWords(user_id=current_user.id,
                                                 word00=word00,
                                                 word01=word01,
                                                 word02=word02,
@@ -435,7 +406,6 @@ def retrieve_seed_to_unlock_account():
 @login_required
 def change_password():
     if request.method == 'POST':
-    
         user = Auth_User.query \
             .filter(Auth_User.id == current_user.id) \
             .first()
@@ -444,12 +414,10 @@ def change_password():
         new_password_confirm = request.json["password_confirm"]
         if str(new_password) == str(new_password_confirm):
             hashed_password = bcrypt.generate_password_hash(new_password)
-
             user.password_hash = hashed_password
             user.passwordpinallowed = 0
             db.session.add(user)
             db.session.commit()
-
             return jsonify({"status": "success"}), 200
     
         else:
@@ -461,14 +429,15 @@ def change_password():
 def change_pin():
 
     if request.method == 'POST':
-        user_id = session.get("user_id")
+      
         user = Auth_User.query \
-            .filter(Auth_User.id == user_id) \
+            .filter(Auth_User.id == current_user.id) \
             .first()
 
         old_pin = request.json["old_pin"]
         new_pin = request.json["new_pin"]
         password = request.json["password"]
+
         if user.passwordpinallowed == 1:
             if not bcrypt.check_password_hash(user.password, password):
                 return jsonify({"error": "Unauthorized"}), 401
@@ -487,7 +456,7 @@ def change_pin():
 
 @auth.route("/vacation-on", methods=["POST"])
 def vacation_on():
-    user_id = session.get("user_id")
+    user_id = current_user.id
     user = Auth_User.query \
         .filter(Auth_User.id == user_id) \
         .first()
@@ -507,20 +476,16 @@ def vacation_on():
                 a.online = 0
                 db.session.add(a)
         db.session.commit()
-        return jsonify({
-            "status": "Vacation Mode Enabled",
-        }), 200
+        return jsonify({ "status": "Vacation Mode Enabled"}), 200
     else:
-        return jsonify({
-            "error": "Vacation Mode already enabled",
-        }), 409
+        return jsonify({"error": "Vacation Mode already enabled" }), 409
 
 
 @auth.route("/vacation-off", methods=["POST"])
 def vacation_off():
-    user_id = session.get("user_id")
+
     user = Auth_User.query \
-        .filter(Auth_User.id == user_id) \
+        .filter(Auth_User.id == current_user.id) \
         .first()
 
     if user is None:
@@ -532,13 +497,9 @@ def vacation_off():
         db.session.add(user)
         db.session.commit()
 
-        return jsonify({
-            "status": "Vacation Mode Disabled",
-        }), 200
+        return jsonify({"status": "Vacation Mode Disabled"}), 200
     else:
-        return jsonify({
-            "error": "Vacation Mode already disabled",
-        }), 409
+        return jsonify({"error": "Vacation Mode already disabled"}), 409
 
 
 
@@ -550,7 +511,6 @@ def get_country_list():
     """
     if request.method == 'GET':
         country_list = Query_Country.query.order_by(Query_Country.name.asc()).all()
-
         country_schema = Query_Country_Schema(many=True)
         return jsonify(country_schema.dump(country_list))
 
@@ -562,11 +522,8 @@ def get_currency_list():
     :return:
     """
     if request.method == 'GET':
-
         currency_list = Query_CurrencyList.query.order_by(Query_CurrencyList.value.asc()).all()
-
         currency_schema = Query_CurrencyList_Schema(many=True)
-    
         return jsonify(currency_schema.dump(currency_list))
 
 

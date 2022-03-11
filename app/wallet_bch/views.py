@@ -2,10 +2,10 @@ from flask import request, session, jsonify
 from app import db, bcrypt
 from app.wallet_bch import wallet_bch
 from app.wallet_bch.wallet_bch_work import bch_send_coin
-
+from flask_login import current_user, login_required
 from datetime import datetime
 from app.common.functions import floating_decimals
-from app.common.decorators import login_required
+
 from app.achs.b import likemoneyinthebank,withdrawl
 from decimal import Decimal
 
@@ -51,11 +51,9 @@ def bch_balance_plus_unconfirmed():
     Gets current balance and any unconirmed transactions
     :return:
     """
-    user_id = session.get("user_id")
-    userwallet = Bch_Wallet.query.filter_by(user_id=user_id).first()
-    if userwallet.currentbalance > 0:
-        likemoneyinthebank(user_id=user_id)
-        db.session.commit()
+
+    userwallet = Bch_Wallet.query.filter_by(user_id=current_user.id).first()
+ 
     try:
         userbalance = str(userwallet.currentbalance)
         unconfirmed = str(userwallet.unconfirmed)
@@ -71,10 +69,10 @@ def bch_balance_plus_unconfirmed():
 @wallet_bch.route('/transactions', methods=['GET'])
 @login_required
 def bch_transactions():
-    user_id = session.get("user_id")
+    
     # Get Transaction history
     transactfull = Bch_WalletTransactions.query\
-        .filter(Bch_WalletTransactions.user_id == user_id.id)\
+        .filter(Bch_WalletTransactions.user_id == current_user.id)\
         .order_by(Bch_WalletTransactions.id.desc())\
         .limit(50)
 
@@ -84,19 +82,17 @@ def bch_transactions():
 @wallet_bch.route('/receive', methods=['GET'])
 @login_required
 def bch_receive():
-    user_id = session.get("user_id")
-    wallet = Bch_Wallet.query.filter_by(user_id=user_id.id).first()
+    
+    wallet = Bch_Wallet.query.filter_by(user_id=current_user.id).first()
     return jsonify({"bch_address": wallet.address1}), 200
 
-@wallet_bch.route('/send', methods=['GET', 'POST'])
-@login_required
+@wallet_bch.route('/send', methods=['POST'])
 @login_required
 def bch_send():
 
-    user_id = session.get("user_id")
     # Get wallet_btc
-    user = Auth_User.query.filter_by(id=user_id).first()
-    wallet = Bch_Wallet.query.filter_by(user_id=user_id).first()
+    user = Auth_User.query.filter_by(id=current_user.id).first()
+    wallet = Bch_Wallet.query.filter_by(user_id=current_user.id).first()
     # get walletfee
     walletthefee = Bch_WalletFee.query.filter_by(id=1).first()
     wfee = Decimal(walletthefee.bch)
@@ -118,13 +114,13 @@ def bch_send():
                 if Decimal(amount) > Decimal(wfee):
                     # add to wallet_btc work
                     bch_send_coin(
-                        user_id=user_id,
+                        user_id=current_user.id,
                         sendto=send_to_address,
                         amount=amount,
                         comment=comment_on_blockchain
                     )
                     # achievement
-                    withdrawl(user_id=user_id)
+                    withdrawl(user_id=current_user.id)
                     db.session.commit()
                     return jsonify({"status": "request sent to wallet"}), 200
                 else:

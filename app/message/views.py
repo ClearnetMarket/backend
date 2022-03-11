@@ -1,4 +1,5 @@
 from flask import session, jsonify
+from flask_login import current_user
 from app.message import message
 from app import db
 from datetime import datetime
@@ -20,7 +21,7 @@ def message_notitification_count():
     Gets the notification count for new users
     :return:
     """
-    user_id = session.get("user_id")
+    user_id = current_user.id
     gnotifications = Message_Notifications.query\
         .filter(Message_Notifications.user_id == user_id,
                 Message_Notifications.read == 0)\

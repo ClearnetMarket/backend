@@ -2,13 +2,12 @@ from flask import request, session, jsonify
 from app import db, bcrypt
 from app.wallet_xmr import wallet_xmr
 from app.wallet_xmr.wallet_xmr_work import xmr_send_coin
+from flask_login import current_user
 
-from datetime import datetime
 from app.common.functions import floating_decimals
 from app.common.decorators import login_required
-from app.achs.b import likemoneyinthebank,withdrawl
-from decimal import Decimal
 
+from decimal import Decimal
 # models
 from app.classes.auth import Auth_User
 from app.classes.wallet_xmr import\
@@ -50,11 +49,9 @@ def xmr_balance_plus_unconfirmed():
     Gets current balance and any unconirmed transactions
     :return:
     """
-    user_id = session.get("user_id")
-    userwallet = Xmr_Wallet.query.filter_by(user_id=user_id).first()
-    if userwallet.currentbalance > 0:
-        likemoneyinthebank(user_id=user_id)
-        db.session.commit()
+
+    userwallet = Xmr_Wallet.query.filter_by(user_id=current_user.id).first()
+    
     try:
         userbalance = str(userwallet.currentbalance)
         unconfirmed = str(userwallet.unconfirmed)
@@ -70,10 +67,10 @@ def xmr_balance_plus_unconfirmed():
 @wallet_xmr.route('/transactions', methods=['GET'])
 @login_required
 def xmr_transactions():
-    user_id = session.get("user_id")
+
     # Get Transaction history
     transactfull = Xmr_Transactions.query\
-        .filter(Xmr_Transactions.user_id == user_id.id)\
+        .filter(Xmr_Transactions.user_id == current_user.id)\
         .order_by(Xmr_Transactions.id.desc())\
         .limit(50)
 
@@ -84,8 +81,8 @@ def xmr_transactions():
 @wallet_xmr.route('/receive', methods=['GET'])
 @login_required
 def xmr_receive():
-    user_id = session.get("user_id")
-    wallet = Xmr_Wallet.query.filter_by(user_id=user_id.id).first()
+
+    wallet = Xmr_Wallet.query.filter_by(user_id=current_user.id).first()
     return jsonify({"xmr_address": wallet.address1}), 200
 
 
@@ -94,10 +91,9 @@ def xmr_receive():
 @login_required
 def xmr_send():
 
-    user_id = session.get("user_id")
-    # Get wallet
-    user = Auth_User.query.filter_by(id=user_id).first()
-    wallet = Xmr_Wallet.query.filter_by(user_id=user_id).first()
+
+    user = Auth_User.query.filter_by(id=current_user.id).first()
+    wallet = Xmr_Wallet.query.filter_by(user_id=current_user.id).first()
     # get walletfee
     walletthefee = Xmr_WalletFee.query.filter_by(id=1).first()
     wfee = Decimal(walletthefee.xmr)
@@ -118,12 +114,10 @@ def xmr_send():
                 if Decimal(amount) > Decimal(wfee):
                     # add to wallet_xmr work
                     xmr_send_coin(
-                        user_id=user_id,
+                        user_id=user.id,
                         sendto=send_to_address,
                         amount=amount,
                     )
-                    # achievement
-                    withdrawl(user_id=user_id)
                     db.session.commit()
                     return jsonify({"status": "request sent to wallet"}), 200
                 else:
@@ -139,7 +133,6 @@ def xmr_send():
                 user.locked = 1
             db.session.add(user)
             db.session.commit()
-
             return jsonify({"error": "Unauthorized"}), 409
     else:
         return jsonify({"error": "Account is locked due to dispute"}), 409

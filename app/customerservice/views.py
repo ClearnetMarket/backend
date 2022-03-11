@@ -22,7 +22,7 @@ def vendor_topbar_get_issues_count():
     Gets the count of vendor order issues.  Notification bar at top
     :return:
     """
-    user_id = session.get("user_id")
+    user_id = current_user.id
     myorderscount = db.session\
         .query(Vendor_Orders)\
         .filter(Vendor_Orders.customer_id == user_id.id)\
@@ -40,7 +40,7 @@ def customer_topbar_get_issues_count():
     Gets the count of customer issues.  Notification bar at top
     :return:
     """
-    user_id = session.get("user_id")
+    user_id = current_user.id
     service_issues = db.session \
         .query(Service_Issue) \
         .filter(Service_Issue.author_id == user_id) \
