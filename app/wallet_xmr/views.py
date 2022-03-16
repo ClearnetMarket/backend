@@ -1,9 +1,9 @@
-from flask import request, session, jsonify
-from app import db, bcrypt
+from flask import request, jsonify
+from app import db, bcrypt, UPLOADED_FILES_DEST_USER
 from app.wallet_xmr import wallet_xmr
 from app.wallet_xmr.wallet_xmr_work import xmr_send_coin
 from flask_login import current_user
-
+import os
 from app.common.functions import floating_decimals
 from app.common.decorators import login_required
 
@@ -46,7 +46,7 @@ def xmr_price_usd():
 @login_required
 def xmr_balance_plus_unconfirmed():
     """
-    Gets current balance and any unconirmed transactions
+    Gets current balance and any unconfirmed transactions
     :return:
     """
 
@@ -83,14 +83,20 @@ def xmr_transactions():
 def xmr_receive():
 
     wallet = Xmr_Wallet.query.filter_by(user_id=current_user.id).first()
-    return jsonify({"xmr_address": wallet.address1}), 200
+
+    qr = wallet.address1 + '.png'
+    wallet_qr_code = os.path.join(UPLOADED_FILES_DEST_USER, str(current_user.uuid), 'qr', qr)
+    
+
+    return jsonify({"xmr_address": wallet.address1,
+                    "xmr_qr_code": wallet_qr_code
+                        }), 200
 
 
 @wallet_xmr.route('/send', methods=['GET', 'POST'])
 @login_required
 @login_required
 def xmr_send():
-
 
     user = Auth_User.query.filter_by(id=current_user.id).first()
     wallet = Xmr_Wallet.query.filter_by(user_id=current_user.id).first()

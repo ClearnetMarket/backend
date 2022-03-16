@@ -83,7 +83,9 @@ def bch_transactions():
 @login_required
 def bch_receive():
     
-    wallet = Bch_Wallet.query.filter_by(user_id=current_user.id).first()
+    wallet = Bch_Wallet.query.filter(Bch_Wallet.user_id==current_user.id).first()
+    print(wallet)
+    print(wallet.address1)
     return jsonify({"bch_address": wallet.address1}), 200
 
 @wallet_bch.route('/send', methods=['POST'])

@@ -7,7 +7,7 @@ from uuid import uuid4
 from app.common.functions import mkdir_p
 from app.common.decorators import login_required
 from app.classes.item import Item_MarketItem, items_schema
-
+import shutil
 
 
 
@@ -20,11 +20,15 @@ def vendorcreate_items_for_sale():
   
     :return:
     """
-   
+    print(current_user.id)
     forsale = Item_MarketItem.query \
         .filter(Item_MarketItem.vendor_id == current_user.id)\
         .order_by(Item_MarketItem.total_sold.desc(), Item_MarketItem.online.desc(), Item_MarketItem.id.desc())\
         .all()
+
+    for f in forsale:
+        print(f)
+
     return items_schema.jsonify(forsale)
 
 
@@ -217,7 +221,7 @@ def vendorcreate_delete_item(uuid):
 
 
             pathtofolder = os.path.join(UPLOADED_FILES_DEST_ITEM, getitemlocation, specific_folder)
-            os.rmdir(pathtofolder)
+            shutil.rmtree(pathtofolder)
 
             db.session.delete(vendoritem)
             db.session.commit()

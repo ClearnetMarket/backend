@@ -154,8 +154,6 @@ def create_item_info(uuid):
     Creates the Vendor Item
     """
 
-
-    
     api_key_auth = request.headers.get('authorization')
     if api_key_auth:
         api_key = api_key_auth.replace('bearer ', '', 1)
@@ -165,7 +163,10 @@ def create_item_info(uuid):
             .first() is not None
         if see_if_user_allowed:
             now = datetime.utcnow()
-    
+            item = Item_MarketItem.query\
+                .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id) \
+                .first()
+           
       # Shipping three toggle
 
             # accept bitcoin
@@ -344,7 +345,7 @@ def create_item_info(uuid):
             item.destination_country_four=shipping_to_country_four
             item.destination_country_five=shipping_to_country_five
 
- 
+
             # add  to database
             db.session.add(item)
             db.session.commit()
@@ -355,6 +356,8 @@ def create_item_info(uuid):
             return jsonify({"status": 'success'}), 200
         else:
             return jsonify({"error": 'Not Logged In'}), 401
+    else:
+        return jsonify({"error": 'Not Logged In'}), 401
 
 
 @vendorcreateitem.route('/create-item-images/<string:uuid>', methods=['POST', 'OPTIONS'])
@@ -363,13 +366,13 @@ def create_item_images(uuid):
     Creates the Vendor Item
     """
     # next, try to login using Basic Auth
-  
     api_key_auth = request.headers.get('Authorization')
     if api_key_auth:
         api_key = api_key_auth.replace('bearer ', '', 1)
         current_user = Auth_User.query.filter_by(api_key=api_key).first()
         see_if_user_allowed = Item_MarketItem.query.filter(Item_MarketItem.uuid==uuid, Item_MarketItem.vendor_id == current_user.id).first() is not None
         if see_if_user_allowed:
+        
             item = Item_MarketItem.query\
                 .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id) \
                 .first()
@@ -382,7 +385,8 @@ def create_item_images(uuid):
             mkdir_p(directoryifitemlisting)
 
             try:
-                image_main = request.files['main_image']
+                image_main = request.files['image_main']
+        
                 image1(formdata=image_main, item=item, directoryifitemlisting=directoryifitemlisting)
             except Exception as e: 
                 pass

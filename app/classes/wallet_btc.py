@@ -39,6 +39,8 @@ class Btc_Wallet(db.Model):
     transactioncount = db.Column(db.INTEGER)
     unconfirmed = db.Column(db.DECIMAL(20, 8))
 
+    
+
 class Btc_Wallet_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Btc_Wallet

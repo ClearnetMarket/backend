@@ -48,7 +48,7 @@ def btc_balance_plus_unconfirmed():
     :return:
     """
 
-    userwallet = Btc_Wallet.query.filter_by(Btc_Wallet.user_id == current_user.id).first()
+    userwallet = Btc_Wallet.query.filter(Btc_Wallet.user_id == current_user.id).first()
    
     try:
         userbalance = str(userwallet.currentbalance)
@@ -80,7 +80,8 @@ def btc_transactions():
 @wallet_btc.route('/receive', methods=['GET'])
 @login_required
 def btc_receive():
-    userwallet = Btc_Wallet.query.filter_by(Btc_Wallet.user_id == current_user.id).first()
+    userwallet = Btc_Wallet.query.filter(Btc_Wallet.user_id == current_user.id).first()
+    print(userwallet.address1)
     return jsonify({"btc_address": userwallet.address1}), 200
 
 

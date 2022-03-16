@@ -72,16 +72,19 @@ def logout():
 
 @auth.route("/login", methods=["POST"])
 def login():
+
     if request.method == "POST":
-        print("here")
+    
         username = request.json["username"]
         password = request.json["password"]
+       
         user = Auth_User.query.filter_by(username=username).first() is not None
-
+    
         if not user:
             return jsonify({"error": "Unauthorized"}), 401
         user = Auth_User.query.filter_by(username=username).first()
         if not bcrypt.check_password_hash(user.password_hash, password):
+      
             current_fails = int(user.fails)
             new_fails = current_fails + 1
             user.fails = new_fails

@@ -1,11 +1,10 @@
-from app import db
-
-from app.common.functions import floating_decimals
+from app import db, UPLOADED_FILES_DEST_USER
+from app.common.functions import floating_decimals, userimagelocation
 from app.notification import notification
 from app.wallet_bch.wallet_bch_transaction import bch_add_transaction
 from app.wallet_bch.wallet_bch_security import bch_check_balance
 from decimal import Decimal
-import datetime
+import datetime, os, qrcode
 # models
 from app.classes.auth import Auth_User
 from app.classes.admin import \
@@ -18,41 +17,6 @@ from app.classes.wallet_bch import \
     Bch_WalletUnconfirmed, \
     Bch_WalletWork
 # end models
-
-
-def bch_walletstatus(user_id):
-    """
-    This function checks status opf the wallet
-    :param user_id:
-    :return:
-    """
-    userswallet = db.session\
-        .query(Bch_Wallet)\
-        .filter_by(Bch_Wallet.user_id == user_id)\
-        .first()
-    getuser = db.session\
-        .query(Auth_User)\
-        .filter(Auth_User.id == user_id)\
-        .first()
-    if userswallet:
-        try:
-            if userswallet.address1status == 0\
-                and userswallet.address2status == 0\
-                and userswallet.address2status == 0:
-                bch_create_wallet(user_id=user_id)
-
-        except Exception as e:
-            userswallet.address1 = ''
-            userswallet.address1status = 0
-            userswallet.address2 = ''
-            userswallet.address2status = 0
-            userswallet.address3 = ''
-            userswallet.address3status = 0
-
-            db.session.add(userswallet)
-    else:
-        # creates wallet_btc in db
-        bch_create_wallet(user_id=getuser.id)
 
 
 def bch_create_wallet(user_id):
@@ -84,6 +48,9 @@ def bch_create_wallet(user_id):
         getnewaddress.user_id = user_id
         db.session.add(getnewaddress)
         db.session.flush()
+
+        # create a qr code
+        bch_create_qr_code(user_id=user_id, address=btc_cash_walletcreate.address1)
     else:
 
         # create a new wallet
@@ -129,6 +96,62 @@ def bch_create_wallet(user_id):
         getnewaddress.user_id = user_id
         getnewaddress.status = 1
         db.session.add(getnewaddress)
+
+        # create a qr code
+        bch_create_qr_code(user_id=user_id, address=btc_cash_walletcreate.address1)
+
+
+def bch_create_qr_code(user_id, address):
+    # find path of the user
+    getuserlocation = userimagelocation(user_id=user_id)
+    thepath = os.path.join(UPLOADED_FILES_DEST_USER,getuserlocation, str(user_id))
+    path_plus_filename = thepath + '/' + address + '.png'
+    qr = qrcode.QRCode(
+                        version=None,
+                        error_correction=qrcode.constants.ERROR_CORRECT_L,
+                        box_size=10,
+                        border=5,
+                        )
+    qr.add_data(address)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+    img.save(path_plus_filename)
+
+
+def bch_walletstatus(user_id):
+    """
+    This function checks status opf the wallet
+    :param user_id:
+    :return:
+    """
+    userswallet = db.session\
+        .query(Bch_Wallet)\
+        .filter_by(Bch_Wallet.user_id == user_id)\
+        .first()
+    getuser = db.session\
+        .query(Auth_User)\
+        .filter(Auth_User.id == user_id)\
+        .first()
+    if userswallet:
+        try:
+            if userswallet.address1status == 0\
+                and userswallet.address2status == 0\
+                and userswallet.address2status == 0:
+                bch_create_wallet(user_id=user_id)
+
+        except Exception as e:
+            userswallet.address1 = ''
+            userswallet.address1status = 0
+            userswallet.address2 = ''
+            userswallet.address2status = 0
+            userswallet.address3 = ''
+            userswallet.address3status = 0
+
+            db.session.add(userswallet)
+    else:
+        # creates wallet_btc in db
+        bch_create_wallet(user_id=getuser.id)
 
 
 def bch_send_coin(user_id, sendto, amount, comment):

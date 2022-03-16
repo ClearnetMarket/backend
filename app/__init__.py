@@ -84,15 +84,11 @@ def load_user_from_request(request):
 
     from app.classes.auth import Auth_User
     # first, try to login using the api_key url arg
-
     api_key = request.args.get('api_key')
-
     if api_key:
-
         user = Auth_User.query.filter_by(api_key=api_key).first()
         if user:
             return user
-
     # next, try to login using Basic Auth
     api_key_auth = request.headers.get('Authorization')
     print(api_key_auth)
@@ -101,13 +97,12 @@ def load_user_from_request(request):
         user = Auth_User.query.filter_by(api_key=api_key).first()
         if user:
             return user
-
     return None
 
 api_main = {
     "origins": [ApplicationConfig.ORIGIN_URL],
     "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
-    "allow_headers": ['Authorization', 'authorization', 'Content-Type', 'Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers']
+    "allow_headers": ['Authorization', 'authorization', 'Content-Type', 'Access-Control-Allow-Headers', 'Origin,Accept', 'X-Requested-With', 'Content-Type', 'Access-Control-Request-Method', 'Access-Control-Request-Headers']
 }
 cors = CORS(app,  supports_credentials=True, resources={r'/*': api_main})
 

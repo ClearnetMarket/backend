@@ -1,13 +1,17 @@
-from app import db
-from app.common.functions import floating_decimals
+from app import db, UPLOADED_FILES_DEST_USER
+from app.common.functions import\
+ floating_decimals, \
+userimagelocation
 from app.notification import notification
 from app.wallet_btc.wallet_btc_addtransaction import btc_addtransaction
 from app.wallet_btc.wallet_btc_security import btc_check_balance
 from decimal import Decimal
-import datetime
+import datetime, os, qrcode
 # models
 from app.classes.auth import Auth_User
-from app.classes.admin import Admin_ClearnetProfitBtc, Admin_ClearnetHoldingsBtc
+from app.classes.admin import\
+    Admin_ClearnetProfitBtc,\
+    Admin_ClearnetHoldingsBtc
 from app.classes.wallet_btc import \
     Btc_Unconfirmed, \
     Btc_Wallet, \
@@ -15,42 +19,6 @@ from app.classes.wallet_btc import \
     Btc_WalletFee, \
     Btc_WalletWork
 # end models
-
-
-def btc_wallet_status(user_id):
-    """
-    This function checks status opf the wallet
-    :param user_id:
-    :return:
-    """
-    userswallet = db.session\
-        .query(Btc_Wallet)\
-        .filter_by(Btc_Wallet.user_id == user_id)\
-        .first()
-    getuser = db.session\
-        .query(Auth_User)\
-        .filter(Auth_User.id == user_id)\
-        .first()
-    if userswallet:
-        try:
-            if userswallet.address1status == 0 \
-                and userswallet.address2status == 0 \
-                and userswallet.address2status == 0:
-                btc_create_wallet(user_id=user_id)
-
-            
-        except Exception as e:
-            userswallet.address1 = ''
-            userswallet.address1status = 0
-            userswallet.address2 = ''
-            userswallet.address2status = 0
-            userswallet.address3 = ''
-            userswallet.address3status = 0
-
-            db.session.add(userswallet)
-    else:
-        # creates wallet_btc in db
-        btc_create_wallet(user_id=getuser.id)
 
 
 def btc_create_wallet(user_id):
@@ -82,6 +50,9 @@ def btc_create_wallet(user_id):
         getnewaddress.user_id = user_id
         db.session.add(getnewaddress)
         db.session.flush()
+
+        # create qr code
+        btc_create_qr_code(user_id=user_id, address=userswallet.address1)
     else:
 
         # create a new wallet
@@ -127,6 +98,62 @@ def btc_create_wallet(user_id):
         getnewaddress.user_id = user_id
         getnewaddress.status = 1
         db.session.add(getnewaddress)
+
+        # create qr code
+        btc_create_qr_code(user_id=user_id, address=userswallet.address1)
+
+def btc_create_qr_code(user_id, address):
+    # find path of the user
+    getuserlocation = userimagelocation(user_id=user_id)
+    thepath = os.path.join(UPLOADED_FILES_DEST_USER, getuserlocation, str(user_id))
+    path_plus_filename = thepath + '/' + address + '.png'
+    qr = qrcode.QRCode(
+                        version=None,
+                        error_correction=qrcode.constants.ERROR_CORRECT_L,
+                        box_size=10,
+                        border=5,
+                        )
+    qr.add_data(address)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+    img.save(path_plus_filename)
+
+
+def btc_wallet_status(user_id):
+    """
+    This function checks status opf the wallet
+    :param user_id:
+    :return:
+    """
+    userswallet = db.session\
+        .query(Btc_Wallet)\
+        .filter_by(Btc_Wallet.user_id == user_id)\
+        .first()
+    getuser = db.session\
+        .query(Auth_User)\
+        .filter(Auth_User.id == user_id)\
+        .first()
+    if userswallet:
+        try:
+            if userswallet.address1status == 0 \
+                and userswallet.address2status == 0 \
+                and userswallet.address2status == 0:
+                btc_create_wallet(user_id=user_id)
+
+            
+        except Exception as e:
+            userswallet.address1 = ''
+            userswallet.address1status = 0
+            userswallet.address2 = ''
+            userswallet.address2status = 0
+            userswallet.address3 = ''
+            userswallet.address3status = 0
+
+            db.session.add(userswallet)
+    else:
+        # creates wallet_btc in db
+        btc_create_wallet(user_id=getuser.id)
 
 
 def btc_send_coin(user_id, sendto, amount, comment):

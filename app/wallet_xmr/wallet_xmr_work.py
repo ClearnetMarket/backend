@@ -1,7 +1,9 @@
-from datetime import datetime
+from app import db, UPLOADED_FILES_DEST_USER
+import datetime, os, qrcode
 from decimal import Decimal
-from app import db
-from app.common.functions import floating_decimals
+from app.common.functions import\
+    floating_decimals,\
+    userimagelocation
 from app.notification import notification
 from app.wallet_xmr.security import xmr_check_balance
 from app.classes.wallet_xmr import \
@@ -35,7 +37,7 @@ def xmr_create_wallet(user_id):
     )
 
     # creates wallet_btc in db
-    monero_walletcreate = Xmr_Wallet(user_id=user_id,
+    monero_wallet_create = Xmr_Wallet(user_id=user_id,
                                currentbalance=0,
                                unconfirmed=0,
                                address1='',
@@ -43,7 +45,7 @@ def xmr_create_wallet(user_id):
                                locked=0,
                                transactioncount=0,
                                )
-    wallet = Xmr_WalletWork(
+    monero_wallet_work = Xmr_WalletWork(
         user_id=user_id,
         type=2,
         amount=0,
@@ -51,9 +53,31 @@ def xmr_create_wallet(user_id):
         txnumber=0,
         created=timestamp,
     )
-    db.session.add(wallet)
+    
+    db.session.add(monero_wallet_work)
     db.session.add(monero_newunconfirmed)
-    db.session.add(monero_walletcreate)
+    db.session.add(monero_wallet_create)
+
+    xmr_create_qr_code(user_id=user_id, address=monero_wallet_create.address1)
+
+
+def xmr_create_qr_code(user_id, address):
+    # find path of the user
+    getuserlocation = userimagelocation(user_id=user_id)
+    thepath = os.path.join(UPLOADED_FILES_DEST_USER, getuserlocation, str(user_id))
+    path_plus_filename = thepath + '/' + address + '.png'
+    qr = qrcode.QRCode(
+                        version=None,
+                        error_correction=qrcode.constants.ERROR_CORRECT_L,
+                        box_size=10,
+                        border=5,
+                        )
+    qr.add_data(address)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+    img.save(path_plus_filename)
+
 
 def xmr_wallet_status(user_id):
     """
