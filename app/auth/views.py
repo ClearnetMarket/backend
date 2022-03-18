@@ -126,9 +126,7 @@ def register_user():
     email = request.json["email"]
     password = request.json["password"]
     currency = request.json["currency"]['value']
-
     country = request.json["country"]['value']
-
     display_username = request.json["display_username"]
     pin = request.json["pin"]
 
@@ -284,10 +282,12 @@ def register_user():
 @login_required
 def account_seed():
     
-    userseed = Auth_AccountSeedWords.query \
-        .filter(Auth_AccountSeedWords.user_id == current_user.id) \
-        .first()
+    print("here")
     if request.method == 'GET':
+        userseed = Auth_AccountSeedWords.query \
+            .filter(Auth_AccountSeedWords.user_id == current_user.id) \
+            .first()
+        print("32213")
         if userseed is None:
             word_list = []
             get_words = Query_WordList.query\
@@ -504,6 +504,20 @@ def vacation_off():
     else:
         return jsonify({"error": "Vacation Mode already disabled"}), 409
 
+
+@auth.route("/amiconfirmed", methods=["GET"])
+@login_required
+def check_confirmed():
+
+
+   
+    user = Auth_User.query.filter(Auth_User.id == current_user.id).first()
+    if user.confirmed == 0:
+        confirmed = False
+    else:
+        confirmed =  True
+  
+    return jsonify({"confirmed": confirmed}), 200
 
 
 @auth.route('/query/country', methods=['GET'])

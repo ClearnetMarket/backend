@@ -378,21 +378,6 @@ def mainCat():
         (24, 'Toys'),
         (25, 'Video Games'),
 
-
-
-    ]
-    return list
-
-
-def subCat():
-    list = [
-        (0, ''),
-        (1, 'sub1'),
-        (2, 'sub2'),
-        (3, 'sub3'),
-        (4, 'sub4'),
-        (5, 'sub5'),
-        (6, 'sub6'),
     ]
     return list
 

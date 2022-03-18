@@ -2,6 +2,7 @@ from flask import request, session, jsonify
 from flask_login import current_user
 from app.vendor import vendor
 from app import db
+import datetime
 from app.common.decorators import login_required
 from sqlalchemy.sql import or_
 # models
@@ -19,9 +20,12 @@ from app.classes.userdata import \
 from app.classes.vendor import \
     Vendor_Orders,\
     Vendor_Notification
-
+from app.classes.auth import Auth_User
+from app.classes.profile import Profile_StatisticsVendor
 
 # end models
+
+
 @vendor.route('/become-vendor', methods=['POST'])
 @login_required
 def vendor_signup():
@@ -30,14 +34,39 @@ def vendor_signup():
     :return:
     """
     if request.method == 'GET':
+        now = datetime.datetime.utcnow()
+
+
         current_user.admin = 1
         current_user.admin_role = 1
+
+        stats = Profile_StatisticsVendor(
+            username=current_user.user_name,
+            vendorid=current_user.id,
+            totalsales=0,
+            totaltrades=0,
+            totalreviews=0,
+            startedselling=now,
+            vendorrating=5,
+            avgitemrating=0,
+            diffpartners=0,
+            disputecount=0,
+            beenflagged=0,
+            totalbtcspent=0,
+            totalbtcrecieved=0,
+            totalbtccashspent=0,
+            totalbtccashrecieved=0,
+            totalxmrspent=0,
+            totalxmrrecieved=0,
+            totalusdmade=0,
+        )
+
+        db.session.add(stats)
         db.session.add(current_user)
         db.session.commit()
         return jsonify({
             "status": 'success',
         })
-
 
 
 @vendor.route('/vendor-stats/<string:vendor_id>', methods=['GET'])
@@ -77,7 +106,7 @@ def vendor_vendor_achievements(vendor_id):
     """
     if request.method == 'GET':
         vendor_get_achs = Achievements_UserAchievements.query \
-            .filter(Achievements_UserAchievements.user_id==vendor_id) \
+            .filter(Achievements_UserAchievements.user_id == vendor_id) \
             .first()
         vendor_schema = Achievements_UserAchievements_Schema(many=True)
         return jsonify(vendor_schema.dump(vendor_get_achs))
@@ -129,6 +158,7 @@ def vendor_topbar_get_orders_count():
         "count": new_orders,
     })
 
+
 @vendor.route('/new-disputes-count', methods=['GET'])
 @login_required
 def vendor_topbar_get_disputes_count():
@@ -136,7 +166,7 @@ def vendor_topbar_get_disputes_count():
     Gets the count for any new orders.  Used on topbar for vendors
     :return:
     """
-   
+
     new_disputes = db.session\
         .query(Vendor_Notification)\
         .filter(Vendor_Notification.new_disputes != 0)\
@@ -183,3 +213,22 @@ def vendor_topbar_get_returns_count():
     })
 
 
+@vendor.route('/vendoriteminfo/<string:vendor_id>', methods=['GET'])
+def vendor_topbar_get_returns_count(vendor_id):
+    """
+    Gets the vendor name, ratings count and sales count
+    :return:
+    """
+
+    vendor = Auth_User.query.filter(Auth_User.uuid == vendor_id).first()
+    vendor_name = vendor.user_name
+    vendor_stats = Profile_StatisticsVendor.query\
+        .filter(Profile_StatisticsVendor.vendorid == vendor.id)\
+        .first()
+    vendor_rating = vendor_stats.avgitemrating
+    vendor_total_sales = vendor_stats.totalsales
+    return jsonify({
+        "vendorname": vendor_name,
+        "vendorrating": vendor_rating,
+        "vendortotalsales": vendor_total_sales,
+    })
