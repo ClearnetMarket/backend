@@ -16,7 +16,7 @@ from app.classes.models import Query_WordList,\
 from app.classes.item import Item_MarketItem
 from app.classes.userdata import UserData_History
 from app.classes.profile import Profile_StatisticsUser
-from app.classes.checkout import  Checkout_ShoppingCartTotal
+from app.classes.checkout import Checkout_ShoppingCartTotal
 from app.classes.auth import \
     Auth_User, \
     Auth_UserFees, \
@@ -30,38 +30,50 @@ from app.wallet_xmr.wallet_xmr_work import xmr_create_wallet
 @auth.route("/whoami", methods=["GET"])
 @login_required
 def check_session():
-   
+
     api_key = request.headers.get('Authorization')
 
     if api_key:
         api_key = api_key.replace('bearer ', '', 1)
-        user_exists = Auth_User.query.filter(Auth_User.api_key==api_key).first() is not None
+        user_exists = Auth_User.query.filter(
+            Auth_User.api_key == api_key).first() is not None
         if user_exists:
-            user = Auth_User.query.filter(Auth_User.api_key==api_key).first()
-
-            print(f"YOU ARE {user.username}")
+            user = Auth_User.query.filter(Auth_User.api_key == api_key).first()
             return jsonify({
-            "login": True,
-            'user': {'user_id': user.uuid,
-                    'user_name': user.username,
-                    'user_email': user.email,
-                    'user_admin': user.admin_role,
-                    'profile_image': user.profileimage,
-                    'country': user.country,
-                    'currency': user.currency,
-                    'token': user.api_key
-            },
-            'token': user.api_key
-                }), 200
+                "login": True,
+                'user': {'user_id': user.uuid,
+                         'user_name': user.username,
+                         'user_email': user.email,
+                         'user_admin': user.admin_role,
+                         'profile_image': user.profileimage,
+                         'country': user.country,
+                         'currency': user.currency,
+                         'token': user.api_key
+                         },
+                'token': user.api_key
+            }), 200
         else:
             return jsonify({"status": "error. user not found"}), 401
     else:
         return jsonify({"status": "error"}), 401
 
 
+@auth.route("/amiconfirmed", methods=["GET"])
+@login_required
+def check_confirmed():
+
+    user = Auth_User.query.filter(Auth_User.id == current_user.id).first()
+    if user.confirmed == 0:
+        confirmed = False
+    else:
+        confirmed = True
+
+    return jsonify({"confirmed": confirmed}), 200
+
+
 @auth.route("/logout", methods=["POST"])
 def logout():
-   
+
     try:
         logout_user()
         return jsonify({'status': 'logged out'}), 200
@@ -74,17 +86,17 @@ def logout():
 def login():
 
     if request.method == "POST":
-    
+
         username = request.json["username"]
         password = request.json["password"]
-       
+
         user = Auth_User.query.filter_by(username=username).first() is not None
-    
+
         if not user:
             return jsonify({"error": "Unauthorized"}), 401
         user = Auth_User.query.filter_by(username=username).first()
         if not bcrypt.check_password_hash(user.password_hash, password):
-      
+
             current_fails = int(user.fails)
             new_fails = current_fails + 1
             user.fails = new_fails
@@ -96,82 +108,85 @@ def login():
         user.fails = 0
         db.session.add(user)
         db.session.commit()
-    
+
         login_user(user)
         current_user.is_authenticated()
         current_user.is_active()
         return jsonify({
             "login": True,
             'user': {'user_id': user.uuid,
-                    'user_name': user.username,
-                    'user_email': user.email,
-                    'profile_image': user.profileimage,
-                    'country': user.country,
-                    'currency': user.currency,
-                    'admin_role': user.admin_role,
-                    'token': user.api_key
-            },
+                     'user_name': user.username,
+                     'user_email': user.email,
+                     'profile_image': user.profileimage,
+                     'country': user.country,
+                     'currency': user.currency,
+                     'admin_role': user.admin_role,
+                     'token': user.api_key
+                     },
             'token': user.api_key
         }), 200
     else:
         print("bummer")
+
 
 @auth.route("/register", methods=["POST"])
 def register_user():
 
     now = datetime.utcnow()
 
-    
+    print(request.json)
     username = request.json["username"]
     email = request.json["email"]
     password = request.json["password"]
-    currency = request.json["currency"]['value']
-    country = request.json["country"]['value']
+    currency = request.json["currency"]
+    country = request.json["country"]
     display_username = request.json["display_username"]
     pin = request.json["pin"]
 
-    part_one_code =  uuid4().hex
+    part_one_code = uuid4().hex
     part_two_code = uuid4().hex
     part_three_code = uuid4().hex
     key = part_one_code + part_two_code + part_three_code
 
-    user_exists_email = Auth_User.query.filter_by(email=email).first() is not None
+    user_exists_email = Auth_User.query.filter_by(
+        email=email).first() is not None
     if user_exists_email:
         return jsonify({"error": "User already exists"}), 409
-    user_exists_username = Auth_User.query.filter_by(username=username).first() is not None
+    user_exists_username = Auth_User.query.filter_by(
+        username=username).first() is not None
     if user_exists_username:
         return jsonify({"error": "User already exists"}), 409
 
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
     new_user = Auth_User(
-            username=username,
-            display_name=display_username,
-            email=email,
-            password_hash=hashed_password,
-            member_since=now,
-            wallet_pin=pin,
-            profileimage='user-unknown.png',
-            bio='',
-            api_key=key,
-            country=country,
-            currency=currency,
-            vendor_account=0,
-            selling_from=country,
-            last_seen=now,
-            admin=0,
-            admin_role=0,
-            dispute=0,
-            fails=0,
-            locked=0,
-            vacation=0,
-            shopping_timer=now,
-            lasttraded_timer=now,
-            shard=1,
-            usernode=0,
-            confirmed=0,
-            passwordpinallowed=0
-             )
+        username=username,
+        display_name=display_username,
+        email=email,
+        password_hash=hashed_password,
+        member_since=now,
+        wallet_pin=pin,
+        profileimage='user-unknown.png',
+        bio='',
+        api_key=key,
+        country=country,
+        currency=currency,
+        vendor_account=0,
+        selling_from=country,
+        last_seen=now,
+        admin=0,
+        admin_role=0,
+        dispute=0,
+        fails=0,
+        locked=0,
+        vacation=0,
+        shopping_timer=now,
+        lasttraded_timer=now,
+        shard=1,
+        usernode=0,
+        confirmed=0,
+        passwordpinallowed=0
+    )
 
     db.session.add(new_user)
     db.session.flush()
@@ -213,7 +228,7 @@ def register_user():
 
     # create checkout_shopping_cart for user
     newcart = Checkout_ShoppingCartTotal(
-        customer_id = new_user.id,
+        customer_id=new_user.id,
         # btc
         btc_sum_of_item=0,
         btc_price=0,
@@ -229,7 +244,7 @@ def register_user():
         xmr_price=0,
         xmr_shipping_price=0,
         xmr_total_price=0,
-        )
+    )
 
     # user fees
     setfees = Auth_UserFees(user_id=new_user.id,
@@ -244,20 +259,18 @@ def register_user():
     db.session.add(stats)
     db.session.add(newcart)
 
+    # create user directory
+    getuserlocation = userimagelocation(user_id=new_user.id)
+    userfolderlocation = os.path.join(UPLOADED_FILES_DEST_USER,
+                                      getuserlocation,
+                                      str(new_user.uuid))
+    mkdir_p(path=userfolderlocation)
     # creates wallets in the database cash wallet in db
     bch_create_wallet(user_id=new_user.id)
     btc_create_wallet(user_id=new_user.id)
     xmr_create_wallet(user_id=new_user.id)
 
     db.session.commit()
-
-    # create user directory
-    getuserlocation = userimagelocation(user_id=new_user.id)
-    userfolderlocation = os.path.join(UPLOADED_FILES_DEST_USER,
-                                      getuserlocation,
-                                      str(new_user.id))
-    mkdir_p(path=userfolderlocation)
-
     # log user in as active not sure if needed with api
     login_user(new_user)
     current_user.is_authenticated()
@@ -266,33 +279,32 @@ def register_user():
     return jsonify({
         "login": True,
         'user': {'user_id': new_user.uuid,
-                'user_name': new_user.username,
-                'user_email': new_user.email,
-                'profile_image': new_user.profileimage,
-                'country': new_user.country,
-                'currency': new_user.currency,
-                'admin_role': new_user.admin_role,
-                'token': new_user.api_key
-         },
-        'token':  new_user.currency
+                 'user_name': new_user.username,
+                 'user_email': new_user.email,
+                 'profile_image': new_user.profileimage,
+                 'country': new_user.country,
+                 'currency': new_user.currency,
+                 'admin_role': new_user.admin_role,
+                 'token': new_user.api_key
+                 },
+        'token':  new_user.api_key
     }), 200
 
 
 @auth.route("/account-seed", methods=["GET"])
 @login_required
 def account_seed():
-    
-    print("here")
+
     if request.method == 'GET':
         userseed = Auth_AccountSeedWords.query \
             .filter(Auth_AccountSeedWords.user_id == current_user.id) \
             .first()
-        print("32213")
+
         if userseed is None:
             word_list = []
             get_words = Query_WordList.query\
-            .order_by(func.random())\
-            .limit(6)
+                .order_by(func.random())\
+                .limit(6)
             for f in get_words:
                 word_list.append(f.text)
             word00 = str(word_list[0]).lower()
@@ -333,40 +345,48 @@ def account_seed():
 @login_required
 def confirm_seed():
 
-    user = Auth_User.query \
-        .filter(Auth_User.id == current_user.id)\
-        .first()
-
     if request.method == 'POST':
-        userseed = db.session.query(Auth_AccountSeedWords) \
-            .filter(Auth_AccountSeedWords.user_id==user.id)\
-            .first() is not None
-        if userseed:
-            word0 = request.json["word0"]
-            word1 = request.json["word1"]
-            word2 = request.json["word3"]
-            word3 = request.json["word4"]
-            word4 = request.json["word5"]
-            word5 = request.json["word6"]
-            if word0 == userseed.word00 and \
-                word1 == userseed.word01 and \
-                word2 == userseed.word02 and \
-                word3 == userseed.word03 and \
-                word4 == userseed.word04 and \
-                word5 == userseed.word05:
+        user = Auth_User.query \
+            .filter(Auth_User.id == current_user.id)\
+            .first()
+
+        if request.method == 'POST':
+            userseed = db.session.query(Auth_AccountSeedWords) \
+                .filter(Auth_AccountSeedWords.user_id == user.id)\
+                .first() is not None
+            if userseed:
+                userseed = db.session.query(Auth_AccountSeedWords) \
+                    .filter(Auth_AccountSeedWords.user_id == user.id)\
+                    .first()
+                word0 = str(request.json["word0"])
+                word1 = str(request.json["word1"])
+                word2 = str(request.json["word2"])
+                word3 = str(request.json["word3"])
+                word4 = str(request.json["word4"])
+                word5 = str(request.json["word5"])
+                if (word0 != userseed.word00):
+                    
+                    return jsonify({"error 1": "Seed does not match"}), 409
+                if (word1 != userseed.word01):
+                    return jsonify({"error 2": "Seed does not match"}), 409
+                if (word2 != userseed.word02):
+                    return jsonify({"error 3": "Seed does not match"}), 409
+                if (word3 != userseed.word03):
+                    return jsonify({"error": "Seed does not match 4"}), 409
+                if (word4 != userseed.word04):
+                    return jsonify({"error": "Seed does not match 5"}), 409
+                if (word5 != userseed.word05):
+                    return jsonify({"error": "Seed does not match 6"}), 409
 
                 user.confirmed = 1
-
 
                 db.session.add(user)
                 db.session.commit()
                 return jsonify({
-                    'status': 'Account Confirmed'
+                    'status': 'success'
                 }), 200
             else:
-                return jsonify({"error": "Seed does not match"}), 409
-        else:
-            return jsonify({"error": "Seed does not exist"}), 409
+                return jsonify({"error": "Seed does not exist"}), 409
 
 
 @auth.route('/unlock-account', methods=['POST'])
@@ -391,7 +411,8 @@ def retrieve_seed_to_unlock_account():
             .first()
 
         if userseed is not None:
-            user = Auth_User.query.filter(Auth_User.id == userseed.user_id).first()
+            user = Auth_User.query.filter(
+                Auth_User.id == userseed.user_id).first()
             user.passwordpinallowed = 1
 
             db.session.add(user)
@@ -412,7 +433,7 @@ def change_password():
         user = Auth_User.query \
             .filter(Auth_User.id == current_user.id) \
             .first()
-      
+
         new_password = request.json["password"]
         new_password_confirm = request.json["password_confirm"]
         if str(new_password) == str(new_password_confirm):
@@ -422,7 +443,7 @@ def change_password():
             db.session.add(user)
             db.session.commit()
             return jsonify({"status": "success"}), 200
-    
+
         else:
             return jsonify({"error": "Incorrect Passwords"}), 409
 
@@ -432,7 +453,7 @@ def change_password():
 def change_pin():
 
     if request.method == 'POST':
-      
+
         user = Auth_User.query \
             .filter(Auth_User.id == current_user.id) \
             .first()
@@ -479,9 +500,9 @@ def vacation_on():
                 a.online = 0
                 db.session.add(a)
         db.session.commit()
-        return jsonify({ "status": "Vacation Mode Enabled"}), 200
+        return jsonify({"status": "Vacation Mode Enabled"}), 200
     else:
-        return jsonify({"error": "Vacation Mode already enabled" }), 409
+        return jsonify({"error": "Vacation Mode already enabled"}), 409
 
 
 @auth.route("/vacation-off", methods=["POST"])
@@ -505,21 +526,6 @@ def vacation_off():
         return jsonify({"error": "Vacation Mode already disabled"}), 409
 
 
-@auth.route("/amiconfirmed", methods=["GET"])
-@login_required
-def check_confirmed():
-
-
-   
-    user = Auth_User.query.filter(Auth_User.id == current_user.id).first()
-    if user.confirmed == 0:
-        confirmed = False
-    else:
-        confirmed =  True
-  
-    return jsonify({"confirmed": confirmed}), 200
-
-
 @auth.route('/query/country', methods=['GET'])
 def get_country_list():
     """
@@ -527,7 +533,8 @@ def get_country_list():
     :return:
     """
     if request.method == 'GET':
-        country_list = Query_Country.query.order_by(Query_Country.name.asc()).all()
+        country_list = Query_Country.query.order_by(
+            Query_Country.name.asc()).all()
         country_schema = Query_Country_Schema(many=True)
         return jsonify(country_schema.dump(country_list))
 
@@ -539,8 +546,7 @@ def get_currency_list():
     :return:
     """
     if request.method == 'GET':
-        currency_list = Query_CurrencyList.query.order_by(Query_CurrencyList.value.asc()).all()
+        currency_list = Query_CurrencyList.query.order_by(
+            Query_CurrencyList.value.asc()).all()
         currency_schema = Query_CurrencyList_Schema(many=True)
         return jsonify(currency_schema.dump(currency_list))
-
-

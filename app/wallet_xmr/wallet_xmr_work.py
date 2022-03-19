@@ -11,7 +11,7 @@ from app.classes.wallet_xmr import \
     Xmr_WalletWork, \
     Xmr_WalletFee, \
     Xmr_Unconfirmed
-
+from app.classes.auth import Auth_User
 
 def xmr_create_wallet(user_id):
     """
@@ -20,7 +20,7 @@ def xmr_create_wallet(user_id):
     :param user_id:
     :return:
     """
-    timestamp = datetime.utcnow()
+    timestamp = datetime.datetime.utcnow()
 
     monero_newunconfirmed = Xmr_Unconfirmed(
         user_id=user_id,
@@ -64,7 +64,8 @@ def xmr_create_wallet(user_id):
 def xmr_create_qr_code(user_id, address):
     # find path of the user
     getuserlocation = userimagelocation(user_id=user_id)
-    thepath = os.path.join(UPLOADED_FILES_DEST_USER, getuserlocation, str(user_id))
+    get_user = Auth_User.query.get(user_id)
+    thepath = os.path.join(UPLOADED_FILES_DEST_USER, getuserlocation, str(get_user.uuid))
     path_plus_filename = thepath + '/' + address + '.png'
     qr = qrcode.QRCode(
                         version=None,

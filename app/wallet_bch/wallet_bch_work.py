@@ -104,7 +104,9 @@ def bch_create_wallet(user_id):
 def bch_create_qr_code(user_id, address):
     # find path of the user
     getuserlocation = userimagelocation(user_id=user_id)
-    thepath = os.path.join(UPLOADED_FILES_DEST_USER,getuserlocation, str(user_id))
+    get_user = Auth_User.query.get(user_id)
+    thepath = os.path.join(UPLOADED_FILES_DEST_USER,
+                           getuserlocation, str(get_user.uuid))
     path_plus_filename = thepath + '/' + address + '.png'
     qr = qrcode.QRCode(
                         version=None,
