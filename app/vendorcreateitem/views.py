@@ -101,6 +101,7 @@ def create_item():
 
                 price=0,
                 currency=current_user.currency,
+                currency_symbol='',
                 digital_currency_1=0,
                 digital_currency_2=0,
                 digital_currency_3=0,
@@ -126,11 +127,15 @@ def create_item():
            
 
                 origin_country=current_user.country,
+                origin_country_name='',
                 destination_country_one=0,
+                destination_country_one_name='',
                 destination_country_two=0,
+                destination_country_two_name='',
                 destination_country_three=0,
+                destination_country_three_name='',
                 destination_country_four=0,
-                destination_country_five=0,
+                destination_country_four_name='',
 
                 view_count=0,
                 item_rating=0,
@@ -154,210 +159,195 @@ def create_item_info(uuid):
     Creates the Vendor Item
     """
 
-    api_key_auth = request.headers.get('authorization')
-    if api_key_auth:
-        api_key = api_key_auth.replace('bearer ', '', 1)
-        current_user = Auth_User.query.filter_by(api_key=api_key).first()
-        see_if_user_allowed = Item_MarketItem.query\
-            .filter(Item_MarketItem.uuid==uuid, Item_MarketItem.vendor_id == current_user.id)\
-            .first() is not None
-        if see_if_user_allowed:
-            now = datetime.utcnow()
-            item = Item_MarketItem.query\
-                .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id) \
-                .first()
-           
-      # Shipping three toggle
-
-            # accept bitcoin
-            digital_currency_1 = request.json["digital_currency_1"]
-            if digital_currency_1 == '':
-                digital_currency_1 = False
-        
-            # accept bitcoin cash
-            digital_currency_2 = request.json["digital_currency_2"]
-            if digital_currency_2 == '':
-                digital_currency_2 = False   
-   
-            # accept monero
-            digital_currency_3 =  request.json["digital_currency_3"] 
-            if digital_currency_3 == '':
-                digital_currency_3 = False
-            # Free shipping toggle
-            free_shipping = request.json["free_shipping"]
-         
-            if free_shipping == '':
-                free_shipping = False
-                    
-            shipping_2= request.json["shipping_2"]
-            if shipping_2 == '':
-                shipping_2 = False
-
-            title = request.json["title"]
-
-            shipping_3= request.json["shipping_3"]
-            if shipping_3 == '':
-                shipping_3 = False
-         
-            title = request.json["title"]
-            # Item Condition Query
-            if request.json["item_condition"] == '':
-                return jsonify({ "status": 'error'})
-            else:
-                item_condition = request.json["item_condition"]
-                item_condition = item_condition['value']
-
-            # Item Count
-            item_count = request.json["item_count"]
-            item_count = int(item_count)
-            if item_count > 0:
-                item_count=int(item_count)
-            else:
-                return jsonify({ "status": 'error'})
-        
-            # Category
-            if request.json["category_id_0"] == '':
-                get_category_query = None
-                category_value = None
-                category_name = None
-                return jsonify({ "status": 'error',})
-            else:
-
-                category = request.json["category_id_0"]
-                category = category['value']
-                get_category_query = Category_Categories.query\
-                .filter(Category_Categories.value == category)\
-                .first_or_404()
-                category_value = get_category_query.value
-                category_name = get_category_query.name
-
-            # Price
-            price = request.json["price"]
-
-            # Keywords
-            keywords = request.json["keywords"]
+    now = datetime.utcnow()
+    item = Item_MarketItem.query\
+        .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id) \
+        .first()
     
-          
-            # Free shipping days
-            free_shipping_days = request.json["free_shipping_days"]
-            if free_shipping_days == '':
-                free_shipping_days = 0
+    get_currency_symbol = Query_Currency.query.filter(Query_Currency.value==current_user.currency).first()
+    currency_symbol = get_currency_symbol.name
+    # accept bitcoin
+    digital_currency_1 = request.json["digital_currency_1"]
+    if digital_currency_1 == '':
+        digital_currency_1 = False
 
+    # accept bitcoin cash
+    digital_currency_2 = request.json["digital_currency_2"]
+    if digital_currency_2 == '':
+        digital_currency_2 = False   
 
-            # Shipping two days
-            shipping_2_days = request.json["shipping_2_days"]
-            if shipping_2_days == '':
-                shipping_2_days = 0
-            # Shipping two price
-            shipping_2_price = request.json["shipping_2_price"]
-            if shipping_2_price == '':
-                shipping_2_price = 0
+    # accept monero
+    digital_currency_3 =  request.json["digital_currency_3"] 
+    if digital_currency_3 == '':
+        digital_currency_3 = False
+    # Free shipping toggle
+    free_shipping = request.json["free_shipping"]
+    
+    if free_shipping == '':
+        free_shipping = False
+            
+    shipping_2= request.json["shipping_2"]
+    if shipping_2 == '':
+        shipping_2 = False
 
-          
-            # Shipping three days
-            shipping_3_days = request.json["shipping_3_days"]
-            if shipping_3_days == '':
-                shipping_3_days = 0
-            # Shipping three price
-            shipping_3_price = request.json["shipping_3_price"]
-            if shipping_3_price == '':
-                shipping_3_price = 0
-
-
-            # Shipping to Country One
-            if request.json["shipping_to_country_one"] == '':
-                shipping_to_country_one = 1000
-            else:
-                shipping_to_country_one = request.json["shipping_to_country_one"]
-                shipping_to_country_one = shipping_to_country_one['value']
-
-            # Shipping to Country two
-            if request.json["shipping_to_country_two"] == '':
-                shipping_to_country_two = 0
-            else:
-                shipping_to_country_two = request.json["shipping_to_country_two"]
-                shipping_to_country_two = shipping_to_country_two['value']
-
-            # Shipping to Country One
-            if request.json["shipping_to_country_three"] == '':
-                shipping_to_country_three = 0
-            else:
-                shipping_to_country_three = request.json["shipping_to_country_three"]
-                shipping_to_country_three = shipping_to_country_three['value']
-
-            # Shipping to Country four
-            if request.json["shipping_to_country_four"] == '':
-                shipping_to_country_four = 0
-            else:
-                shipping_to_country_four = request.json["shipping_to_country_four"]
-                shipping_to_country_four = shipping_to_country_four['value']
-
-            # Shipping to Country five
-            if request.json["shipping_to_country_five"] == '':
-                shipping_to_country_five = 0
-            else:
-                shipping_to_country_five = request.json["shipping_to_country_five"]
-                shipping_to_country_five = shipping_to_country_five['value']
-
-            item_description = request.json["item_description"]
-            # create image of item in database
-            item = Item_MarketItem.query\
-                .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id)\
-                .first()
-
-            item.created=now
-            item.vendor_name=current_user.username
-            item.vendor_id=current_user.id
-            item.vendor_uuid=current_user.uuid
-            item.vendor_display_name=current_user.display_name
-
-            item.item_title=title
-            item.item_count=item_count
-            item.item_description=item_description
-            item.item_condition=item_condition
-            item.keywords=keywords
-            item.category_name_0=category_name
-            item.category_id_0=category_value
-
-            item.price=price
-            item.currency=current_user.currency
-
-            item.digital_currency_1=digital_currency_1
-            item.digital_currency_2=digital_currency_2
-            item.digital_currency_3=digital_currency_3
-
-            item.shipping_free=free_shipping
-            item.shipping_two=shipping_2
-            item.shipping_three=shipping_3
-
-
-            item.shipping_day_0=free_shipping_days
-
-      
-            item.shipping_price_2=shipping_2_price
-            item.shipping_day_2=shipping_2_days
-            item.shipping_price_3=shipping_3_price
-            item.shipping_day_3=shipping_3_days
-
-            item.destination_country_one=shipping_to_country_one
-            item.destination_country_two=shipping_to_country_two
-            item.destination_country_three=shipping_to_country_three
-            item.destination_country_four=shipping_to_country_four
-            item.destination_country_five=shipping_to_country_five
-
-
-            # add  to database
-            db.session.add(item)
-            db.session.commit()
-
-            getimagesubfolder = itemlocation(x=item.id)
-            directoryifitemlisting = os.path.join(UPLOADED_FILES_DEST_ITEM, getimagesubfolder, (str(item.uuid)))
-            mkdir_p(directoryifitemlisting)
-            return jsonify({"status": 'success'}), 200
-        else:
-            return jsonify({"error": 'Not Logged In'}), 401
+    shipping_3= request.json["shipping_3"]
+    if shipping_3 == '':
+        shipping_3 = False
+    
+    title = request.json["item_title"]
+    # Item Condition Query
+    if request.json["item_condition"] == '':
+        return jsonify({ "status": 'error'})
     else:
-        return jsonify({"error": 'Not Logged In'}), 401
+        item_condition = request.json["item_condition"]
+        item_condition = item_condition
+
+    # Item Count
+    item_count = request.json["item_count"]
+    item_count = int(item_count)
+    if item_count > 0:
+        item_count=int(item_count)
+    else:
+        return jsonify({ "status": 'error'})
+
+    # Category
+    if request.json["category_id_0"] == '':
+        get_category_query = None
+        category_value = None
+        category_name = None
+        return jsonify({ "status": 'error',})
+    else:
+        category = request.json["category_id_0"]
+        get_category_query = Category_Categories.query\
+            .filter(Category_Categories.value == category)\
+            .first_or_404()
+        category_value = get_category_query.value
+        category_name = get_category_query.name
+
+    # Price
+    price = request.json["price"]
+
+    # Keywords
+    keywords = request.json["keywords"]
+
+    # Free shipping days
+    free_shipping_days = request.json["free_shipping_days"]
+    if free_shipping_days == '':
+        free_shipping_days = 0
+
+
+    # Shipping two days
+    shipping_2_days = request.json["shipping_2_days"]
+    if shipping_2_days == '':
+        shipping_2_days = 0
+    # Shipping two price
+    shipping_2_price = request.json["shipping_2_price"]
+    if shipping_2_price == '':
+        shipping_2_price = 0
+    
+    # Shipping three days
+    shipping_3_days = request.json["shipping_3_days"]
+    if shipping_3_days == '':
+        shipping_3_days = 0
+    # Shipping three price
+    shipping_3_price = request.json["shipping_3_price"]
+    if shipping_3_price == '':
+        shipping_3_price = 0
+
+    # Shipping to Country One
+    if request.json["shipping_to_country_one"] == '':
+        shipping_to_country_one = 1000
+    else:
+        shipping_to_country_one = request.json["shipping_to_country_one"]
+       
+        get_name_country_one = Query_Country.query\
+            .filter(Query_Country.value == shipping_to_country_one)\
+            .first()
+        shipping_to_country_one_name = get_name_country_one.name
+
+    # Shipping to Country two
+    if request.json["shipping_to_country_two"] == '':
+        shipping_to_country_two = 0
+    else:
+        shipping_to_country_two = request.json["shipping_to_country_two"]
+        get_name_country_two = Query_Country.query\
+            .filter(Query_Country.value == shipping_to_country_two)\
+            .first()
+        shipping_to_country_two_name = get_name_country_two.name
+
+    # Shipping to Country One
+    if request.json["shipping_to_country_three"] == '':
+        shipping_to_country_three = 0
+    else:
+        shipping_to_country_three = request.json["shipping_to_country_three"]
+        get_name_country_three = Query_Country.query\
+            .filter(Query_Country.value == shipping_to_country_three)\
+            .first()
+        shipping_to_country_three_name = get_name_country_three.name
+
+
+    # Shipping to Country four
+    if request.json["shipping_to_country_four"] == '':
+        shipping_to_country_four = 0
+    else:
+        shipping_to_country_four = request.json["shipping_to_country_four"]
+        get_name_country_four = Query_Country.query\
+            .filter(Query_Country.value == shipping_to_country_four)\
+            .first()
+        shipping_to_country_four_name = get_name_country_four.name
+
+  
+
+    item_description = request.json["item_description"]
+    # create image of item in database
+    item = Item_MarketItem.query\
+        .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id)\
+        .first()
+
+    item.created=now
+    item.vendor_name=current_user.username
+    item.vendor_id=current_user.id
+    item.vendor_uuid=current_user.uuid
+    item.vendor_display_name=current_user.display_name
+    item.item_title=title
+    item.item_count=item_count
+    item.item_description=item_description
+    item.item_condition=item_condition
+    item.keywords=keywords
+    item.category_name_0=category_name
+    item.category_id_0=category_value
+    item.price=price
+    item.currency=current_user.currency
+    item.currency_symbol = currency_symbol,
+    item.digital_currency_1=digital_currency_1
+    item.digital_currency_2=digital_currency_2
+    item.digital_currency_3=digital_currency_3
+    item.shipping_free=free_shipping
+    item.shipping_two=shipping_2
+    item.shipping_three=shipping_3
+    item.shipping_day_0=free_shipping_days
+    item.shipping_price_2=shipping_2_price
+    item.shipping_day_2=shipping_2_days
+    item.shipping_price_3=shipping_3_price
+    item.shipping_day_3=shipping_3_days
+    item.destination_country_one=shipping_to_country_one
+    item.destination_country_one_name = shipping_to_country_one_name
+    item.destination_country_two=shipping_to_country_two
+    item.destination_country_two_name = shipping_to_country_two_name
+    item.destination_country_three=shipping_to_country_three
+    item.destination_country_three_name = shipping_to_country_three_name
+    item.destination_country_four=shipping_to_country_four
+    item.destination_country_four_name = shipping_to_country_four_name
+
+    # add  to database
+    db.session.add(item)
+    db.session.commit()
+
+    getimagesubfolder = itemlocation(x=item.id)
+    directoryifitemlisting = os.path.join(UPLOADED_FILES_DEST_ITEM, getimagesubfolder, (str(item.uuid)))
+    mkdir_p(directoryifitemlisting)
+    return jsonify({"status": 'success'}), 200
+
 
 
 @vendorcreateitem.route('/create-item-images/<string:uuid>', methods=['POST', 'OPTIONS'])

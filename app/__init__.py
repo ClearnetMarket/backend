@@ -102,7 +102,7 @@ def load_user_from_request(request):
 api_main = {
     "origins": [ApplicationConfig.ORIGIN_URL],
     "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
-    "allow_headers": ['Authorization', 'authorization', 'Content-Type', 'Access-Control-Allow-Headers', 'Origin,Accept', 'X-Requested-With', 'Content-Type', 'Access-Control-Request-Method', 'Access-Control-Request-Headers']
+    "allow_headers": ['Authorization', 'application/json','authorization', 'Content-Type', 'Access-Control-Allow-Headers', 'Origin,Accept', 'X-Requested-With', 'Content-Type', 'Access-Control-Request-Method', 'Access-Control-Request-Headers']
 }
 cors = CORS(app,  supports_credentials=True, resources={r'/*': api_main})
 
@@ -194,9 +194,9 @@ app.register_blueprint(userdata_blueprint, url_prefix='/info')
 # from .promote import promote as promote_blueprint
 # app.register_blueprint(promote_blueprint, url_prefix='/promote')
 #
-# from .checkout import checkout as checkout_blueprint
-# app.register_blueprint(checkout_blueprint, url_prefix='/checkout')
-#
+from .checkout import checkout as checkout_blueprint
+app.register_blueprint(checkout_blueprint, url_prefix='/checkout')
+
 from .vendorcreate import vendorcreate as vendorcreate_blueprint
 app.register_blueprint(vendorcreate_blueprint, url_prefix='/vendorcreate')
 
@@ -206,8 +206,8 @@ app.register_blueprint(vendorcreateitem_blueprint, url_prefix='/vendorcreateitem
 # from .vendorverification import vendorverification as vendorverification_blueprint
 # app.register_blueprint(vendorverification_blueprint, url_prefix='/vendor-verification')
 #
-# from .vendor import vendor as vendor_blueprint
-# app.register_blueprint(vendor_blueprint, url_prefix='/vendor')
+from .vendor import vendor as vendor_blueprint
+app.register_blueprint(vendor_blueprint, url_prefix='/vendor')
 #
 
 # bch wallet

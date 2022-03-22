@@ -47,11 +47,16 @@ class Item_MarketItem(db.Model):
     category_id_0 = db.Column(db.Integer)
 
     origin_country = db.Column(db.INTEGER)
+    origin_country_name = db.Column(db.VARCHAR(150))
     destination_country_one = db.Column(db.INTEGER)
+    destination_country_one_name = db.Column(db.VARCHAR(150))
     destination_country_two = db.Column(db.INTEGER)
+    destination_country_two_name = db.Column(db.VARCHAR(150))
     destination_country_three = db.Column(db.INTEGER)
+    destination_country_three_name = db.Column(db.VARCHAR(150))
     destination_country_four = db.Column(db.INTEGER)
-    destination_country_five = db.Column(db.INTEGER)
+    destination_country_four_name = db.Column(db.VARCHAR(150))
+
 
     item_title = db.Column(db.VARCHAR(500))
     item_count = db.Column(db.INTEGER)
@@ -61,6 +66,7 @@ class Item_MarketItem(db.Model):
 
     price = db.Column(db.DECIMAL(20, 2))
     currency = db.Column(db.INTEGER)
+    currency_symbol = db.Column(db.VARCHAR(10))
 
     digital_currency_1 = db.Column(db.BOOLEAN)
     digital_currency_2 = db.Column(db.BOOLEAN)
@@ -106,12 +112,12 @@ class Item_MarketItem_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Item_MarketItem
             
-        fields = ('uuid', 'online', 'created', 'price', 'vendor_name', 'node_id',
-                    'origin_country','destination_country_one', 
-                    'destination_country_two', 'destination_country_three',
-                    'destination_country_four', 'destination_country_five',
+        fields = ('uuid', 'online', 'created', 'price', 'vendor_name', 'node_id', 'vendor_uuid',
+                  'origin_country_name', 'currency_symbol', 'destination_country_one_name',
+                    'destination_country_two_name', 'destination_country_three_name',
+                    'destination_country_four_name', 'destination_country_five_name',
                      'item_title', 'item_count', 'item_description',
-                    'item_condition', 'keywords', 'price', 'currency', 
+                    'item_condition', 'keywords', 'price',  
                     'digital_currency_1', 'digital_currency_2', 'digital_currency_3',
                     'image_one_url', 'image_two_url', 'image_three_url', 'image_four_url',
                     'image_one_server', 'image_two_server', 'image_three_server', 'image_four_server',

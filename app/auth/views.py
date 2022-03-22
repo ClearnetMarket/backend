@@ -93,6 +93,7 @@ def login():
         user = Auth_User.query.filter_by(username=username).first() is not None
 
         if not user:
+        
             return jsonify({"error": "Unauthorized"}), 401
         user = Auth_User.query.filter_by(username=username).first()
         if not bcrypt.check_password_hash(user.password_hash, password):
@@ -126,7 +127,7 @@ def login():
             'token': user.api_key
         }), 200
     else:
-        print("bummer")
+        return jsonify({"error": "Unauthorized"}), 401
 
 
 @auth.route("/register", methods=["POST"])
@@ -134,7 +135,6 @@ def register_user():
 
     now = datetime.utcnow()
 
-    print(request.json)
     username = request.json["username"]
     email = request.json["email"]
     password = request.json["password"]

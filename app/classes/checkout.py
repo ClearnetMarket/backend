@@ -13,6 +13,7 @@ class Checkout_CheckoutShoppingCart(db.Model):
     customer_id = db.Column(db.INTEGER)
     vendor = db.Column(db.VARCHAR(40))
     vendor_id = db.Column(db.INTEGER)
+    vendor_uuid = db.Column(db.VARCHAR(50))
     currency = db.Column(db.INTEGER)
     title_of_item = db.Column(db.VARCHAR(500))
     price_of_item = db.Column(db.DECIMAL(20, 2))

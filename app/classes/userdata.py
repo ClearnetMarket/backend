@@ -43,6 +43,7 @@ class UserData_Feedback(db.Model):
     customername = db.Column(db.VARCHAR(40))
     sale_id = db.Column(db.INTEGER)
     vendorname = db.Column(db.VARCHAR(40))
+    vendor_uuid = db.Column(db.VARCHAR(40))
     vendorid = db.Column(db.INTEGER)
     comment = db.Column(db.TEXT)
     item_rating = db.Column(db.INTEGER)
@@ -69,4 +70,5 @@ class UserData_Feedback_Schema(ma.SQLAlchemyAutoSchema):
     timestamp = ma.auto_field()
     addedtodb = ma.auto_field()
     author_id = ma.auto_field()
+    vendor_uuid = ma.auto_field()
 
