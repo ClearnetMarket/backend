@@ -24,16 +24,13 @@ class Checkout_CheckoutShoppingCart(db.Model):
     item_id = db.Column(db.INTEGER)
     vendorsupply = db.Column(db.INTEGER)
     shipping_info_0 = db.Column(db.VARCHAR(350))
-    shipping_day_least_0 = db.Column(db.INTEGER)
-    shipping_day_most_0 = db.Column(db.INTEGER)
+    shipping_day_0 = db.Column(db.INTEGER)
     shipping_info_2 = db.Column(db.VARCHAR(350))
     shipping_price_2 = db.Column(db.DECIMAL(20, 2))
-    shipping_day_least_2 = db.Column(db.INTEGER)
-    shipping_day_most_2 = db.Column(db.INTEGER)
+    shipping_day_2 = db.Column(db.INTEGER)
     shipping_info_3 = db.Column(db.VARCHAR(350))
     shipping_price_3 = db.Column(db.DECIMAL(20, 2))
-    shipping_day_least_3 = db.Column(db.INTEGER)
-    shipping_day_most_3 = db.Column(db.INTEGER)
+    shipping_day_3 = db.Column(db.INTEGER)
     shipping_free = db.Column(db.INTEGER)
     shipping_two = db.Column(db.INTEGER)
     shipping_three = db.Column(db.INTEGER)
@@ -41,6 +38,7 @@ class Checkout_CheckoutShoppingCart(db.Model):
     digital_currency_1 = db.Column(db.INTEGER)
     digital_currency_2 = db.Column(db.INTEGER)
     digital_currency_3 = db.Column(db.INTEGER)
+
     selected_currency = db.Column(db.INTEGER)
     selected_shipping = db.Column(db.INTEGER)
     selected_shipping_description = db.Column(db.VARCHAR(350))
@@ -53,6 +51,66 @@ class Checkout_CheckoutShoppingCart(db.Model):
 
     final_shipping_price_xmr = db.Column(db.DECIMAL(20, 8))
     final_price_xmr = db.Column(db.DECIMAL(20, 8))
+
+
+
+
+
+class Checkout_ShoppingCartTotal(db.Model):
+    __tablename__ = 'checkout_shopping_cart_total'
+    __bind_key__ = 'clearnet'
+    __table_args__ = {"schema": "public"}
+    id = db.Column(db.Integer,
+                   primary_key=True,
+                   autoincrement=True,
+                   unique=True)
+
+    customer_id = db.Column(db.INTEGER)
+    # btc
+    btc_sum_of_item = db.Column(db.INTEGER)
+    btc_price = db.Column(db.DECIMAL(20, 8))
+    btc_shipping_price = db.Column(db.DECIMAL(20, 8))
+    btc_total_price = db.Column(db.DECIMAL(20, 8))
+    # bch
+    bch_sum_of_item = db.Column(db.INTEGER)
+    bch_price = db.Column(db.DECIMAL(20, 8))
+    bch_shipping_price = db.Column(db.DECIMAL(20, 8))
+    bch_total_price = db.Column(db.DECIMAL(20, 8))
+    # xmr
+    xmr_sum_of_item = db.Column(db.INTEGER)
+    xmr_price = db.Column(db.DECIMAL(20, 12))
+    xmr_shipping_price = db.Column(db.DECIMAL(20, 12))
+    xmr_total_price = db.Column(db.DECIMAL(20, 12))
+
+
+
+
+
+
+
+
+
+class Checkout_ShoppingCartTotal_Schema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Checkout_ShoppingCartTotal
+
+    id = ma.auto_field()
+    customer_id = ma.auto_field()
+    # btc
+    btc_sum_of_item = ma.auto_field()
+    btc_price = ma.auto_field()
+    btc_shipping_price = ma.auto_field()
+    btc_total_price = ma.auto_field()
+    # bch
+    bch_sum_of_item = ma.auto_field()
+    bch_price = ma.auto_field()
+    bch_shipping_price = ma.auto_field()
+    bch_total_price = ma.auto_field()
+    # xmr
+    xmr_sum_of_item = ma.auto_field()
+    xmr_price = ma.auto_field()
+    xmr_shipping_price = ma.auto_field()
+    xmr_total_price = ma.auto_field()
 
 
 class Checkout_CheckoutShoppingCart_Schema(ma.SQLAlchemyAutoSchema):
@@ -102,54 +160,3 @@ class Checkout_CheckoutShoppingCart_Schema(ma.SQLAlchemyAutoSchema):
 
     final_shipping_price_xmr = ma.auto_field()
     final_price_xmr = ma.auto_field()
-
-
-class Checkout_ShoppingCartTotal(db.Model):
-    __tablename__ = 'checkout_shopping_cart_total'
-    __bind_key__ = 'clearnet'
-    __table_args__ = {"schema": "public"}
-    id = db.Column(db.Integer,
-                   primary_key=True,
-                   autoincrement=True,
-                   unique=True)
-
-    customer_id = db.Column(db.INTEGER)
-    # btc
-    btc_sum_of_item = db.Column(db.INTEGER)
-    btc_price = db.Column(db.DECIMAL(20, 8))
-    btc_shipping_price = db.Column(db.DECIMAL(20, 8))
-    btc_total_price = db.Column(db.DECIMAL(20, 8))
-    # bch
-    bch_sum_of_item = db.Column(db.INTEGER)
-    bch_price = db.Column(db.DECIMAL(20, 8))
-    bch_shipping_price = db.Column(db.DECIMAL(20, 8))
-    bch_total_price = db.Column(db.DECIMAL(20, 8))
-    # xmr
-    xmr_sum_of_item = db.Column(db.INTEGER)
-    xmr_price = db.Column(db.DECIMAL(20, 12))
-    xmr_shipping_price = db.Column(db.DECIMAL(20, 12))
-    xmr_total_price = db.Column(db.DECIMAL(20, 12))
-
-
-class Checkout_ShoppingCartTotal_Schema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = Checkout_ShoppingCartTotal
-
-    id = ma.auto_field()
-    customer_id = ma.auto_field()
-    # btc
-    btc_sum_of_item = ma.auto_field()
-    btc_price = ma.auto_field()
-    btc_shipping_price = ma.auto_field()
-    btc_total_price = ma.auto_field()
-    # bch
-    bch_sum_of_item = ma.auto_field()
-    bch_price = ma.auto_field()
-    bch_shipping_price = ma.auto_field()
-    bch_total_price = ma.auto_field()
-    # xmr
-    xmr_sum_of_item = ma.auto_field()
-    xmr_price = ma.auto_field()
-    xmr_shipping_price = ma.auto_field()
-    xmr_total_price = ma.auto_field()
-
