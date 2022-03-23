@@ -57,7 +57,7 @@ class Auth_AccountSeedWords(db.Model):
 class Auth_AccountSeedWords_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Auth_AccountSeedWords
-    id = ma.auto_field()
+
     user_id = ma.auto_field()
     word00 = ma.auto_field()
     word01 = ma.auto_field()
