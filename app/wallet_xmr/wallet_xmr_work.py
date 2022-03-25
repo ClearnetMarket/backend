@@ -6,6 +6,7 @@ from app.common.functions import\
     userimagelocation
 from app.notification import notification
 from app.wallet_xmr.security import xmr_check_balance
+from app.wallet_xmr.transaction import xmr_add_transaction
 from app.classes.wallet_xmr import \
     Xmr_Wallet, \
     Xmr_WalletWork, \
@@ -134,3 +135,45 @@ def xmr_send_coin(user_id, sendto, amount):
         db.session.add(userswallet)
     else:
         notification(user_id=user_id,subid=0,subname='',postid=0,commentid=0,msg=34)
+
+
+
+
+def xmr_send_coin_to_escrow(amount, comment, user_id):
+    """
+    # TO clearnet_webapp Wallet
+    # this function will move the coin to clearnets wallet_btc from a user
+    :param amount:
+    :param comment:
+    :param user_id:
+    :return:
+    """
+    passed_balance_check = xmr_check_balance(user_id=user_id, amount=amount)
+    if passed_balance_check == 1:
+
+        type_transaction = 4
+        userwallet = Xmr_Wallet.query.filter(
+            Xmr_Wallet.user_id == user_id).first()
+        curbal = Decimal(userwallet.currentbalance)
+        amounttomod = Decimal(amount)
+        newbalance = Decimal(curbal) - Decimal(amounttomod)
+        userwallet.currentbalance = newbalance
+        db.session.add(userwallet)
+
+        oid = int(comment)
+        xmr_add_transaction(category=type_transaction,
+                            amount=amount,
+                            user_id=user_id,
+                            comment='Sent Coin To Escrow',
+                            orderid=oid,
+                            balance=newbalance
+                            )
+
+    else:
+        notification(
+            type=34,
+            username='',
+            user_id=user_id,
+            salenumber=comment,
+            bitcoin=amount
+        )

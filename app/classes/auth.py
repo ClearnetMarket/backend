@@ -1,5 +1,3 @@
-
-
 from flask import current_app
 from flask_login import UserMixin, AnonymousUserMixin
 from app import db, ma, login_manager
@@ -9,62 +7,6 @@ from uuid import uuid4
 def get_uuid():
     return uuid4().hex
 
-class Auth_UserFees(db.Model):
-    __tablename__ = 'auth_user_fees'
-    __bind_key__ = 'clearnet'
-    __table_args__ = {"schema": "public"}
-
-    id = db.Column(db.Integer,
-                   autoincrement=True,
-                   primary_key=True,
-                   unique=True)
-    user_id = db.Column(db.INTEGER)
-    buyerfee = db.Column(db.DECIMAL(6, 4))
-    buyerfee_time = db.Column(db.TIMESTAMP())
-    vendorfee = db.Column(db.DECIMAL(6, 4))
-    vendorfee_time = db.Column(db.TIMESTAMP())
-
-
-class Auth_UserFees_Schema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = Auth_UserFees
-    id = ma.auto_field()
-    user_id = ma.auto_field()
-    buyerfee = ma.auto_field()
-    buyerfee_time = ma.auto_field()
-    vendorfee = ma.auto_field()
-    vendorfee_time = ma.auto_field()
-
-
-class Auth_AccountSeedWords(db.Model):
-    __tablename__ = 'auth_account_seed_words'
-    __bind_key__ = 'clearnet'
-    __table_args__ = {"schema": "public"}
-
-    id = db.Column(db.Integer,
-                   autoincrement=True,
-                   primary_key=True,
-                   unique=True)
-    user_id = db.Column(db.INTEGER)
-    word00 = db.Column(db.VARCHAR(30))
-    word01 = db.Column(db.VARCHAR(30))
-    word02 = db.Column(db.VARCHAR(30))
-    word03 = db.Column(db.VARCHAR(30))
-    word04 = db.Column(db.VARCHAR(30))
-    word05 = db.Column(db.VARCHAR(30))
-    wordstring = db.Column(db.TEXT)
-
-class Auth_AccountSeedWords_Schema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = Auth_AccountSeedWords
-
-    user_id = ma.auto_field()
-    word00 = ma.auto_field()
-    word01 = ma.auto_field()
-    word02 = ma.auto_field()
-    word03 = ma.auto_field()
-    word04 = ma.auto_field()
-    word05 = ma.auto_field()
 
 class Auth_User(UserMixin, db.Model):
     __tablename__ = 'auth_users'
@@ -173,36 +115,6 @@ class Auth_User(UserMixin, db.Model):
     def get_id(self):
         return self.id
 
-    def generate_auth_token(self, expiration):
-        s = Serializer(current_app.config['SECRET_KEY'],
-                       expires_in=expiration)
-
-        return s.dumps({'id': self.id}).decode('ascii')
-
-    def confirm(self, token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-
-        try:
-            data = s.loads(token)
-        except:
-            return False
-        if data.get('confirm') != self.id:
-            return False
-
-        self.confirmed = True
-        db.session.add(self)
-
-        return True
-
-    @staticmethod
-    def verify_auth_token(token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token)
-        except:
-            return None
-        return Auth_User.query.get(data['id'])
-
 
 class Auth_User_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -222,6 +134,66 @@ class Auth_User_Schema(ma.SQLAlchemyAutoSchema):
     shopping_timer = ma.auto_field()
     confirmed = ma.auto_field()
 
+
+class Auth_UserFees(db.Model):
+    __tablename__ = 'auth_user_fees'
+    __bind_key__ = 'clearnet'
+    __table_args__ = {"schema": "public"}
+
+    id = db.Column(db.Integer,
+                   autoincrement=True,
+                   primary_key=True,
+                   unique=True)
+    user_id = db.Column(db.INTEGER)
+    buyerfee = db.Column(db.DECIMAL(6, 4))
+    buyerfee_time = db.Column(db.TIMESTAMP())
+    vendorfee = db.Column(db.DECIMAL(6, 4))
+    vendorfee_time = db.Column(db.TIMESTAMP())
+
+
+class Auth_UserFees_Schema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Auth_UserFees
+    id = ma.auto_field()
+    user_id = ma.auto_field()
+    buyerfee = ma.auto_field()
+    buyerfee_time = ma.auto_field()
+    vendorfee = ma.auto_field()
+    vendorfee_time = ma.auto_field()
+
+
+class Auth_AccountSeedWords(db.Model):
+    __tablename__ = 'auth_account_seed_words'
+    __bind_key__ = 'clearnet'
+    __table_args__ = {"schema": "public"}
+
+    id = db.Column(db.Integer,
+                   autoincrement=True,
+                   primary_key=True,
+                   unique=True)
+    user_id = db.Column(db.INTEGER)
+    word00 = db.Column(db.VARCHAR(30))
+    word01 = db.Column(db.VARCHAR(30))
+    word02 = db.Column(db.VARCHAR(30))
+    word03 = db.Column(db.VARCHAR(30))
+    word04 = db.Column(db.VARCHAR(30))
+    word05 = db.Column(db.VARCHAR(30))
+    wordstring = db.Column(db.TEXT)
+
+
+class Auth_AccountSeedWords_Schema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Auth_AccountSeedWords
+
+    user_id = ma.auto_field()
+    word00 = ma.auto_field()
+    word01 = ma.auto_field()
+    word02 = ma.auto_field()
+    word03 = ma.auto_field()
+    word04 = ma.auto_field()
+    word05 = ma.auto_field()
+
+    
 class AnonymousUser(AnonymousUserMixin):
     def __init__(self):
         self.username = 'Guest'

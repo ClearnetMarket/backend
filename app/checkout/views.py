@@ -1,41 +1,226 @@
+
 from flask import jsonify, request
 from flask_login import current_user, login_required
 from app.checkout import checkout
 from app import db
 from app.notification import notification
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-import calendar
+
 # models
 from app.classes.checkout import\
     Checkout_CheckoutShoppingCart,\
     Checkout_ShoppingCartTotal,\
-    Checkout_CheckoutShoppingCart_Schema, \
-    Checkout_ShoppingCartTotal_Schema
+    carts_schema, carts_total_schema
+
 from app.classes.auth import\
     Auth_User,\
     Auth_UserFees
 from app.classes.item import \
-    Item_MarketItem, \
-    Checkout_CheckoutShoppingCart, \
-    Checkout_ShoppingCartTotal
+    Item_MarketItem
 from app.classes.service import \
     Service_ShippingSecret
-from app.classes.vendor import \
-    User_Orders
-from app.classes.wallet_btc import Btc_Wallet, Btc_Prices
-from app.classes.wallet_bch import Bch_Wallet, Bch_Prices
-from app.classes.wallet_xmr import Xmr_Wallet, Xmr_Prices
+from app.classes.user_orders import User_Orders
+from app.classes.wallet_btc import Btc_Wallet
+from app.classes.wallet_bch import Bch_Wallet
+from app.classes.wallet_xmr import Xmr_Wallet
 # endmodels
 
 from app.wallet_bch.wallet_bch_work import bch_send_coin_to_escrow
 from app.wallet_btc.wallet_btc_work import btc_send_coin_to_escrow
 from app.wallet_xmr.wallet_xmr_work import xmr_send_coin_to_escrow
-from app.common.functions import floating_decimals, convert_local_to_bch, convert_local_to_btc, convert_local_to_xmr
-from app.userdata.views import \
-    userdata_different_trading_partners_user, \
-    userdata_different_trading_partners_vendor
+from app.common.functions import floating_decimals,\
+    convert_local_to_bch,\
+    convert_local_to_btc,\
+    convert_local_to_xmr
 
+
+@checkout.route('/data/incart', methods=['GET'])
+@login_required
+def data_shopping_cart_in_cart():
+    """
+    Returns items in the shopping cart
+    """
+    if request.method == 'GET':
+        cart = Checkout_CheckoutShoppingCart.query\
+            .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
+                    Checkout_CheckoutShoppingCart.saved_for_later == 0)\
+            .first() is not None
+     
+        if cart:
+            cart_items = Checkout_CheckoutShoppingCart.query\
+                .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
+                        Checkout_CheckoutShoppingCart.saved_for_later == 0)\
+                .all()
+
+            return carts_schema.jsonify(cart_items)
+
+        else:
+            print("oops")
+            return jsonify({"status": None}), 409
+
+
+@checkout.route('/data/saved', methods=['GET'])
+@login_required
+def data_shopping_cart_in_saved():
+    """
+    Returns items in the shopping cart
+    """
+    if request.method == 'GET':
+        cart = db.session\
+            .query(Checkout_CheckoutShoppingCart)\
+            .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
+                    Checkout_CheckoutShoppingCart.saved_for_later == 1)\
+            .first() is not None
+
+        if cart:
+         
+            cart_items = db.session\
+                .query(Checkout_CheckoutShoppingCart)\
+                .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
+                        Checkout_CheckoutShoppingCart.saved_for_later == 1)\
+                .all()
+         
+            return carts_schema.jsonify(cart_items)
+        else:
+          
+            return jsonify({"status": "No items in your cart exist"}), 409
+
+
+@checkout.route('/data/total', methods=['GET'])
+@login_required
+def data_shopping_cart_total():
+    """
+    Returns total costs of items for first shopping cart page
+    """
+    if request.method == 'GET':
+        total_in_cart = []
+        total_shipping_cart = []
+        total_items = []
+        all_cart_items = Checkout_CheckoutShoppingCart.query\
+            .filter(Checkout_CheckoutShoppingCart.customer_id == current_user.id)\
+            .filter(Checkout_CheckoutShoppingCart.saved_for_later == 0)\
+            .all()
+        for f in all_cart_items:
+            total_in_cart.append(f.price_of_item * f.quantity_of_item)
+            total_items.append(f.quantity_of_item)
+            if f.selected_shipping == None:
+                total_shipping_cart.append(0)
+            if f.selected_shipping == 1:
+                total_shipping_cart.append(0)
+            if f.selected_shipping == 2:
+                total_shipping_cart.append(f.shipping_price_2 * f.quantity_of_item)
+            if f.selected_shipping == 3:
+                total_shipping_cart.append(f.shipping_price_3 * f.quantity_of_item)
+
+
+
+        total_items_in_cart = sum(total_items)
+        total_price_of_items_with_quantity = sum(total_in_cart)
+        total_shipping_price_of_items_with_quantity = sum(total_shipping_cart)
+        total = (
+            total_shipping_price_of_items_with_quantity + total_price_of_items_with_quantity)
+        return jsonify({
+            'total_items': total_items_in_cart,
+            'total_shipping': total_shipping_price_of_items_with_quantity,
+            'total_price_before_shipping': total_price_of_items_with_quantity,
+            'total_price': total
+
+        })
+
+
+@checkout.route('/data/cart/total', methods=['GET'])
+@login_required
+def data_checkout_total():
+    """
+    Returns items in the shopping cart second page total
+    """
+    if request.method == 'GET':
+
+        total_cart = Checkout_ShoppingCartTotal.query\
+            .filter(Checkout_ShoppingCartTotal.customer_id == current_user.id)\
+            .first()
+
+        return jsonify({
+            'btc_sum_of_item': total_cart.btc_sum_of_item,
+            'btc_price': total_cart.btc_price,
+            'btc_shipping_price': total_cart.btc_shipping_price,
+            'btc_total_price': total_cart.btc_total_price,
+
+            'bch_sum_of_item': total_cart.bch_sum_of_item,
+            'bch_price': total_cart.bch_price,
+            'bch_shipping_price': total_cart.bch_shipping_price,
+            'bch_total_price': total_cart.bch_total_price,
+
+            'xmr_sum_of_item': total_cart.xmr_sum_of_item,
+            'xmr_price': total_cart.xmr_price,
+            'xmr_shipping_price': total_cart.xmr_shipping_price,
+            'xmr_total_price': total_cart.xmr_total_price,
+        })
+
+
+@checkout.route('/add/<string:itemuuid>', methods=['POST'])
+@login_required
+def cart_add_to_shopping_cart(itemuuid):
+    """
+    Adds item to shopping cart
+    """
+    
+    get_item_for_sale = db.session\
+        .query(Item_MarketItem) \
+        .filter_by(uuid=itemuuid) \
+        .first()
+
+    new_shopping_cart_item = Checkout_CheckoutShoppingCart(
+    item_id=get_item_for_sale.id,
+    item_uuid=get_item_for_sale.uuid,
+    customer_user_name = current_user.username,
+    customer_id = current_user.id,
+    customer_uuid=current_user.uuid,
+    vendor_user_name = get_item_for_sale.vendor_display_name,
+    vendor_id = get_item_for_sale.vendor_id,
+    vendor_uuid = get_item_for_sale.vendor_uuid,
+    currency = get_item_for_sale.currency,
+    title_of_item=get_item_for_sale.item_title,
+    price_of_item=get_item_for_sale.price,
+    image_of_item = get_item_for_sale.image_one_url,
+    shipping_info_0 = get_item_for_sale.shipping_info_0,
+    shipping_day_0 = get_item_for_sale.shipping_day_0,
+    shipping_info_2 = get_item_for_sale.shipping_info_2,
+    shipping_price_2 = get_item_for_sale.shipping_price_2,
+    shipping_day_2 = get_item_for_sale.shipping_day_2,
+    shipping_info_3 = get_item_for_sale.shipping_info_3,
+    shipping_price_3 = get_item_for_sale.shipping_price_3,
+    shipping_day_3 = get_item_for_sale.shipping_day_3,
+    vendor_supply=get_item_for_sale.item_count,
+    shipping_free = get_item_for_sale.shipping_free,
+    shipping_two = get_item_for_sale.shipping_two,
+    shipping_three = get_item_for_sale.shipping_three,
+    digital_currency_1 = get_item_for_sale.digital_currency_1,
+    digital_currency_2 = get_item_for_sale.digital_currency_2,
+    digital_currency_3 = get_item_for_sale.digital_currency_3,
+
+    # selected items
+    saved_for_later=0,
+    quantity_of_item=1,
+    selected_digital_currency=None,
+    selected_shipping = None,
+    selected_shipping_description =  None,
+
+    # calculated items
+    final_shipping_price_btc = None,
+    final_price_btc =  None,
+    final_shipping_price_bch =  None,
+    final_price_bch =  None,
+    final_shipping_price_xmr =  None,
+    final_price_xmr =  None,
+    )
+
+    db.session.add(new_shopping_cart_item)
+    db.session.commit()
+
+
+    return jsonify({'status': 'success'})
 
 
 # Shopping cart page
@@ -48,6 +233,13 @@ def cart_calculate_item_shipping_and_price_cart(cartitemid):
     Converts the local price to cryptocurrency prices
     determines quantity and calculates price
     """
+    cartitem_exists = Checkout_CheckoutShoppingCart.query\
+        .filter(Checkout_CheckoutShoppingCart.id == cartitemid)\
+        .first() is not None
+    getitem_exists = db.session\
+        .query(Item_MarketItem) \
+        .filter_by(id=cartitemid) \
+        .first() is not None
     cartitem = Checkout_CheckoutShoppingCart.query\
         .filter(Checkout_CheckoutShoppingCart.id == cartitemid)\
         .first()
@@ -55,94 +247,94 @@ def cart_calculate_item_shipping_and_price_cart(cartitemid):
         .query(Item_MarketItem) \
         .filter_by(id=cartitemid) \
         .first()
+    if cartitem_exists and getitem_exists:
+        # BITCOIN
+        if cartitem.selected_digital_currency == 1:
 
-    # BITCOIN
-    if cartitem.selected_currency == 1:
+            ## SHIPPING
+            # free shipping
+            if cartitem.selected_shipping == 1:
+                shipprice = 0
+            elif cartitem.selected_shipping == 2:
+                shipprice = Decimal(getitem.shipping_price_2)
+            else:
+                shipprice = Decimal(getitem.shipping_price_3)
+            # convert it to btc cash
+            btc_ship_price = Decimal(convert_local_to_btc(amount=shipprice, currency=getitem.currency))
+            # get it formatted correctly
+            btc_shipprice_formatted = (floating_decimals(btc_ship_price, 8))
+            # times the shipping price times quantity
+            btc_shippingtotal = Decimal(cartitem.quantity_of_item) * Decimal(btc_shipprice_formatted)
+            # return shipping price
+            btc_ship_price_final = (floating_decimals(btc_shippingtotal, 8))
+            # set variable in database
+            cartitem.final_shipping_price_btc = btc_ship_price_final
 
-        ## SHIPPING
-        # free shipping
-        if cartitem.selected_shipping == 1:
-            shipprice = 0
-        elif cartitem.selected_shipping == 2:
-            shipprice = Decimal(getitem.shipping_price_2)
-        else:
-            shipprice = Decimal(getitem.shipping_price_3)
-        # convert it to btc cash
-        btc_ship_price = Decimal(convert_local_to_btc(amount=shipprice, currency=getitem.currency))
-        # get it formatted correctly
-        btc_shipprice_formatted = (floating_decimals(btc_ship_price, 8))
-        # times the shipping price times quantity
-        btc_shippingtotal = Decimal(cartitem.quantity_of_item) * Decimal(btc_shipprice_formatted)
-        # return shipping price
-        btc_ship_price_final = (floating_decimals(btc_shippingtotal, 8))
-        # set variable in database
-        cartitem.final_shipping_price_btc = btc_ship_price_final
+            ## PRICING
+            btc_itemprice = Decimal(getitem.price_of_item)
+            btc_price_per_item = Decimal(convert_local_to_btc(amount=btc_itemprice, currency=getitem.currency))
+            btc_price_formatted = (floating_decimals(btc_price_per_item, 8))
+            btc_pricing_multiply = Decimal(cartitem.quantity_of_item) * Decimal(btc_price_formatted)
+            btc_price_final = (floating_decimals(btc_pricing_multiply, 8))
+            cartitem.final_price_btc = btc_price_final
 
-        ## PRICING
-        btc_itemprice = Decimal(getitem.price_of_item)
-        btc_price_per_item = Decimal(convert_local_to_btc(amount=btc_itemprice, currency=getitem.currency))
-        btc_price_formatted = (floating_decimals(btc_price_per_item, 8))
-        btc_pricing_multiply = Decimal(cartitem.quantity_of_item) * Decimal(btc_price_formatted)
-        btc_price_final = (floating_decimals(btc_pricing_multiply, 8))
-        cartitem.final_price_btc = btc_price_final
+        # BITCOIN CASH
+        if cartitem.selected_digital_currency == 2:
 
-    # BITCOIN CASH
-    if cartitem.selected_currency == 2:
+            ## SHIPPING
+            # free shipping
+            if cartitem.selected_shipping == 1:
+                shipprice = 0
+            elif cartitem.selected_shipping == 2:
+                shipprice = Decimal(getitem.shipping_price_2)
+            else:
+                shipprice = Decimal(getitem.shipping_price_3)
+            # convert it to btc cash
+            bch_ship_price = Decimal(convert_local_to_bch(amount=shipprice, currency=getitem.currency))
+            # get it formatted correctly
+            bch_shipprice_formatted = (floating_decimals(bch_ship_price, 8))
+            # times the shipping price times quantity
+            bch_shippingtotal = Decimal(cartitem.quantity_of_item) *  Decimal(bch_shipprice_formatted)
+            # return shipping price
+            bch_ship_price_final = (floating_decimals(bch_shippingtotal, 8))
+            # set variable in database
+            cartitem.final_shipping_price_bch = bch_ship_price_final
+            
+            ## PRICING
+            bch_itemprice = Decimal(getitem.price_of_item)
+            bch_price_per_item = Decimal(convert_local_to_bch(amount=bch_itemprice, currency=getitem.currency))
+            bch_price_formatted = (floating_decimals(bch_price_per_item, 8))
+            bch_pricing_multiply = Decimal(cartitem.quantity_of_item) * Decimal(bch_price_formatted)
+            bch_price_final = (floating_decimals(bch_pricing_multiply, 8))
+            cartitem.final_price_bch = bch_price_final
 
-        ## SHIPPING
-        # free shipping
-        if cartitem.selected_shipping == 1:
-            shipprice = 0
-        elif cartitem.selected_shipping == 2:
-            shipprice = Decimal(getitem.shipping_price_2)
-        else:
-            shipprice = Decimal(getitem.shipping_price_3)
-        # convert it to btc cash
-        bch_ship_price = Decimal(convert_local_to_bch(amount=shipprice, currency=getitem.currency))
-        # get it formatted correctly
-        bch_shipprice_formatted = (floating_decimals(bch_ship_price, 8))
-        # times the shipping price times quantity
-        bch_shippingtotal = Decimal(cartitem.quantity_of_item) *  Decimal(bch_shipprice_formatted)
-        # return shipping price
-        bch_ship_price_final = (floating_decimals(bch_shippingtotal, 8))
-        # set variable in database
-        cartitem.final_shipping_price_bch = bch_ship_price_final
-        
-        ## PRICING
-        bch_itemprice = Decimal(getitem.price_of_item)
-        bch_price_per_item = Decimal(convert_local_to_bch(amount=bch_itemprice, currency=getitem.currency))
-        bch_price_formatted = (floating_decimals(bch_price_per_item, 8))
-        bch_pricing_multiply = Decimal(cartitem.quantity_of_item) * Decimal(bch_price_formatted)
-        bch_price_final = (floating_decimals(bch_pricing_multiply, 8))
-        cartitem.final_price_bch = bch_price_final
+        # Monero
+        if cartitem.selected_digital_currency == 3:
+            # free shipping
+            if cartitem.selected_shipping == 1:
+                shipprice = 0
+            elif cartitem.selected_shipping == 2:
+                shipprice = Decimal(getitem.shipping_price_2)
+            else:
+                shipprice = Decimal(getitem.shipping_price_3)
+            # convert it to btc cash
+            xmr_ship_price = Decimal(convert_local_to_xmr(amount=shipprice, currency=getitem.currency))
+            # get it formatted correctly
+            xmr_shipprice_formatted = (floating_decimals(xmr_ship_price, 12))
+            # times the shipping price times quantity
+            xmr_shippingtotal = Decimal(cartitem.quantity_of_item) * Decimal(xmr_shipprice_formatted)
+            # return shipping price
+            xmr_ship_price_final = (floating_decimals(xmr_shippingtotal, 12))
+            # set variable in database
+            cartitem.final_shipping_price_xmr = xmr_ship_price_final
 
-    # Monero
-    if cartitem.selected_currency == 3:
-        # free shipping
-        if cartitem.selected_shipping == 1:
-            shipprice = 0
-        elif cartitem.selected_shipping == 2:
-            shipprice = Decimal(getitem.shipping_price_2)
-        else:
-            shipprice = Decimal(getitem.shipping_price_3)
-        # convert it to btc cash
-        xmr_ship_price = Decimal(convert_local_to_xmr(amount=shipprice, currency=getitem.currency))
-        # get it formatted correctly
-        xmr_shipprice_formatted = (floating_decimals(xmr_ship_price, 12))
-        # times the shipping price times quantity
-        xmr_shippingtotal = Decimal(cartitem.quantity_of_item) * Decimal(xmr_shipprice_formatted)
-        # return shipping price
-        xmr_ship_price_final = (floating_decimals(xmr_shippingtotal, 12))
-        # set variable in database
-        cartitem.final_shipping_price_xmr = xmr_ship_price_final
-
-        ## PRICING
-        xmr_itemprice = Decimal(getitem.price_of_item)
-        xmr_price_per_item = Decimal(convert_local_to_xmr(amount=xmr_itemprice, currency=getitem.currency))
-        xmr_price_formatted = (floating_decimals(xmr_price_per_item, 12))
-        xmr_pricing_multiply = Decimal(cartitem.quantity_of_item) * Decimal(xmr_price_formatted)
-        xmr_price_final = (floating_decimals(xmr_pricing_multiply, 12))
-        cartitem.final_price_xmr = xmr_price_final
+            ## PRICING
+            xmr_itemprice = Decimal(getitem.price_of_item)
+            xmr_price_per_item = Decimal(convert_local_to_xmr(amount=xmr_itemprice, currency=getitem.currency))
+            xmr_price_formatted = (floating_decimals(xmr_price_per_item, 12))
+            xmr_pricing_multiply = Decimal(cartitem.quantity_of_item) * Decimal(xmr_price_formatted)
+            xmr_price_final = (floating_decimals(xmr_pricing_multiply, 12))
+            cartitem.final_price_xmr = xmr_price_final
 
 
 def cart_calculate_total_price(user_id):
@@ -161,7 +353,7 @@ def cart_calculate_total_price(user_id):
     shopping_cart = db.session\
         .query(Checkout_CheckoutShoppingCart)\
         .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
-                Checkout_CheckoutShoppingCart.savedforlater == 0)\
+                Checkout_CheckoutShoppingCart.saved_for_later == 0)\
         .all()
 
     # Bitcoin
@@ -177,61 +369,76 @@ def cart_calculate_total_price(user_id):
     xmr_shipping_pricelist = []
 
     for cart in shopping_cart:
-        if cart.selected_currency == 1:
+        if cart.selected_digital_currency == 1:
 
             btc_pricelist.append(cart.final_price_btc)
             btc_shipping_pricelist.append(cart.final_shipping_price_btc)
             
             ##TODO
-        elif cart.selected_currency == 2:
+        elif cart.selected_digital_currency == 2:
         
             bch_pricelist.append(cart.final_price_bch)
             bch_shipping_pricelist.append(cart.final_shipping_price_bch)
-        else:
+        elif cart.selected_digital_currency == 2:
             xmr_pricelist.append(cart.final_price_xmr)
             xmr_shipping_pricelist.append(cart.final_shipping_price_xmr)
+        else:
+            pass
 
     # get sum of prices in list
-    btc_sum_of_item = len(btc_pricelist)
-    total_cart.btc_sum_of_item = btc_sum_of_item
-    # get sum of prices in list
-    btc_formatted_total_price = ("{0:.8f}".format(sum(btc_pricelist)))
-    # get sum of shipping prices
-    btc_formatted_total_shipping_price=( "{0:.8f}".format(sum(btc_shipping_pricelist)))
-    total_cart.price = btc_formatted_total_price 
-    total_cart.btc_shipping_price = btc_formatted_total_shipping_price
-    # get total price
-    btc_add_total = Decimal(btc_formatted_total_price) + Decimal(btc_formatted_total_shipping_price)
-    total_cart.btc_total_price = btc_add_total
+    if len(btc_pricelist) > 0 :
+        btc_sum_of_item = len(btc_pricelist)
+        total_cart.btc_sum_of_item = btc_sum_of_item
+        # get sum of prices in list
+        btc_formatted_total_price = ("{0:.8f}".format(sum(btc_pricelist)))
+        # get sum of shipping prices
+        btc_formatted_total_shipping_price=( "{0:.8f}".format(sum(btc_shipping_pricelist)))
+        total_cart.btc_price = btc_formatted_total_price 
+        total_cart.btc_shipping_price = btc_formatted_total_shipping_price
+        # get total price
+        btc_add_total = Decimal(btc_formatted_total_price) + Decimal(btc_formatted_total_shipping_price)
+        total_cart.btc_total_price = btc_add_total
+    else:
+        total_cart.btc_price = 0
+        total_cart.btc_shipping_price = 0
+        total_cart.btc_total_price = 0
+    if len(bch_pricelist) > 0:
+        # get sum of prices in list
+        bch_sum_of_item = len(bch_pricelist)
+        total_cart.bch_sum_of_item = bch_sum_of_item
+        bch_formatted_total_price = ("{0:.8f}".format(sum(bch_pricelist)))
+        # get sum of shipping prices
+        bch_formatted_total_shipping_price = ("{0:.8f}".format(sum(bch_shipping_pricelist)))
+        total_cart.bch_price = bch_formatted_total_price 
+        total_cart.bch_shipping_price = bch_formatted_total_shipping_price
+        # get total price
+        bch_add_total = Decimal(bch_formatted_total_price) + Decimal(bch_formatted_total_shipping_price)
+        total_cart.bch_total_price = bch_add_total
+    else:
+        total_cart.bhc_price = 0
+        total_cart.bch_shipping_price = 0
+        total_cart.bch_total_price = 0
 
     # get sum of prices in list
-    bch_sum_of_item = len(bch_pricelist)
-    total_cart.bch_sum_of_item = bch_sum_of_item
-    bch_formatted_total_price = ("{0:.8f}".format(sum(bch_pricelist)))
-    # get sum of shipping prices
-    bch_formatted_total_shipping_price = ("{0:.8f}".format(sum(bch_shipping_pricelist)))
-    total_cart.price = bch_formatted_total_price 
-    total_cart.bch_shipping_price = bch_formatted_total_shipping_price
-    # get total price
-    bch_add_total = Decimal(bch_formatted_total_price) + Decimal(bch_formatted_total_shipping_price)
-    total_cart.bch_total_price = bch_add_total
-
-    # get sum of prices in list
-    xmr_sum_of_item = len(xmr_pricelist)
-    total_cart.xmr_sum_of_item = xmr_sum_of_item
-    # get sum of prices in list
-    xmr_formatted_total_price = ("{0:.12f}".format(sum(xmr_pricelist)))
-    # get sum of shipping prices
-    xmr_formatted_total_shipping_price = ("{0:.12f}".format(sum(xmr_shipping_pricelist)))
-    total_cart.price = xmr_formatted_total_price 
-    total_cart.xmr_shipping_price = xmr_formatted_total_shipping_price
-    # get total price
-    xmr_add_total = Decimal(xmr_formatted_total_price) + Decimal(xmr_formatted_total_shipping_price)
-    total_cart.xmr_total_price = xmr_add_total
-
+    if len(xmr_pricelist) > 0 :
+        xmr_sum_of_item = len(xmr_pricelist)
+        total_cart.xmr_sum_of_item = xmr_sum_of_item
+        # get sum of prices in list
+        xmr_formatted_total_price = ("{0:.12f}".format(sum(xmr_pricelist)))
+        # get sum of shipping prices
+        xmr_formatted_total_shipping_price = ("{0:.12f}".format(sum(xmr_shipping_pricelist)))
+        total_cart.xmr_price = xmr_formatted_total_price 
+        total_cart.xmr_shipping_price = xmr_formatted_total_shipping_price
+        # get total price
+        xmr_add_total = Decimal(xmr_formatted_total_price) + Decimal(xmr_formatted_total_shipping_price)
+        total_cart.xmr_total_price = xmr_add_total
+    else:
+        total_cart.xmr_price = 0
+        total_cart.xmr_shipping_price = 0
+        total_cart.xmr_total_price = 0
     db.session.add(total_cart)
 
-@checkout.route('/changepaymentoption/<int:cartid>', methods=['POST'])
+@checkout.route('/changeshippingoption/<int:cartid>', methods=['PUT'])
 @login_required
 def cart_update_shipping_option(cartid):
     """
@@ -267,46 +474,64 @@ def cart_update_shipping_option(cartid):
         else:
             cartitem.selected_shipping = new_shipping
             cartitem.selected_shipping_description = getitem.shipping_info_3
+            print(cartitem.id)
+            print(cartitem.selected_shipping_description)
+            print(getitem.shipping_info_3)
            
     db.session.flush()
     cart_calculate_item_shipping_and_price_cart(cartitem.id)
     cart_calculate_total_price(cartitem.customer_id)
+    db.session.commit()
     return jsonify({'status': 'success'})
 
-@checkout.route('/movecartitem/<string:itemid>', methods=['POST'])
+
+@checkout.route('/currentquantity/<int:cartid>', methods=['GET'])
 @login_required
-def cart_move_cart_item(itemid):
+def cart_current_quantity(cartid):
     """
-    Moves the item from cart to saved for later
+    gets current quantity
     """
     the_cart_item = Checkout_CheckoutShoppingCart.query\
-        .filter(Checkout_CheckoutShoppingCart.uuid == itemid)\
+        .filter(Checkout_CheckoutShoppingCart.id == cartid)\
         .first()
-    if the_cart_item:
-        if the_cart_item.customer_id == current_user.id:
-            the_cart_item.savedforlater = 1
-            db.session.add(the_cart_item)
-            db.session.commit()
-            cart_calculate_item_shipping_and_price_cart(the_cart_item.id)
-            cart_calculate_total_price(the_cart_item.customer_id)
-        else:
-           return jsonify({'status': 'Error.  No Items in your cart'})
-    else:
-        return jsonify({'status': 'Error. Item doesnt exist.'})
 
-@checkout.route('/saveforlater/<int:cartid>', methods=['POST'])
+   
+    return jsonify({'amount': the_cart_item.quantity_of_item})
+
+@checkout.route('/movecartitem/<int:cartid>', methods=['PUT'])
+@login_required
+def cart_move_cart_item(cartid):
+    """
+    Moves the item from saved to cart
+    """
+    the_cart_item = Checkout_CheckoutShoppingCart.query\
+        .filter(Checkout_CheckoutShoppingCart.id == cartid)\
+        .first()
+  
+    if the_cart_item.customer_id != current_user.id:
+        return jsonify({'status': 'error'})
+    the_cart_item.saved_for_later = 0
+    db.session.add(the_cart_item)
+
+    cart_calculate_item_shipping_and_price_cart(the_cart_item.id)
+    cart_calculate_total_price(the_cart_item.customer_id)
+  
+    db.session.commit()
+    return jsonify({'status': 'success'})
+
+@checkout.route('/saveforlater/<int:cartid>', methods=['PUT'])
 @login_required
 def cart_save_for_later(cartid):
     """
-    Delete the message sent to the user
+    Save the item fopr later
     """
 
     cartitem = Checkout_CheckoutShoppingCart.query\
         .filter(Checkout_CheckoutShoppingCart.id==cartid)\
         .first()
     if cartitem.customer_id != current_user.id:
-        return jsonify({'status': 'success'})
-    cartitem.savedforlater = 1
+        return jsonify({'status': 'error'})
+    cartitem.saved_for_later = 1
     db.session.add(cartitem)
     db.session.commit()
     return jsonify({'status': 'success'})
@@ -351,13 +576,12 @@ def cart_update_payment_option(cartid):
     db.session.commit()
     return jsonify({'status': 'error'})
 
-@checkout.route('/updateamount/<int:cartid>', methods=['POST'])
+@checkout.route('/updateamount/<int:cartid>', methods=['PUT'])
 @login_required
 def cart_update_quantity(cartid):
     """
     Updates the quanity of the item in the shopping cart
     """
-
     the_cart_item = Checkout_CheckoutShoppingCart.query\
         .filter(Checkout_CheckoutShoppingCart.id==cartid)\
         .first()
@@ -366,11 +590,10 @@ def cart_update_quantity(cartid):
         .filter_by(id=the_cart_item.item_id) \
         .first()
     new_amount = request.json["new_amount"]
-    if new_amount > getitem.item_count:
-         return jsonify({'status': 'error'})
+    if int(new_amount) > getitem.item_count:
+        return jsonify({'status': 'error'})
     if the_cart_item.customer_id != current_user.id:
         return jsonify({'status': 'error'})
-
     the_cart_item.quantity_of_item = new_amount
     cart_calculate_item_shipping_and_price_cart(the_cart_item.id)
     cart_calculate_total_price(the_cart_item.customer_id)
@@ -388,7 +611,7 @@ def cart_checkout_order(userid):
     cart = db.session\
         .query(Checkout_CheckoutShoppingCart)\
         .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
-                Checkout_CheckoutShoppingCart.savedforlater == 0)\
+                Checkout_CheckoutShoppingCart.saved_for_later == 0)\
         .all()
 
     for k in cart:
@@ -492,6 +715,26 @@ def cart_checkout_order(userid):
         return jsonify({'status': 'success'})
 
 
+@checkout.route('/delete/<int:cartid>', methods=['DELETE'])
+@login_required
+def cart_delete_item(cartid):
+    """
+    Updates the quanity of the item in the shopping cart
+    """
+    the_cart_item = Checkout_CheckoutShoppingCart.query\
+        .filter(Checkout_CheckoutShoppingCart.id == cartid)\
+        .first()
+
+    if the_cart_item.customer_id != current_user.id:
+        return jsonify({'status': 'error'})
+   
+    db.session.delete(the_cart_item)
+    
+    cart_calculate_item_shipping_and_price_cart(the_cart_item.id)
+    cart_calculate_total_price(the_cart_item.customer_id)
+    db.session.commit()
+    return jsonify({'status': 'success'})
+
 
 
 # Checkout page
@@ -569,13 +812,6 @@ def checkout_make_payment(userid):
         get_item.total_sold = newsold
         get_item.item_count = newquantleft
 
-        # add diff trading partners
-        userdata_different_trading_partners_user(user_id=order.customer_id,
-                                                 otherid=order.vendor_id)
-
-        # add diff trading partners
-        userdata_different_trading_partners_vendor(user_id=order.vendor_id,
-                                                   otherid=order.customer_id)
 
         # add a message for each order
         addmsg = Service_ShippingSecret(
@@ -635,12 +871,13 @@ def checkout_make_payment(userid):
         db.session.commit()
         return jsonify({'status': 'success'})
 
+
 @checkout.route('/info/delete/<string:itemid>', methods=['POST'])
 @login_required
 def checkout_delete_secret_info(itemid):
     """
     Delete the message sent to the user
-    """
+    # """
     user = Auth_User.query\
         .filter_by(username=current_user.username)\
         .first()
@@ -759,53 +996,3 @@ def checkoutput_item_offline(itemid):
                         bitcoin=0)
 
 
-@checkout.route('/data/incart', methods=['POST'])
-@login_required
-def data_shopping_cart_in_cart():
-    """
-    Returns items in the shopping cart
-    """
-    if request.method == 'GET':
-        cart = db.session\
-            .query(Checkout_CheckoutShoppingCart)\
-            .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
-                    Checkout_CheckoutShoppingCart.savedforlater == 0)\
-            .first() is not None
-
-        if cart:
-            cart_items = db.session\
-                .query(Checkout_CheckoutShoppingCart)\
-                .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
-                        Checkout_CheckoutShoppingCart.savedforlater == 0)\
-                .all()
-            item_schema = Checkout_CheckoutShoppingCart_Schema()
-            result = item_schema.dump(cart_items)
-            return jsonify(result), 200
-        else:
-            jsonify({"Error": "No items in your cart exist"}), 404
-
-
-@checkout.route('/data/saved', methods=['POST'])
-@login_required
-def data_shopping_cart_in_saved():
-    """
-    Returns items in the shopping cart
-    """
-    if request.method == 'GET':
-        cart = db.session\
-            .query(Checkout_CheckoutShoppingCart)\
-            .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
-                    Checkout_CheckoutShoppingCart.savedforlater == 1)\
-            .first() is not None
-
-        if cart:
-            cart_items = db.session\
-                .query(Checkout_CheckoutShoppingCart)\
-                .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
-                        Checkout_CheckoutShoppingCart.savedforlater == 1)\
-                .all()
-            item_schema = Checkout_CheckoutShoppingCart_Schema()
-            result = item_schema.dump(cart_items)
-            return jsonify(result), 200
-        else:
-            jsonify({"Error": "No items in your cart exist"}), 404

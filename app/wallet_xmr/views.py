@@ -7,8 +7,9 @@ import os
 from app.notification import notification
 from app.common.functions import floating_decimals
 from app.common.decorators import login_required
-from wallet_xmr.security import xmr_check_balance
-from wallet_xmr.transaction import xmr_add_transaction
+
+from app.wallet_xmr.security import xmr_check_balance
+from app.wallet_xmr.transaction import xmr_add_transaction
 from decimal import Decimal
 # models
 from app.classes.auth import Auth_User
@@ -146,40 +147,4 @@ def xmr_send():
         return jsonify({"error": "Account is locked due to dispute"}), 409
 
 
-def xmr_send_coin_to_escrow(amount, comment, user_id):
-    """
-    # TO clearnet_webapp Wallet
-    # this function will move the coin to clearnets wallet_btc from a user
-    :param amount:
-    :param comment:
-    :param user_id:
-    :return:
-    """
-    passed_balance_check = xmr_check_balance(user_id=user_id, amount=amount)
-    if passed_balance_check == 1:
-      
-            type_transaction = 4
-            userwallet = Xmr_Wallet.query.filter(Xmr_Wallet.user_id==user_id).first()
-            curbal = Decimal(userwallet.currentbalance)
-            amounttomod = Decimal(amount)
-            newbalance = Decimal(curbal) - Decimal(amounttomod)
-            userwallet.currentbalance = newbalance
-            db.session.add(userwallet)
 
-            oid = int(comment)
-            xmr_add_transaction(category=type_transaction,
-                               amount=amount,
-                               user_id=user_id,
-                               comment='Sent Coin To Escrow',
-                               orderid=oid,
-                               balance=newbalance
-                               )
-
-    else:
-        notification(
-            type=34,
-            username='',
-            user_id=user_id,
-            salenumber=comment,
-            bitcoin=amount
-        )
