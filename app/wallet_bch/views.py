@@ -51,7 +51,7 @@ def bch_balance_plus_unconfirmed():
     Gets current balance and any unconirmed transactions
     :return:
     """
-
+  
     userwallet = Bch_Wallet.query.filter_by(user_id=current_user.id).first()
  
     try:

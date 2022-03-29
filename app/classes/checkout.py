@@ -38,7 +38,7 @@ class Checkout_CheckoutShoppingCart(db.Model):
     shipping_free = db.Column(db.BOOLEAN)
     shipping_two = db.Column(db.BOOLEAN)
     shipping_three = db.Column(db.BOOLEAN)
-   
+
     digital_currency_1 = db.Column(db.BOOLEAN)
     digital_currency_2 = db.Column(db.BOOLEAN)
     digital_currency_3 = db.Column(db.BOOLEAN)
@@ -62,11 +62,13 @@ class Checkout_ShoppingCart_Schema(ma.SQLAlchemyAutoSchema):
         model = Checkout_CheckoutShoppingCart
 
         fields = ('id', 'customer_user_name', 'vendor_user_name', 'customer_uuid', 'vendor_uuid',
-                  'title_of_item', 'price_of_item', 'image_of_item',
+                  'title_of_item', 'price_of_item', 'image_of_item', 'quantity_of_item',
+                  'digital_currency_1', 'digital_currency_2', 'digital_currency_3',
                   'shipping_free', 'shipping_two', 'shipping_three',
-                  'shipping_info_0', 'shipping_day_0',
-                  'shipping_day_2', 'shipping_info_2', 'shipping_price_2',
-                  'shipping_day_3', 'shipping_info_3', 'shipping_price_3',
+                  'shipping_info_0', 'shipping_info_2', 'shipping_info_3',
+                  'shipping_day_0', 'shipping_day_2', 'shipping_day_3',
+                  'shipping_price_3', 'shipping_price_3', 'shipping_price_3',
+                  'selected_digital_currency', 'selected_shipping'
                   )
 
 
@@ -113,8 +115,6 @@ class Checkout_ShoppingCartTotal(db.Model):
     xmr_shipping_price = db.Column(db.DECIMAL(20, 12))
     # total cost in xmr
     xmr_total_price = db.Column(db.DECIMAL(20, 12))
-
-
 
 
 class Checkout_CheckoutShoppingCartTotal_Schema(ma.SQLAlchemyAutoSchema):
