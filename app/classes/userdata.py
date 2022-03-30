@@ -72,3 +72,25 @@ class UserData_Feedback_Schema(ma.SQLAlchemyAutoSchema):
     author_id = ma.auto_field()
     vendor_uuid = ma.auto_field()
 
+
+class UserData_DefaultAddress(db.Model):
+    __tablename__ = 'userdata_defaultaddress'
+    __bind_key__ = 'clearnet'
+    __table_args__ = {"schema": "public"}
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uuid = db.Column(db.VARCHAR(40))
+
+
+    address_name = db.Column(db.VARCHAR(1000))
+    address = db.Column(db.VARCHAR(1000))
+    apt = db.Column(db.VARCHAR(1000))
+    city = db.Column(db.VARCHAR(1000))
+    country = db.Column(db.INTEGER)
+    state_or_provence = db.Column(db.VARCHAR(1000))
+    zip_code = db.Column(db.VARCHAR(200))
+    msg = db.Column(db.VARCHAR(2500))
+
+
+class UserData_DefaultAddress_Schema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = UserData_DefaultAddress

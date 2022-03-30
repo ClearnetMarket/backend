@@ -14,7 +14,7 @@ from app.classes.models import Query_WordList,\
     Query_CurrencyList,\
     Query_CurrencyList_Schema
 from app.classes.item import Item_MarketItem
-from app.classes.userdata import UserData_History
+from app.classes.userdata import UserData_History, UserData_DefaultAddress
 from app.classes.profile import Profile_StatisticsUser
 from app.classes.checkout import Checkout_ShoppingCartTotal
 from app.classes.auth import \
@@ -225,7 +225,17 @@ def register_user():
         recentcat5=7,
         recentcat5date=now,
     )
-
+    user_address = UserData_DefaultAddress(
+        uuid=new_user.uuid,
+        address_name='', 
+        address='', 
+        apt='', 
+        city='',
+        country=country,
+        state_or_provence='',
+        zip_code='', 
+        msg='' 
+    )
     # create checkout_shopping_cart for user
     newcart = Checkout_ShoppingCartTotal(
         customer_id=new_user.id,
@@ -258,6 +268,7 @@ def register_user():
     db.session.add(browserhistory)
     db.session.add(stats)
     db.session.add(newcart)
+    db.session.add(user_address)
 
     # create user directory
     getuserlocation = userimagelocation(user_id=new_user.id)

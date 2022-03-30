@@ -65,17 +65,18 @@ def vendorcreateitem_get_item_category_list():
     :return:
     """
     if request.method == 'GET':
-        category_list = Category_Categories.query.order_by(
-            Category_Categories.name.asc()).all()
+        category_list = Category_Categories.query\
+        .order_by(Category_Categories.name.asc())\
+        .all()
         category_schema = Category_Categories_Schema(many=True)
 
         return jsonify(category_schema.dump(category_list))
 
 
-@vendorcreateitem.route('/create-item', methods=['GET'])
+@vendorcreateitem.route('/create-item', methods=['POST'])
 @login_required
 def create_item():
-    if request.method == 'GET':
+    if request.method == 'POST':
         now = datetime.utcnow()
         see_if_empty_item = Item_MarketItem.query\
             .filter(Item_MarketItem.vendor_id == current_user.id, Item_MarketItem.item_title == '')\
@@ -110,26 +111,24 @@ def create_item():
                 shipping_free=False,
                 shipping_two=False,
                 shipping_three=False,
-                shipping_day_0=0,
-                shipping_info_free='',
 
+                shipping_day_0=0,
                 shipping_price_2=0,
                 shipping_day_2=0,
                 shipping_info_2='',
                 shipping_price_3=0,
                 shipping_info_3='',
                 shipping_day_3=0,
+
                 image_one_url=None,
                 image_two_url=None,
                 image_three_url=None,
                 image_four_url=None,
 
-
                 image_one_server=None,
                 image_two_server=None,
                 image_three_server=None,
                 image_four_server=None,
-
 
                 origin_country=current_user.country,
                 origin_country_name='',
@@ -171,9 +170,10 @@ def create_item_info(uuid):
         .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id) \
         .first()
 
-    get_currency_symbol = Query_Currency.query.filter(
-        Query_Currency.value == current_user.currency).first()
-    currency_symbol = get_currency_symbol.name
+    get_currency_symbol = Query_Currency.query\
+        .filter(Query_Currency.value == current_user.currency)\
+        .first()
+    currency_symbol = get_currency_symbol.symbol
     # accept bitcoin
     digital_currency_1 = request.json["digital_currency_1"]
     if digital_currency_1 == '':
@@ -218,19 +218,6 @@ def create_item_info(uuid):
     else:
         return jsonify({"status": 'error'})
 
-    # Category
-    if request.json["category_id_0"] == '':
-        get_category_query = None
-        category_value = None
-        category_name = None
-        return jsonify({"status": 'error', })
-    else:
-        category = request.json["category_id_0"]
-        get_category_query = Category_Categories.query\
-            .filter(Category_Categories.value == category)\
-            .first_or_404()
-        category_value = get_category_query.value
-        category_name = get_category_query.name
 
     # Price
     price = request.json["price"]
@@ -264,6 +251,7 @@ def create_item_info(uuid):
     # Shipping to Country One
     if request.json["shipping_to_country_one"] == '':
         shipping_to_country_one = 1000
+        shipping_to_country_one_name = 'WorldWide Shipping'
     else:
         shipping_to_country_one = request.json["shipping_to_country_one"]
 
@@ -275,6 +263,7 @@ def create_item_info(uuid):
     # Shipping to Country two
     if request.json["shipping_to_country_two"] == '':
         shipping_to_country_two = 0
+        shipping_to_country_two_name = ''
     else:
         shipping_to_country_two = request.json["shipping_to_country_two"]
         get_name_country_two = Query_Country.query\
@@ -285,6 +274,7 @@ def create_item_info(uuid):
     # Shipping to Country One
     if request.json["shipping_to_country_three"] == '':
         shipping_to_country_three = 0
+        shipping_to_country_three_name = ''
     else:
         shipping_to_country_three = request.json["shipping_to_country_three"]
         get_name_country_three = Query_Country.query\
@@ -295,6 +285,7 @@ def create_item_info(uuid):
     # Shipping to Country four
     if request.json["shipping_to_country_four"] == '':
         shipping_to_country_four = 0
+        shipping_to_country_four_name = ''
     else:
         shipping_to_country_four = request.json["shipping_to_country_four"]
         get_name_country_four = Query_Country.query\
@@ -309,12 +300,25 @@ def create_item_info(uuid):
     shipinfo2 = f'Takes {shipping_2_days} days for {shipping_2_price}{currency_symbol}'
     shipinfo3 = f'Takes {shipping_3_days} days for {shipping_3_price}{currency_symbol}'
 
+
+    # Category
+    if request.json["category_id_0"] == '':
+        get_category_query = None
+        category_value = None
+        category_name = None
+        return jsonify({"status": 'error', })
+    else:
+        category = request.json["category_id_0"]
+        get_category_query = Category_Categories.query\
+            .filter(Category_Categories.value == category)\
+            .first()
+        category_value = get_category_query.value
+        category_name = get_category_query.name
+
     # create image of item in database
     item = Item_MarketItem.query\
         .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id)\
         .first()
-
-
 
     item.created = now
     item.vendor_name = current_user.username
@@ -497,3 +501,53 @@ def delete_item_images(uuid, imagename):
             return jsonify({"error": 'Not Authorized'})
     else:
         return jsonify({"error": 'Large Error'})
+
+
+@vendorcreateitem.route('/get-fields/<string:uuid>', methods=['GET'])
+@login_required
+def get_item_fields(uuid):
+    """
+    gets form data for editing or creating an item
+    :param id:
+    :param img:
+    :return:
+    """
+    if request.method == 'GET':
+        item = db.session.query(Item_MarketItem).filter_by(uuid=uuid).first()
+
+
+        return jsonify({
+            'item_title': item.item_title,
+            'item_count': item.item_count,
+            'item_description': item.item_description,
+            'item_condition': item.item_condition,
+            'keywords': item.keywords,
+            'category_name_0': item.category_name_0,
+            'category_id_0': item.category_id_0,
+            'price': item.price,
+            'currency': item.currency,
+            'currency_symbol': item.currency_symbol,
+            'digital_currency_1': item.digital_currency_1,
+            'digital_currency_2': item.digital_currency_2,
+            'digital_currency_3': item.digital_currency_3,
+            'shipping_free': item.shipping_free,
+            'shipping_two': item.shipping_two,
+            'shipping_three': item.shipping_three,
+            'shipping_day_0': item.shipping_day_0,
+            'shipping_info_0': item.shipping_info_0,
+            'shipping_price_2': item.shipping_price_2,
+            'shipping_day_2': item.shipping_day_2,
+            'shipping_info_2': item.shipping_info_2,
+            'shipping_price_3': item.shipping_price_3,
+            'shipping_day_3': item.shipping_day_3,
+            'shipping_info_3': item.shipping_info_3,
+            'destination_country_one': item.destination_country_one,
+            'destination_country_one_name': item.destination_country_one_name,
+            'destination_country_two': item.destination_country_two,
+            'destination_country_two_name': item.destination_country_two_name,
+            'destination_country_three': item.destination_country_three,
+            'destination_country_three_name': item.destination_country_three_name,
+            'destination_country_four': item.destination_country_four,
+            'destination_country_four_name': item.destination_country_four_name,
+     
+        })

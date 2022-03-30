@@ -41,7 +41,6 @@ class Auth_User(UserMixin, db.Model):
     shopping_timer = db.Column(db.TIMESTAMP())
     shard = db.Column(db.INTEGER)
     usernode = db.Column(db.INTEGER)
-
     confirmed = db.Column(db.INTEGER)
     passwordpinallowed = db.Column(db.INTEGER)
 
@@ -70,7 +69,6 @@ class Auth_User(UserMixin, db.Model):
                  lasttraded_timer,
                  shard,
                  usernode,
-           
                  confirmed,
                  passwordpinallowed,
                  ):

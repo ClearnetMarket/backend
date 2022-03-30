@@ -7,21 +7,7 @@ from app import db
 from app.classes.category import Category_Categories, Category_Categories_Schema
 from app.classes.item import Item_MarketItem, Item_MarketItem_Schema
 
-@category.route('/sidebar', methods=['GET'])
-def get_categories_sidebar():
-    """
-    Function grabs category for the sidebar
-    :return:
-    """
-    if request.method == 'GET':
 
-        get_cats = db.session\
-            .query(Category_Categories)\
-            .filter(Category_Categories.value != 1000, Category_Categories.value != 0)\
-            .order_by(Category_Categories.name.asc())\
-            .all()
-        cats_schema = Category_Categories_Schema(many=True)
-        return jsonify(cats_schema.dump(get_cats))
 
 
 @category.route('/query/index/todayfeatured', methods=['GET'])
@@ -31,7 +17,7 @@ def get_categories_today_featured():
     :return:
     """
     if request.method == 'GET':
-        
+
         todayfeaturedfull = db.session \
             .query(Item_MarketItem) \
             .filter(Item_MarketItem.online == 1) \
@@ -54,12 +40,31 @@ def get_categories_electronics():
         electronicsfull = db.session \
             .query(Item_MarketItem) \
             .filter(Item_MarketItem.online == 1) \
-            .filter(Item_MarketItem.image_one_server != '') \
-            .filter(Item_MarketItem.category_id_0 == 9) \
+            .filter(Item_MarketItem.category_id_0 == 17) \
             .order_by(func.random()) \
             .limit(10)
 
         category_schema = Category_Categories_Schema(many=True)
         return jsonify(category_schema.dump(electronicsfull))
+
+
+
+
+
+@category.route('/sidebar', methods=['GET'])
+def get_categories_sidebar():
+    """
+    Function grabs category for the sidebar
+    :return:
+    """
+    if request.method == 'GET':
+
+        get_cats = db.session\
+            .query(Category_Categories)\
+            .filter( Category_Categories.value != 0)\
+            .order_by(Category_Categories.name.asc())\
+            .all()
+        cats_schema = Category_Categories_Schema(many=True)
+        return jsonify(cats_schema.dump(get_cats))
 
 

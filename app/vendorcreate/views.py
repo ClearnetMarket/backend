@@ -37,7 +37,7 @@ def vendorcreate_clone_item(uuid):
     :param id:
     :return:
     """
-    print("here")
+
     # get item we are cloning
     vendoritem = Item_MarketItem.query.filter(Item_MarketItem.uuid == uuid).first()
 
