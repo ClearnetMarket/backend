@@ -18,7 +18,3 @@ class Category_Categories_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Category_Categories
         fields = ('id', 'value', 'name', 'cat_icon')
-    id = ma.auto_field()
-    value = ma.auto_field()
-    name = ma.auto_field()
-    cat_icon = ma.auto_field()

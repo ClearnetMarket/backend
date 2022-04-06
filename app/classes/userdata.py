@@ -35,52 +35,12 @@ class UserData_History_Schema(ma.SQLAlchemyAutoSchema):
     recentcat5date = ma.auto_field()
 
 
-class UserData_Feedback(db.Model):
-    __tablename__ = 'userdata_feedback'
-    __bind_key__ = 'clearnet'
-    __table_args__ = {"schema": "public"}
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    customername = db.Column(db.VARCHAR(40))
-    sale_id = db.Column(db.INTEGER)
-    vendorname = db.Column(db.VARCHAR(40))
-    vendor_uuid = db.Column(db.VARCHAR(40))
-    vendorid = db.Column(db.INTEGER)
-    comment = db.Column(db.TEXT)
-    item_rating = db.Column(db.INTEGER)
-    item_id = db.Column(db.INTEGER)
-    type = db.Column(db.INTEGER)
-    vendorrating = db.Column(db.INTEGER)
-    timestamp = db.Column(db.TIMESTAMP())
-    addedtodb = db.Column(db.INTEGER)
-    author_id = db.Column(db.INTEGER)
-
-class UserData_Feedback_Schema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = UserData_Feedback
-    id = ma.auto_field()
-    customername = ma.auto_field()
-    sale_id = ma.auto_field()
-    vendorname = ma.auto_field()
-    vendorid = ma.auto_field()
-    comment = ma.auto_field()
-    item_rating = ma.auto_field()
-    item_id = ma.auto_field()
-    type = ma.auto_field()
-    vendorrating = ma.auto_field()
-    timestamp = ma.auto_field()
-    addedtodb = ma.auto_field()
-    author_id = ma.auto_field()
-    vendor_uuid = ma.auto_field()
-
-
 class UserData_DefaultAddress(db.Model):
     __tablename__ = 'userdata_defaultaddress'
     __bind_key__ = 'clearnet'
     __table_args__ = {"schema": "public"}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uuid = db.Column(db.VARCHAR(40))
-
-
     address_name = db.Column(db.VARCHAR(1000))
     address = db.Column(db.VARCHAR(1000))
     apt = db.Column(db.VARCHAR(1000))

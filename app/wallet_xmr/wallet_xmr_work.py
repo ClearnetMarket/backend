@@ -66,7 +66,9 @@ def xmr_create_qr_code(user_id, address):
     # find path of the user
     getuserlocation = userimagelocation(user_id=user_id)
     get_user = Auth_User.query.get(user_id)
-    thepath = os.path.join(UPLOADED_FILES_DEST_USER, getuserlocation, str(get_user.uuid))
+    thepath = os.path.join(UPLOADED_FILES_DEST_USER,
+     getuserlocation,
+      str(get_user.uuid))
     path_plus_filename = thepath + '/' + address + '.png'
     qr = qrcode.QRCode(
                         version=None,
@@ -134,7 +136,8 @@ def xmr_send_coin(user_id, sendto, amount):
         db.session.add(wallet)
         db.session.add(userswallet)
     else:
-        notification(user_id=user_id,subid=0,subname='',postid=0,commentid=0,msg=34)
+        #TODO error notification
+        pass
 
 
 
@@ -164,6 +167,7 @@ def xmr_send_coin_to_escrow(amount, comment, user_id):
         xmr_add_transaction(category=type_transaction,
                             amount=amount,
                             user_id=user_id,
+                      
                             comment='Sent Coin To Escrow',
                             orderid=oid,
                             balance=newbalance

@@ -4,7 +4,7 @@ from app.userdata import userdata
 from app import db
 from app.common.decorators import login_required
 # models
-from app.classes.auth import Auth_User, Auth_User_Schema
+from app.classes.auth import Auth_User, Auth_User_Schema, user_schema, users_schema
 from app.classes.models import Query_Country, Query_Currency
 from app.classes.checkout import Checkout_CheckoutShoppingCart
 from app.classes.userdata import UserData_DefaultAddress
@@ -60,12 +60,12 @@ def userdata_home():
     Returns all info about a user
     :return:
     """
-
+ 
     if request.method == 'GET':
         userdata = Auth_User.query\
             .filter(Auth_User.id == current_user.id)\
             .first()
-        user_schema = Auth_User_Schema(many=True)
+        user_schema = Auth_User_Schema()
         return jsonify(user_schema.dump(userdata))
 
 

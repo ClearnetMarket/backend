@@ -4,7 +4,9 @@ from app.notification import notification
 from app.wallet_bch.wallet_bch_transaction import bch_add_transaction
 from app.wallet_bch.wallet_bch_security import bch_check_balance
 from decimal import Decimal
-import datetime, os, qrcode
+import datetime
+import os
+import qrcode
 # models
 from app.classes.auth import Auth_User
 from app.classes.admin import \
@@ -36,7 +38,7 @@ def bch_create_wallet(user_id):
         # find a new clean address
         getnewaddress = db.session\
             .query(Bch_WalletAddresses) \
-            .filter(Bch_WalletAddresses.status == 0 ) \
+            .filter(Bch_WalletAddresses.status == 0) \
             .first()
 
         # sets users wallet with this
@@ -50,7 +52,8 @@ def bch_create_wallet(user_id):
         db.session.flush()
 
         # create a qr code
-        bch_create_qr_code(user_id=user_id, address=btc_cash_walletcreate.address1)
+        bch_create_qr_code(
+            user_id=user_id, address=btc_cash_walletcreate.address1)
     else:
 
         # create a new wallet
@@ -98,7 +101,8 @@ def bch_create_wallet(user_id):
         db.session.add(getnewaddress)
 
         # create a qr code
-        bch_create_qr_code(user_id=user_id, address=btc_cash_walletcreate.address1)
+        bch_create_qr_code(
+            user_id=user_id, address=btc_cash_walletcreate.address1)
 
 
 def bch_create_qr_code(user_id, address):
@@ -109,11 +113,11 @@ def bch_create_qr_code(user_id, address):
                            getuserlocation, str(get_user.uuid))
     path_plus_filename = thepath + '/' + address + '.png'
     qr = qrcode.QRCode(
-                        version=None,
-                        error_correction=qrcode.constants.ERROR_CORRECT_L,
-                        box_size=10,
-                        border=5,
-                        )
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=5,
+    )
     qr.add_data(address)
     qr.make(fit=True)
 
@@ -138,8 +142,8 @@ def bch_walletstatus(user_id):
     if userswallet:
         try:
             if userswallet.address1status == 0\
-                and userswallet.address2status == 0\
-                and userswallet.address2status == 0:
+                    and userswallet.address2status == 0\
+                    and userswallet.address2status == 0:
                 bch_create_wallet(user_id=user_id)
 
         except Exception as e:
@@ -189,11 +193,9 @@ def bch_send_coin(user_id, sendto, amount, comment):
             comment=0,
             created=timestamp,
             txtcomment=strcomment,
-   
         )
 
         db.session.add(wallet)
-
         # turn sting to a decimal
         amountdecimal = Decimal(amount)
         # make decimal 8th power
@@ -206,16 +208,16 @@ def bch_send_coin(user_id, sendto, amount, comment):
         y = floating_decimals(curbalance - amountandfee, 8)
         # set balance as new amount
         userswallet.currentbalance = floating_decimals(y, 8)
-
         db.session.add(userswallet)
-
     else:
         notification(
             type=34,
             username='',
             user_id=user_id,
             salenumber=0,
-            bitcoin=amount
+            bitcoin=amount,
+            bitcoincash=0,
+            monero=0,
         )
 
 
@@ -233,9 +235,9 @@ def bch_send_coin_to_escrow(amount, comment, user_id):
         try:
             type_transaction = 4
             userswallet = db.session\
-                        .query(Bch_Wallet)\
-                        .filter_by(user_id=user_id)\
-                        .first()
+                .query(Bch_Wallet)\
+                .filter_by(user_id=user_id)\
+                .first()
             curbal = Decimal(userswallet.currentbalance)
             amounttomod = Decimal(amount)
             newbalance = Decimal(curbal) - Decimal(amounttomod)
@@ -244,13 +246,13 @@ def bch_send_coin_to_escrow(amount, comment, user_id):
 
             oid = int(comment)
             bch_add_transaction(category=type_transaction,
-                                    amount=amount,
-                                    user_id=user_id,
-                                    comment='Sent Coin To Escrow',
-                            
-                                    orderid=oid,
-                                    balance=newbalance
-                                    )
+                                amount=amount,
+                                user_id=user_id,
+                                comment='Sent Coin To Escrow',
+
+                                orderid=oid,
+                                balance=newbalance
+                                )
 
         except Exception as e:
             print(str(e))
@@ -259,18 +261,24 @@ def bch_send_coin_to_escrow(amount, comment, user_id):
                 username='',
                 user_id=user_id,
                 salenumber=comment,
-                bitcoin=amount
+                bitcoin=amount,
+                bitcoincash=0,
+                monero=0,
+            
             )
 
     else:
-        print("a equals", a)
+        
         notification(
             type=34,
             username='',
             user_id=user_id,
             salenumber=comment,
-            bitcoin=amount
-        )
+            bitcoin=amount,
+            bitcoincash=0,
+            monero=0,
+             )
+        
 
 
 def bch_send_coin_to_user_as_admin(amount, comment, user_id):
@@ -286,9 +294,9 @@ def bch_send_coin_to_user_as_admin(amount, comment, user_id):
     type_transaction = 9
 
     userswallet = db.session\
-            .query(Bch_Wallet)\
-            .filter_by(user_id=user_id)\
-            .first()
+        .query(Bch_Wallet)\
+        .filter_by(user_id=user_id)\
+        .first()
     curbal = Decimal(userswallet.currentbalance)
     amounttomod = Decimal(amount)
     newbalance = Decimal(curbal) + Decimal(amounttomod)
@@ -297,13 +305,12 @@ def bch_send_coin_to_user_as_admin(amount, comment, user_id):
     db.session.flush()
 
     bch_add_transaction(category=type_transaction,
-                            amount=amount,
-                            user_id=user_id,
-                            comment=comment,
-                   
-                            orderid=0,
-                            balance=newbalance
-                            )
+                        amount=amount,
+                        user_id=user_id,
+                        comment=comment,
+                        orderid=0,
+                        balance=newbalance
+                        )
 
 
 def bch_take_coin_to_user_as_admin(amount, comment, user_id):
@@ -319,9 +326,9 @@ def bch_take_coin_to_user_as_admin(amount, comment, user_id):
     type_transaction = 10
     a = Decimal(amount)
     userswallet = db.session\
-            .query(Bch_Wallet)\
-            .filter_by(user_id=user_id)\
-            .first()
+        .query(Bch_Wallet)\
+        .filter_by(user_id=user_id)\
+        .first()
     curbal = Decimal(userswallet.currentbalance)
     amounttomod = Decimal(amount)
     newbalance = Decimal(curbal) - Decimal(amounttomod)
@@ -330,13 +337,12 @@ def bch_take_coin_to_user_as_admin(amount, comment, user_id):
     db.session.flush()
 
     bch_add_transaction(category=type_transaction,
-                            amount=amount,
-                            user_id=user_id,
-                            comment=comment,
-                        
-                            orderid=0,
-                            balance=newbalance
-                            )
+                        amount=amount,
+                        user_id=user_id,
+                        comment=comment,
+                        orderid=0,
+                        balance=newbalance
+                        )
 
     getcurrentprofit = db.session\
         .query(Admin_ClearnetProfitBCH)\
@@ -385,20 +391,21 @@ def bch_send_coin_for_ad(amount, user_id, comment):
         a = Decimal(amount)
         commentstring = (f"Sent money for ad {c}")
         bch_add_transaction(category=type_transaction,
-                                amount=amount,
-                                user_id=user.id,
-                                comment=commentstring,
-                        
-                                orderid=0,
-                                balance=newbalance
-                                )
+                            amount=amount,
+                            user_id=user.id,
+                            comment=commentstring,
+
+                            orderid=0,
+                            balance=newbalance
+                            )
 
         getcurrentholdings = db.session\
             .query(Admin_ClearnetHoldingsBCH)\
             .order_by(Admin_ClearnetHoldingsBCH.id.desc())\
             .first()
         currentamount = floating_decimals(getcurrentholdings.total, 8)
-        newamount = floating_decimals(currentamount, 8) + floating_decimals(a, 8)
+        newamount = floating_decimals(
+            currentamount, 8) + floating_decimals(a, 8)
 
         holdingsaccount = Admin_ClearnetHoldingsBCH(
             amount=a,
@@ -443,20 +450,21 @@ def bch_send_coin_to_holdings(amount, user_id, comment):
         a = Decimal(amount)
         commentstring = "Vendor Verification: Level " + c
         bch_add_transaction(category=type_transaction,
-                                amount=amount,
-                                user_id=user.id,
-                                comment=commentstring,
-                         
-                                orderid=0,
-                                balance=newbalance
-                                )
+                            amount=amount,
+                            user_id=user.id,
+                            comment=commentstring,
+
+                            orderid=0,
+                            balance=newbalance
+                            )
 
         getcurrentholdings = db.session\
             .query(Admin_ClearnetHoldingsBCH)\
             .order_by(Admin_ClearnetHoldingsBCH.id.desc())\
             .first()
         currentamount = floating_decimals(getcurrentholdings.total, 8)
-        newamount = floating_decimals(currentamount, 8) + floating_decimals(a, 8)
+        newamount = floating_decimals(
+            currentamount, 8) + floating_decimals(a, 8)
 
         holdingsaccount = Admin_ClearnetHoldingsBCH(
             amount=a,
@@ -502,13 +510,13 @@ def bch_send_coin_from_holdings(amount, user_id, comment):
     commentstring = "Vendor Verification Refund: Level " + c
 
     bch_add_transaction(category=type_transaction,
-                            amount=amount,
-                            user_id=user.id,
-                            comment=commentstring,
-                      
-                            orderid=0,
-                            balance=newbalance
-                            )
+                        amount=amount,
+                        user_id=user.id,
+                        comment=commentstring,
+
+                        orderid=0,
+                        balance=newbalance
+                        )
 
     getcurrentholdings = db.session\
         .query(Admin_ClearnetHoldingsBCH)\
@@ -589,12 +597,12 @@ def bch_send_coin_to_user(amount, comment, user_id):
     db.session.flush()
 
     bch_add_transaction(category=type_transaction,
-                            amount=amount,
-                            user_id=user_id,
-                            comment='Transaction',
-                            orderid=oid,
-                            balance=newbalance
-                            )
+                        amount=amount,
+                        user_id=user_id,
+                        comment='Transaction',
+                        orderid=oid,
+                        balance=newbalance
+                        )
 
 
 def bch_send_coin_to_affiliate(amount, comment, user_id):
@@ -623,9 +631,9 @@ def bch_send_coin_to_affiliate(amount, comment, user_id):
     db.session.add(userswallet)
 
     bch_add_transaction(category=type_transaction,
-                            amount=amount,
-                            user_id=user_id,
-                            comment='Transaction',
-                            orderid=oid,
-                            balance=newbalance
-                            )
+                        amount=amount,
+                        user_id=user_id,
+                        comment='Transaction',
+                        orderid=oid,
+                        balance=newbalance
+                        )

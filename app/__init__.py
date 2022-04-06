@@ -202,6 +202,10 @@ app.register_blueprint(vendorcreate_blueprint, url_prefix='/vendorcreate')
 
 from .vendorcreateitem import vendorcreateitem as vendorcreateitem_blueprint
 app.register_blueprint(vendorcreateitem_blueprint, url_prefix='/vendorcreateitem')
+
+from .vendororders import vendororders as vendororders_blueprint
+app.register_blueprint(vendororders_blueprint, url_prefix='/vendororders')
+
 #
 # from .vendorverification import vendorverification as vendorverification_blueprint
 # app.register_blueprint(vendorverification_blueprint, url_prefix='/vendor-verification')
@@ -220,5 +224,8 @@ app.register_blueprint(wallet_btc_blueprint, url_prefix='/btc')
 from app.wallet_xmr import wallet_xmr as wallet_xmr_blueprint
 app.register_blueprint(wallet_xmr_blueprint, url_prefix='/xmr')
 
-with app.app_context():
-    db.create_all()
+# with app.app_context():
+#     db.create_all()
+db.configure_mappers()
+db.create_all()
+db.session.commit()

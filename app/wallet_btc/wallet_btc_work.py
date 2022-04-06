@@ -1,12 +1,14 @@
 from app import db, UPLOADED_FILES_DEST_USER
 from app.common.functions import\
- floating_decimals, \
-userimagelocation
+    floating_decimals, \
+    userimagelocation
 from app.notification import notification
 from app.wallet_btc.wallet_btc_addtransaction import btc_addtransaction
 from app.wallet_btc.wallet_btc_security import btc_check_balance
 from decimal import Decimal
-import datetime, os, qrcode
+import datetime
+import os
+import qrcode
 # models
 from app.classes.auth import Auth_User
 from app.classes.admin import\
@@ -57,17 +59,17 @@ def btc_create_wallet(user_id):
 
         # create a new wallet
         btc_walletcreate = Btc_Wallet(user_id=user_id,
-                                        currentbalance=0,
-                                        unconfirmed=0,
-                                        address1='',
-                                        address1status=0,
-                                        address2='',
-                                        address2status=0,
-                                        address3='',
-                                        address3status=0,
-                                        locked=0,
-                                        transactioncount=0
-                                        )
+                                      currentbalance=0,
+                                      unconfirmed=0,
+                                      address1='',
+                                      address1status=0,
+                                      address2='',
+                                      address2status=0,
+                                      address3='',
+                                      address3status=0,
+                                      locked=0,
+                                      transactioncount=0
+                                      )
         db.session.add(btc_walletcreate)
 
         btc_newunconfirmed = Btc_Unconfirmed(
@@ -102,18 +104,20 @@ def btc_create_wallet(user_id):
         # create qr code
         btc_create_qr_code(user_id=user_id, address=btc_walletcreate.address1)
 
+
 def btc_create_qr_code(user_id, address):
     # find path of the user
     getuserlocation = userimagelocation(user_id=user_id)
     get_user = Auth_User.query.get(user_id)
-    thepath = os.path.join(UPLOADED_FILES_DEST_USER, getuserlocation, str(get_user.uuid))
+    thepath = os.path.join(UPLOADED_FILES_DEST_USER,
+                           getuserlocation, str(get_user.uuid))
     path_plus_filename = thepath + '/' + address + '.png'
     qr = qrcode.QRCode(
-                        version=None,
-                        error_correction=qrcode.constants.ERROR_CORRECT_L,
-                        box_size=10,
-                        border=5,
-                        )
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=5,
+    )
     qr.add_data(address)
     qr.make(fit=True)
 
@@ -138,11 +142,10 @@ def btc_wallet_status(user_id):
     if userswallet:
         try:
             if userswallet.address1status == 0 \
-                and userswallet.address2status == 0 \
-                and userswallet.address2status == 0:
+                    and userswallet.address2status == 0 \
+                    and userswallet.address2status == 0:
                 btc_create_wallet(user_id=user_id)
 
-            
         except Exception as e:
             userswallet.address1 = ''
             userswallet.address1status = 0
@@ -215,7 +218,10 @@ def btc_send_coin(user_id, sendto, amount, comment):
             username='',
             user_id=user_id,
             salenumber=0,
-            bitcoin=amount
+            bitcoin=amount,
+
+                     bitcoincash=0,
+                     monero=0,
         )
 
 
@@ -232,7 +238,8 @@ def btc_send_coin_to_escrow(amount, comment, user_id):
     if a == 1:
         try:
             type_transaction = 4
-            userswallet = db.session.query(Btc_Wallet).filter_by(user_id=user_id).first()
+            userswallet = db.session.query(
+                Btc_Wallet).filter_by(user_id=user_id).first()
             curbal = Decimal(userswallet.currentbalance)
             amounttomod = Decimal(amount)
             newbalance = Decimal(curbal) - Decimal(amounttomod)
@@ -241,12 +248,12 @@ def btc_send_coin_to_escrow(amount, comment, user_id):
 
             oid = int(comment)
             btc_addtransaction(category=type_transaction,
-                                    amount=amount,
-                                    user_id=user_id,
-                                    comment='Sent Coin To Escrow',
-                                    orderid=oid,
-                                    balance=newbalance
-                                    )
+                               amount=amount,
+                               user_id=user_id,
+                               comment='Sent Coin To Escrow',
+                               orderid=oid,
+                               balance=newbalance
+                               )
 
         except Exception as e:
             notification(
@@ -254,7 +261,10 @@ def btc_send_coin_to_escrow(amount, comment, user_id):
                 username='',
                 user_id=user_id,
                 salenumber=comment,
-                bitcoin=amount
+                bitcoin=amount,
+                bitcoincash=0,
+                monero=0,
+
             )
 
     else:
@@ -263,7 +273,9 @@ def btc_send_coin_to_escrow(amount, comment, user_id):
             username='',
             user_id=user_id,
             salenumber=comment,
-            bitcoin=amount
+            bitcoin=amount,
+                     bitcoincash=0,
+                     monero=0,
         )
 
 
@@ -291,12 +303,12 @@ def btc_send_coin_to_user_as_admin(amount, comment, user_id):
     db.session.flush()
 
     btc_addtransaction(category=type_transaction,
-                            amount=amount,
-                            user_id=user_id,
-                            comment=comment,
-                            orderid=0,
-                            balance=newbalance
-                            )
+                       amount=amount,
+                       user_id=user_id,
+                       comment=comment,
+                       orderid=0,
+                       balance=newbalance
+                       )
 
 
 def btc_take_coin_to_user_as_admin(amount, comment, user_id):
@@ -323,12 +335,12 @@ def btc_take_coin_to_user_as_admin(amount, comment, user_id):
     db.session.flush()
 
     btc_addtransaction(category=type_transaction,
-                            amount=amount,
-                            user_id=user_id,
-                            comment=comment,
-                            orderid=0,
-                            balance=newbalance
-                            )
+                       amount=amount,
+                       user_id=user_id,
+                       comment=comment,
+                       orderid=0,
+                       balance=newbalance
+                       )
 
     getcurrentprofit = db.session\
         .query(Admin_ClearnetProfitBtc)\
@@ -378,12 +390,12 @@ def btc_send_coin_for_ad(amount, user_id, comment):
         a = Decimal(amount)
         commentstring = "Sent money for ad " + c
         btc_addtransaction(category=type_transaction,
-                                amount=amount,
-                                user_id=user.id,
-                                comment=commentstring,
-                                orderid=0,
-                                balance=newbalance
-                                )
+                           amount=amount,
+                           user_id=user.id,
+                           comment=commentstring,
+                           orderid=0,
+                           balance=newbalance
+                           )
 
         getcurrentholdings = db.session\
             .query(Admin_ClearnetHoldingsBtc)\
@@ -437,19 +449,20 @@ def btc_send_coin_to_holdings(amount, user_id, comment):
         a = Decimal(amount)
         commentstring = "Vendor Verification: Level " + c
         btc_addtransaction(category=type_transaction,
-                                amount=amount,
-                                user_id=user.id,
-                                comment=commentstring,
-                                orderid=0,
-                                balance=newbalance
-                                )
+                           amount=amount,
+                           user_id=user.id,
+                           comment=commentstring,
+                           orderid=0,
+                           balance=newbalance
+                           )
 
         getcurrentholdings = db.session\
             .query(Admin_ClearnetHoldingsBtc)\
             .order_by(Admin_ClearnetHoldingsBtc.id.desc())\
             .first()
         currentamount = floating_decimals(getcurrentholdings.total, 8)
-        newamount = floating_decimals(currentamount, 8) + floating_decimals(a, 8)
+        newamount = floating_decimals(
+            currentamount, 8) + floating_decimals(a, 8)
 
         holdingsaccount = Admin_ClearnetHoldingsBtc(
             amount=a,
@@ -495,12 +508,12 @@ def btc_send_coin_from_holdings(amount, user_id, comment):
     commentstring = "Vendor Verification Refund: Level " + c
 
     btc_addtransaction(category=type_transaction,
-                            amount=amount,
-                            user_id=user.id,
-                            comment=commentstring,
-                            orderid=0,
-                            balance=newbalance
-                            )
+                       amount=amount,
+                       user_id=user.id,
+                       comment=commentstring,
+                       orderid=0,
+                       balance=newbalance
+                       )
 
     getcurrentholdings = db.session\
         .query(Admin_ClearnetHoldingsBtc)\
@@ -534,7 +547,6 @@ def btc_send_coin_to_clearnet(amount, comment):
     oid = int(comment)
     a = Decimal(amount)
 
-
     getcurrentprofit = db.session\
         .query(Admin_ClearnetProfitBtc)\
         .order_by(Admin_ClearnetProfitBtc.id.desc())\
@@ -557,8 +569,8 @@ def btc_send_coin_to_clearnet(amount, comment):
         orderid=oid,
         balance=0
     )
-    
-    
+
+
 def btc_send_coin_to_user(amount, comment, user_id):
     """
     # to User
@@ -584,12 +596,12 @@ def btc_send_coin_to_user(amount, comment, user_id):
     db.session.flush()
 
     btc_addtransaction(category=type_transaction,
-                            amount=amount,
-                            user_id=user_id,
-                            comment='Transaction',
-                            orderid=oid,
-                            balance=newbalance
-                            )
+                       amount=amount,
+                       user_id=user_id,
+                       comment='Transaction',
+                       orderid=oid,
+                       balance=newbalance
+                       )
 
 
 def btc_send_coin_to_affiliate(amount, comment, user_id):
@@ -619,9 +631,9 @@ def btc_send_coin_to_affiliate(amount, comment, user_id):
     db.session.add(userswallet)
 
     btc_addtransaction(category=type_transaction,
-                            amount=amount,
-                            user_id=user_id,
-                            comment='Transaction',
-                            orderid=oid,
-                            balance=newbalance
-                            )
+                       amount=amount,
+                       user_id=user_id,
+                       comment='Transaction',
+                       orderid=oid,
+                       balance=newbalance
+                       )

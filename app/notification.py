@@ -22,7 +22,7 @@
 # 30 btc address error
 # 31 too little btc to send offsite
 
-def notification(type, username, user_id, salenumber, bitcoin):
+def notification(type, username, user_id, salenumber, bitcoin, bitcoincash, monero):
     from app import db
     from app.classes.message import Message_Notifications
     from datetime import datetime
@@ -31,8 +31,10 @@ def notification(type, username, user_id, salenumber, bitcoin):
         type=type,
         username=username,
         user_id=user_id,
-        sale_number=salenumber,
-        crypto_amount=bitcoin,
+        salenumber=salenumber,
+        bitcoin=bitcoin,
+        bitcoincash=bitcoincash,
+        monero=monero,
         read=1,
         timestamp=now,
     )

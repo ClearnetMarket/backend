@@ -16,62 +16,6 @@ from app.classes.category import Category_Categories, Category_Categories_Schema
 from app.vendor.images.image_forms import image1, image2, image3, image4
 
 
-@vendorcreateitem.route('/query/country', methods=['GET'])
-def vendorcreateitem_get_country_list():
-    """
-    Returns list of Countrys
-    :return:
-    """
-    if request.method == 'GET':
-        country_list = Query_Country.query.order_by(
-            Query_Country.name.asc()).all()
-        country_schema = Query_Country_Schema(many=True)
-        return jsonify(country_schema.dump(country_list))
-
-
-@vendorcreateitem.route('/query/currency', methods=['GET'])
-def vendorcreateitem_get_currency_list():
-    """
-    Returns list of currencys 
-    :return:
-    """
-    if request.method == 'GET':
-        currency_list = Query_CurrencyList.query.order_by(
-            Query_CurrencyList.value.asc()).all()
-        currency_schema = Query_CurrencyList_Schema(many=True)
-
-        return jsonify(currency_schema.dump(currency_list))
-
-
-@vendorcreateitem.route('/query/condition', methods=['GET'])
-def vendorcreateitem_get_item_condition_list():
-    """
-    Returns list of item condition 
-    :return:
-    """
-    if request.method == 'GET':
-
-        condition_list = Query_ItemCondition.query.order_by(
-            Query_ItemCondition.value.asc()).all()
-        condition_schema = Query_ItemCondition_Schema(many=True)
-
-        return jsonify(condition_schema.dump(condition_list))
-
-
-@vendorcreateitem.route('/query/category', methods=['GET'])
-def vendorcreateitem_get_item_category_list():
-    """
-    Returns list of item category 
-    :return:
-    """
-    if request.method == 'GET':
-        category_list = Category_Categories.query\
-        .order_by(Category_Categories.name.asc())\
-        .all()
-        category_schema = Category_Categories_Schema(many=True)
-
-        return jsonify(category_schema.dump(category_list))
-
 
 @vendorcreateitem.route('/create-item', methods=['POST'])
 @login_required
@@ -160,11 +104,11 @@ def create_item():
 
 
 @vendorcreateitem.route('/create-item-main/<string:uuid>', methods=['POST'])
-def create_item_info(uuid):
+def create_item_main(uuid):
     """
     Creates the Vendor Item
     """
-
+   
     now = datetime.utcnow()
     item = Item_MarketItem.query\
         .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id) \
@@ -209,7 +153,7 @@ def create_item_info(uuid):
     else:
         item_condition = request.json["item_condition"]
         item_condition = item_condition
-
+ 
     # Item Count
     item_count = request.json["item_count"]
     item_count = int(item_count)
@@ -218,8 +162,8 @@ def create_item_info(uuid):
     else:
         return jsonify({"status": 'error'})
 
-
-    # Price
+    print("here")
+    # Pric  e
     price = request.json["price"]
 
     # Keywords
@@ -259,7 +203,7 @@ def create_item_info(uuid):
             .filter(Query_Country.value == shipping_to_country_one)\
             .first()
         shipping_to_country_one_name = get_name_country_one.name
-
+    
     # Shipping to Country two
     if request.json["shipping_to_country_two"] == '':
         shipping_to_country_two = 0
@@ -300,7 +244,7 @@ def create_item_info(uuid):
     shipinfo2 = f'Takes {shipping_2_days} days for {shipping_2_price}{currency_symbol}'
     shipinfo3 = f'Takes {shipping_3_days} days for {shipping_3_price}{currency_symbol}'
 
-
+ 
     # Category
     if request.json["category_id_0"] == '':
         get_category_query = None
@@ -317,7 +261,8 @@ def create_item_info(uuid):
 
     # create image of item in database
     item = Item_MarketItem.query\
-        .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id)\
+        .filter(Item_MarketItem.uuid == uuid,
+         Item_MarketItem.vendor_id == current_user.id)\
         .first()
 
     item.created = now
@@ -551,3 +496,60 @@ def get_item_fields(uuid):
             'destination_country_four_name': item.destination_country_four_name,
      
         })
+
+
+@vendorcreateitem.route('/query/country', methods=['GET'])
+def vendorcreateitem_get_country_list():
+    """
+    Returns list of Countrys
+    :return:
+    """
+    if request.method == 'GET':
+        country_list = Query_Country.query.order_by(
+            Query_Country.name.asc()).all()
+        country_schema = Query_Country_Schema(many=True)
+        return jsonify(country_schema.dump(country_list))
+
+
+@vendorcreateitem.route('/query/currency', methods=['GET'])
+def vendorcreateitem_get_currency_list():
+    """
+    Returns list of currencys 
+    :return:
+    """
+    if request.method == 'GET':
+        currency_list = Query_CurrencyList.query.order_by(
+            Query_CurrencyList.value.asc()).all()
+        currency_schema = Query_CurrencyList_Schema(many=True)
+
+        return jsonify(currency_schema.dump(currency_list))
+
+
+@vendorcreateitem.route('/query/condition', methods=['GET'])
+def vendorcreateitem_get_item_condition_list():
+    """
+    Returns list of item condition 
+    :return:
+    """
+    if request.method == 'GET':
+
+        condition_list = Query_ItemCondition.query.order_by(
+            Query_ItemCondition.value.asc()).all()
+        condition_schema = Query_ItemCondition_Schema(many=True)
+
+        return jsonify(condition_schema.dump(condition_list))
+
+
+@vendorcreateitem.route('/query/category', methods=['GET'])
+def vendorcreateitem_get_item_category_list():
+    """
+    Returns list of item category 
+    :return:
+    """
+    if request.method == 'GET':
+        category_list = Category_Categories.query\
+            .order_by(Category_Categories.name.asc())\
+            .all()
+        category_schema = Category_Categories_Schema(many=True)
+
+        return jsonify(category_schema.dump(category_list))

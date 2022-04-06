@@ -15,19 +15,10 @@ class Message_Notifications(db.Model):
     timestamp = db.Column(db.TIMESTAMP())
     salenumber = db.Column(db.INTEGER)
     bitcoin = db.Column(db.DECIMAL(20, 8))
+    bitcoincash = db.Column(db.DECIMAL(20, 8))
+    monero = db.Column(db.DECIMAL(20, 12))
     read = db.Column(db.INTEGER)
 
-class Message_Notifications_Schema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = Message_Notifications
-    id = ma.auto_field()
-    type = ma.auto_field()
-    username = ma.auto_field()
-    user_id = ma.auto_field()
-    timestamp = ma.auto_field()
-    salenumber = ma.auto_field()
-    bitcoin = ma.auto_field()
-    read = ma.auto_field()
 
 class Message_Chat(db.Model):
     __tablename__ = 'message_chat'
@@ -151,3 +142,5 @@ class Message_Comment_Schema(ma.SQLAlchemyAutoSchema):
     author = ma.auto_field()
     post_id = ma.auto_field()
     modid = ma.auto_field()
+
+

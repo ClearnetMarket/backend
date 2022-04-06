@@ -113,10 +113,10 @@ class Item_MarketItem_Schema(ma.SQLAlchemyAutoSchema):
         model = Item_MarketItem
             
         fields = ('uuid', 'online', 'created', 'price', 'vendor_name', 'node_id', 'vendor_uuid',
-                  'origin_country_name', 'currency_symbol', 'destination_country_one_name',
+                    'origin_country_name', 'currency_symbol', 'destination_country_one_name',
                     'destination_country_two_name', 'destination_country_three_name',
                     'destination_country_four_name', 'destination_country_five_name',
-                     'item_title', 'item_count', 'item_description',
+                        'item_title', 'item_count', 'item_description',
                     'item_condition', 'keywords', 'price',  
                     'digital_currency_1', 'digital_currency_2', 'digital_currency_3',
                     'image_one_url', 'image_two_url', 'image_three_url', 'image_four_url',
@@ -125,6 +125,6 @@ class Item_MarketItem_Schema(ma.SQLAlchemyAutoSchema):
                     'shipping_price_2', 'shipping_day_2', 'shipping_info_3', 'shipping_price_3', 'shipping_day_3', 'view_count', 
                     'item_rating', 'review_count',  'total_sold', 
                     )
-                    
+                
 item_schema = Item_MarketItem_Schema()
 items_schema = Item_MarketItem_Schema(many=True)

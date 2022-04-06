@@ -23,6 +23,7 @@ class Checkout_CheckoutShoppingCart(db.Model):
     image_of_item = db.Column(db.VARCHAR(500))
     # how many items in your cart you wanna buy
     quantity_of_item = db.Column(db.INTEGER)
+
     # how many items vendor has
     vendor_supply = db.Column(db.INTEGER)
     saved_for_later = db.Column(db.INTEGER)
@@ -68,7 +69,7 @@ class Checkout_ShoppingCart_Schema(ma.SQLAlchemyAutoSchema):
                   'shipping_info_0', 'shipping_info_2', 'shipping_info_3',
                   'shipping_day_0', 'shipping_day_2', 'shipping_day_3',
                   'shipping_price_3', 'shipping_price_3', 'shipping_price_3',
-                  'selected_digital_currency', 'selected_shipping'
+                  'selected_digital_currency', 'selected_shipping', 'vendor_supply'
                   )
 
 

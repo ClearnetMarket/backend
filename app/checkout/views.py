@@ -24,6 +24,7 @@ from app.classes.user_orders import User_Orders
 from app.classes.wallet_btc import Btc_Wallet
 from app.classes.wallet_bch import Bch_Wallet
 from app.classes.wallet_xmr import Xmr_Wallet
+from app.classes.vendor import Vendor_Notification
 # endmodels
 
 from app.wallet_bch.wallet_bch_work import bch_send_coin_to_escrow
@@ -33,7 +34,6 @@ from app.common.functions import floating_decimals,\
     convert_local_to_bch,\
     convert_local_to_btc,\
     convert_local_to_xmr
-
 
 
 def cart_calculate_total_price(user_id):
@@ -103,6 +103,7 @@ def cart_calculate_total_price(user_id):
  
     if len(btc_pricelist) > 0 :
         btc_sum_of_item = sum(btc_items_quan)
+ 
         total_cart.btc_sum_of_item = btc_sum_of_item
         # get sum of prices in list
         btc_formatted_total_price = ("{0:.8f}".format(sum(btc_pricelist)))
@@ -113,7 +114,7 @@ def cart_calculate_total_price(user_id):
         # get total price
         btc_add_total = Decimal(btc_formatted_total_price) + Decimal(btc_formatted_total_shipping_price)
         total_cart.btc_total_price = btc_add_total
-   
+     
 
     if len(bch_pricelist) > 0:
         # get sum of prices in list
@@ -145,7 +146,6 @@ def cart_calculate_total_price(user_id):
     db.session.add(total_cart)
     db.session.flush()
 
-
 def cart_calculate_item_shipping_and_price_cart(cartitemid):
 
     """
@@ -155,6 +155,7 @@ def cart_calculate_item_shipping_and_price_cart(cartitemid):
     Converts the local price to cryptocurrency prices
     determines quantity and calculates price
     """
+    
     cartitem = Checkout_CheckoutShoppingCart.query\
         .filter(Checkout_CheckoutShoppingCart.id == cartitemid)\
         .first()
@@ -176,7 +177,7 @@ def cart_calculate_item_shipping_and_price_cart(cartitemid):
         # BITCOIN
 
         if cartitem.selected_digital_currency == 1:
-
+            
             ## SHIPPING
             # free shipping
             if cartitem.selected_shipping == 1:
@@ -265,7 +266,319 @@ def cart_calculate_item_shipping_and_price_cart(cartitemid):
         db.session.add(cartitem)
         db.session.flush()
 
+def cart_calculate_item_shipping_and_price_all(userid):
 
+    """
+    # calculates shopping cart table
+    Function takes cart if of item in shopping cart
+    THen it determines the currency being used
+    Converts the local price to cryptocurrency prices
+    determines quantity and calculates price
+    """
+    
+    cart_items = Checkout_CheckoutShoppingCart.query\
+        .filter(Checkout_CheckoutShoppingCart.customer_id == userid)\
+        .all()
+
+
+    # BITCOIN
+    for f in cart_items:
+     
+        getitem = db.session\
+            .query(Item_MarketItem) \
+            .filter(Item_MarketItem.id==f.item_id) \
+            .first()
+        if f.selected_digital_currency == 1:
+            
+            ## SHIPPING
+            # free shipping
+            if f.selected_shipping == 1:
+                shipprice = 0
+            elif f.selected_shipping == 2:
+                shipprice = Decimal(getitem.shipping_price_2)
+            else:
+                shipprice = Decimal(getitem.shipping_price_3)
+            # convert it to btc cash
+            btc_ship_price = Decimal(convert_local_to_btc(amount=shipprice, currency=getitem.currency))
+            # get it formatted correctly
+            btc_shipprice_formatted = (floating_decimals(btc_ship_price, 8))
+            # times the shipping price times quantity
+            btc_shippingtotal = Decimal(f.quantity_of_item) * Decimal(btc_shipprice_formatted)
+            # return shipping price
+            btc_ship_price_final = (floating_decimals(btc_shippingtotal, 8))
+            # set variable in database
+            f.final_shipping_price_btc = btc_ship_price_final
+
+            ## PRICING
+            btc_itemprice = Decimal(getitem.price)
+            btc_price_per_item = Decimal(convert_local_to_btc(amount=btc_itemprice, currency=getitem.currency))
+            btc_price_formatted = (floating_decimals(btc_price_per_item, 8))
+            btc_pricing_multiply = Decimal(f.quantity_of_item) * Decimal(btc_price_formatted)
+            btc_price_final = (floating_decimals(btc_pricing_multiply, 8))
+            f.final_price_btc = btc_price_final
+
+        # BITCOIN CASH
+        if f.selected_digital_currency == 2:
+
+            ## SHIPPING
+            # free shipping
+            if f.selected_shipping == 1:
+                shipprice = 0
+            elif f.selected_shipping == 2:
+                shipprice = Decimal(getitem.shipping_price_2)
+            else:
+                shipprice = Decimal(getitem.shipping_price_3)
+            # convert it to btc cash
+            bch_ship_price = Decimal(convert_local_to_bch(amount=shipprice, currency=getitem.currency))
+            # get it formatted correctly
+            bch_shipprice_formatted = (floating_decimals(bch_ship_price, 8))
+            # times the shipping price times quantity
+            bch_shippingtotal = Decimal(f.quantity_of_item) *  Decimal(bch_shipprice_formatted)
+            # return shipping price
+            bch_ship_price_final = (floating_decimals(bch_shippingtotal, 8))
+            # set variable in database
+            f.final_shipping_price_bch = bch_ship_price_final
+            
+            ## PRICING
+            bch_itemprice = Decimal(getitem.price)
+            bch_price_per_item = Decimal(convert_local_to_bch(amount=bch_itemprice, currency=getitem.currency))
+            bch_price_formatted = (floating_decimals(bch_price_per_item, 8))
+            bch_pricing_multiply = Decimal(f.quantity_of_item) * Decimal(bch_price_formatted)
+            bch_price_final = (floating_decimals(bch_pricing_multiply, 8))
+            f.final_price_bch = bch_price_final
+
+        # Monero
+        if f.selected_digital_currency == 3:
+            # free shipping
+            if f.selected_shipping == 1:
+                shipprice = 0
+            elif f.selected_shipping == 2:
+                shipprice = Decimal(getitem.shipping_price_2)
+            else:
+                shipprice = Decimal(getitem.shipping_price_3)
+            # convert it to btc cash
+            xmr_ship_price = Decimal(convert_local_to_xmr(amount=shipprice, currency=getitem.currency))
+            # get it formatted correctly
+            xmr_shipprice_formatted = (floating_decimals(xmr_ship_price, 12))
+            # times the shipping price times quantity
+            xmr_shippingtotal = Decimal(f.quantity_of_item) * Decimal(xmr_shipprice_formatted)
+            # return shipping price
+            xmr_ship_price_final = (floating_decimals(xmr_shippingtotal, 12))
+            # set variable in database
+            f.final_shipping_price_xmr = xmr_ship_price_final
+
+            ## PRICING
+            xmr_itemprice = Decimal(getitem.price)
+            xmr_price_per_item = Decimal(convert_local_to_xmr(amount=xmr_itemprice, currency=getitem.currency))
+            xmr_price_formatted = (floating_decimals(xmr_price_per_item, 12))
+            xmr_pricing_multiply = Decimal(f.quantity_of_item) * Decimal(xmr_price_formatted)
+            xmr_price_final = (floating_decimals(xmr_pricing_multiply, 12))
+            f.final_price_xmr = xmr_price_final
+
+        db.session.add(f)
+    db.session.flush()
+
+
+def checkout_clear_shopping_cart(userid):
+    """
+    Puts totals of cart to zero
+    Then deletes all items in the regular cat
+    """
+    # clear user shoppingcarttotal
+    user = Auth_User.query\
+        .filter_by(username=current_user.username)\
+        .first()
+    get_total_cart_for_user = db.session \
+        .query(Checkout_ShoppingCartTotal) \
+        .filter_by(customer_id=user.id) \
+        .first()
+
+    get_shopping_cart = Checkout_CheckoutShoppingCart.query\
+        .filter(Checkout_CheckoutShoppingCart.customer_id == userid)\
+        .all()
+    get_total_cart_for_user.btc_sum_of_item = 0
+    get_total_cart_for_user.btc_price = 0
+    get_total_cart_for_user.btc_shipping_price = 0
+    get_total_cart_for_user.btc_total_price = 0
+
+    get_total_cart_for_user.bch_sum_of_item = 0
+    get_total_cart_for_user.bch_price = 0
+    get_total_cart_for_user.bch_shipping_price = 0
+    get_total_cart_for_user.bch_total_price = 0
+
+    get_total_cart_for_user.xmr_sum_of_item = 0
+    get_total_cart_for_user.xmr_price = 0
+    get_total_cart_for_user.xmr_shipping_price = 0
+    get_total_cart_for_user.xmr_total_price = 0
+    db.session.add(get_total_cart_for_user)
+
+    # delete items in cart
+    for cart in get_shopping_cart:
+        db.session.delete(cart)
+    db.session.flush()
+
+def checkout_delete_private_msg(userid):
+    """
+    Deletes the private message
+    """
+    user = Auth_User.query.filter(Auth_User.id==userid).first()
+    oldmsg = db.session\
+        .query(Service_ShippingSecret)\
+        .filter_by(user_id=user.id, orderid=0)\
+        .first()
+    db.session.delete(oldmsg)
+    db.session.flush()
+
+def checkoutput_item_offline(itemid):
+    """
+    If user bought last or only item..take vendors item offline
+    """
+    getitem = db.session\
+        .query(Item_MarketItem) \
+        .filter_by(uuid=itemid) \
+        .first()
+        # turn off if item is less than one
+    if getitem.item_count < 1:
+
+        getitem.online = 0
+        db.session.add(getitem)
+
+        # send notification to vendor saying its all sold out
+        notification(type=9,
+                        username=getitem.vendor_name,
+                        user_id=getitem.vendor_id,
+                        salenumber=getitem.id,
+                        bitcoin=0,
+                        bitcoincash=0,
+                        monero=0)
+
+# updates pricing and quanity of items in shopping cart
+@checkout.route('/update/price', methods=['GET'])
+@login_required
+def checkout_update_cart_information():
+    """
+    updates pricing and quanity of items in shopping cart
+    """
+    get_cart_items = Checkout_CheckoutShoppingCart.query\
+        .filter(Checkout_CheckoutShoppingCart.customer_id == current_user.id)\
+        .all()
+    new_amount = 0
+    for f in get_cart_items:
+
+        get_market_item = Item_MarketItem.query\
+            .filter(Item_MarketItem.id==f.item_id)\
+            .first()
+        if f.price_of_item != get_market_item.price:
+            print(f"f price{f.price_of_item}")
+            print(f"market price{get_market_item.price}")
+            new_amount  += 1
+            f.price_of_item = get_market_item.price
+        if f.quantity_of_item != get_market_item.item_count:
+            print(f"item quant{f.quantity_of_item}")
+            print(f"item count{get_market_item.item_count}")
+            new_amount += 1
+            f.quantity_of_item = get_market_item.item_count
+            
+        db.session.add(f)
+    print(new_amount)
+    if new_amount > 0:
+        print("commited")
+        db.session.commit()
+    return jsonify({'status': 'success'})
+
+
+# updates pricing for the user
+@checkout.route('/update/price', methods=['GET'])
+@login_required
+def checkout_update_payment_information():
+    """
+    Sends the Payments for the cryptocurrencies
+    """
+    cart_calculate_item_shipping_and_price_all(current_user.id)
+    cart_calculate_total_price(current_user.id)
+    db.session.commit()
+    return jsonify({'status': 'success'})
+
+
+@checkout.route('/add/<string:itemuuid>', methods=['POST'])
+@login_required
+def cart_add_to_shopping_cart(itemuuid):
+    """
+    Adds item to shopping cart
+    """
+
+    get_item_for_sale = db.session\
+        .query(Item_MarketItem) \
+        .filter_by(uuid=itemuuid) \
+        .first()
+
+    # see if in shopping cart
+    see_if_item_in_cart = Checkout_CheckoutShoppingCart.query\
+        .filter(Checkout_CheckoutShoppingCart.item_uuid == itemuuid)\
+        .first() is not None
+    if see_if_item_in_cart is False:
+        if get_item_for_sale.shipping_free is True:
+            shipping_selected = 1
+            shipinfodesc = f'Takes {get_item_for_sale.shipping_day_0} days for Free'
+        elif get_item_for_sale.free_shipping is True:
+            shipping_selected = 2
+            shipinfodesc = f'Takes {get_item_for_sale.shipping_day_2} days for {get_item_for_sale.shipping_price_2}{get_item_for_sale.currency_symbol}'
+        else:
+            shipping_selected = 3
+            shipinfodesc = f'Takes {get_item_for_sale.shipping_day_3} days for {get_item_for_sale.shipping_price_3}{get_item_for_sale.currency_symbol}'
+
+        new_shopping_cart_item = Checkout_CheckoutShoppingCart(
+            item_id=get_item_for_sale.id,
+            item_uuid=get_item_for_sale.uuid,
+            customer_user_name=current_user.username,
+            customer_id=current_user.id,
+            customer_uuid=current_user.uuid,
+            vendor_user_name=get_item_for_sale.vendor_display_name,
+            vendor_id=get_item_for_sale.vendor_id,
+            vendor_uuid=get_item_for_sale.vendor_uuid,
+            currency=get_item_for_sale.currency,
+            title_of_item=get_item_for_sale.item_title,
+            price_of_item=get_item_for_sale.price,
+            image_of_item=get_item_for_sale.image_one_url,
+            shipping_info_0=get_item_for_sale.shipping_info_0,
+            shipping_day_0=get_item_for_sale.shipping_day_0,
+            shipping_info_2=get_item_for_sale.shipping_info_2,
+            shipping_price_2=get_item_for_sale.shipping_price_2,
+            shipping_day_2=get_item_for_sale.shipping_day_2,
+            shipping_info_3=get_item_for_sale.shipping_info_3,
+            shipping_price_3=get_item_for_sale.shipping_price_3,
+            shipping_day_3=get_item_for_sale.shipping_day_3,
+            vendor_supply=get_item_for_sale.item_count,
+            shipping_free=get_item_for_sale.shipping_free,
+            shipping_two=get_item_for_sale.shipping_two,
+            shipping_three=get_item_for_sale.shipping_three,
+            digital_currency_1=get_item_for_sale.digital_currency_1,
+            digital_currency_2=get_item_for_sale.digital_currency_2,
+            digital_currency_3=get_item_for_sale.digital_currency_3,
+
+            # selected items
+            saved_for_later=0,
+            quantity_of_item=1,
+   
+            selected_digital_currency=None,
+            selected_shipping=shipping_selected,
+            selected_shipping_description=shipinfodesc,
+
+            # calculated items
+            final_shipping_price_btc=None,
+            final_price_btc=None,
+            final_shipping_price_bch=None,
+            final_price_bch=None,
+            final_shipping_price_xmr=None,
+            final_price_xmr=None,
+        )
+
+        db.session.add(new_shopping_cart_item)
+        db.session.commit()
+
+        return jsonify({'status': 'success'})
+    else:
+       return jsonify({'error': 'Item is in cart already.'})
 
 @checkout.route('/data/incart', methods=['GET'])
 @login_required
@@ -291,7 +604,6 @@ def data_shopping_cart_in_cart():
          
             return jsonify({"status": None}), 409
 
-
 @checkout.route('/data/saved', methods=['GET'])
 @login_required
 def data_shopping_cart_in_saved():
@@ -313,7 +625,6 @@ def data_shopping_cart_in_saved():
             return carts_schema.jsonify(cart_items)
         else:
             return jsonify({"status": "none"}), 200
-
 
 @checkout.route('/data/total', methods=['GET'])
 @login_required
@@ -356,7 +667,6 @@ def data_shopping_cart_total():
 
         })
 
-
 @checkout.route('/data/cart/total', methods=['GET'])
 @login_required
 def data_checkout_total():
@@ -385,73 +695,6 @@ def data_checkout_total():
             'xmr_shipping_price': total_cart.xmr_shipping_price,
             'xmr_total_price': total_cart.xmr_total_price,
         })
-
-
-@checkout.route('/add/<string:itemuuid>', methods=['POST'])
-@login_required
-def cart_add_to_shopping_cart(itemuuid):
-    """
-    Adds item to shopping cart
-    """
-    
-    get_item_for_sale = db.session\
-        .query(Item_MarketItem) \
-        .filter_by(uuid=itemuuid) \
-        .first()
-
-    new_shopping_cart_item = Checkout_CheckoutShoppingCart(
-    item_id=get_item_for_sale.id,
-    item_uuid=get_item_for_sale.uuid,
-    customer_user_name = current_user.username,
-    customer_id = current_user.id,
-    customer_uuid=current_user.uuid,
-    vendor_user_name = get_item_for_sale.vendor_display_name,
-    vendor_id = get_item_for_sale.vendor_id,
-    vendor_uuid = get_item_for_sale.vendor_uuid,
-    currency = get_item_for_sale.currency,
-    title_of_item=get_item_for_sale.item_title,
-    price_of_item=get_item_for_sale.price,
-    image_of_item = get_item_for_sale.image_one_url,
-    shipping_info_0 = get_item_for_sale.shipping_info_0,
-    shipping_day_0 = get_item_for_sale.shipping_day_0,
-    shipping_info_2 = get_item_for_sale.shipping_info_2,
-    shipping_price_2 = get_item_for_sale.shipping_price_2,
-    shipping_day_2 = get_item_for_sale.shipping_day_2,
-    shipping_info_3 = get_item_for_sale.shipping_info_3,
-    shipping_price_3 = get_item_for_sale.shipping_price_3,
-    shipping_day_3 = get_item_for_sale.shipping_day_3,
-    vendor_supply=get_item_for_sale.item_count,
-    shipping_free = get_item_for_sale.shipping_free,
-    shipping_two = get_item_for_sale.shipping_two,
-    shipping_three = get_item_for_sale.shipping_three,
-    digital_currency_1 = get_item_for_sale.digital_currency_1,
-    digital_currency_2 = get_item_for_sale.digital_currency_2,
-    digital_currency_3 = get_item_for_sale.digital_currency_3,
-
-    # selected items
-    saved_for_later=0,
-    quantity_of_item=1,
-    selected_digital_currency=None,
-    selected_shipping = None,
-    selected_shipping_description =  None,
-
-    # calculated items
-    final_shipping_price_btc = None,
-    final_price_btc =  None,
-    final_shipping_price_bch =  None,
-    final_price_bch =  None,
-    final_shipping_price_xmr =  None,
-    final_price_xmr =  None,
-    )
-
-    db.session.add(new_shopping_cart_item)
-    db.session.commit()
-
-
-    return jsonify({'status': 'success'})
-
-
-
 
 @checkout.route('/changeshippingoption/<int:cartid>', methods=['PUT'])
 @login_required
@@ -497,7 +740,6 @@ def cart_update_shipping_option(cartid):
     db.session.commit()
     return jsonify({'status': 'success'})
 
-
 @checkout.route('/currentquantity/<int:cartid>', methods=['GET'])
 @login_required
 def cart_current_quantity(cartid):
@@ -507,7 +749,6 @@ def cart_current_quantity(cartid):
     the_cart_item = Checkout_CheckoutShoppingCart.query\
         .filter(Checkout_CheckoutShoppingCart.id == cartid)\
         .first()
-    print("here")
     return jsonify({'amount': the_cart_item.quantity_of_item})
 
 @checkout.route('/movecartitem/<int:cartid>', methods=['PUT'])
@@ -564,11 +805,12 @@ def cart_update_payment_option(cartid):
         .first()
     new_currency = request.json["new_currency"]
     new_currency = int(new_currency)
+
     if new_currency == 1:
         if getitem.digital_currency_1 is False:
             return jsonify({'status': 'error'})
         else:
-            print("boop")
+           
             the_cart_item.selected_digital_currency = new_currency
         
     if new_currency == 2:
@@ -604,9 +846,9 @@ def cart_update_quantity(cartid):
         .first()
     new_amount = request.json["new_amount"]
     if int(new_amount) > getitem.item_count:
-        return jsonify({'status': 'error'})
+        return jsonify({'status': 'Error.  Vendor Doesnt have that many items for sale'})
     if the_cart_item.customer_id != current_user.id:
-        return jsonify({'status': 'error'})
+        return jsonify({'status': 'error.  Not your shopping cart.'})
     the_cart_item.quantity_of_item = new_amount
     cart_calculate_item_shipping_and_price_cart(the_cart_item.id)
     cart_calculate_total_price(the_cart_item.customer_id)
@@ -614,118 +856,6 @@ def cart_update_quantity(cartid):
     db.session.commit()
     return jsonify({'status': 'success'})
 
-@checkout.route('/payment/<string:itemid>', methods=['POST'])
-@login_required
-def cart_checkout_order(userid):
-    """
-    Sends the Payments for the cryptocurrencies
-    """
-    # Total cart
-    cart = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
-                Checkout_CheckoutShoppingCart.saved_for_later == 0)\
-        .all()
-
-    for k in cart:
-        sellerfee = Auth_UserFees.query\
-            .filter(Auth_UserFees.user_id == k.vendor_id)\
-            .first()
-        physicalitemfee = sellerfee.vendorfee
-        if k.selected_currency == 1:
-            dbfeetopercent = (floating_decimals((physicalitemfee/100), 8))
-            fee_btc = (floating_decimals((dbfeetopercent * k.final_price_btc), 8))
-            fee_xmr = 0
-            fee_bch = 0
-            price_total_xmr = 0
-            price_total_bch = 0
-            price_total_btc = k.final_price_btc
-            price_per_item_btc = Decimal(k.final_price_btc) / Decimal(k.quantity_of_item)
-            price_per_item_xmr = 0
-            price_per_item_bch = 0
-            shipping_price_xmr = 0
-            shipping_price_bch = 0
-            shipping_price_btc = k.final_shipping_price_btc
-
-        if k.selected_currency == 2:
-            dbfeetopercent = (floating_decimals((physicalitemfee/100), 8))
-            fee_bch = (floating_decimals((dbfeetopercent * k.final_price_bch), 8))
-            fee_btc = 0
-            fee_xmr = 0
-            price_total_btc = 0
-            price_total_xmr = 0
-            price_total_bch = k.final_price_bch
-            price_per_item_btc = 0
-            price_per_item_xmr = 0
-            price_per_item_bch = Decimal(k.final_price_bch) / Decimal(k.quantity_of_item)
-            shipping_price_btc = 0
-            shipping_price_xmr = 0
-            shipping_price_bch = k.finalfinal_shipping_price_bch
-            
-        if k.selected_currency == 3:
-            dbfeetopercent = (floating_decimals((physicalitemfee/100), 12))
-            fee_xmr = (floating_decimals((dbfeetopercent * k.final_price_xmr), 12))
-            fee_btc = 0
-            fee_bch = 0
-            price_total_btc = 0
-            price_total_bch = 0
-            price_total_xmr = k.final_price_xmr
-            price_per_item_btc = 0
-            price_per_item_bch = 0
-            price_per_item_xmr = Decimal(k.final_price_xmr) / Decimal(k.quantity_of_item)
-            shipping_price_btc = 0
-            shipping_price_bch = 0
-            shipping_price_xmr = k.final_shipping_price_xmr
-            
-        order = User_Orders(
-            title_of_item=k.title_of_item,
-            item_uuid=k.item_uuid,
-            image_one=k.image_of_item,
-            quantity=k.quantity_of_item,
-            vendor_user_name=k.vendor,
-            vendor_uuid=k.vendor_uuid,
-            vendor_id=k.vendor_id,
-            customer_user_name=k.customer,
-            customer_uuid=k.customer_uuid,
-            customer_id=k.customer_id,
-            currency=k.currency,
-            incart=1,
-            new_order=0,
-            accepted_order=0,
-            waiting_order=0,
-            disputed_order=0,
-            disputed_timer=0,
-            moderator_uuid=None,
-            delivered_order=0,
-            date_shipped=None,
-            completed=0,
-            completed_time=None,
-            released=0,
-            private_note=None,
-            escrow=0,
-            request_cancel=0,
-            reason_cancel=None,
-            cancelled=0,
-            shipping_price_btc=shipping_price_btc,
-            shipping_price_bch=shipping_price_bch,
-            shipping_price_xmr=shipping_price_xmr,
-            shipping_description=None,
-            vendor_feedback=None,
-            user_feedback=None,
-            digital_currency=k.digital_currency,
-            fee_btc=fee_btc,
-            fee_bch=fee_bch,
-            fee_xmr=fee_xmr,
-            price_total_btc=price_total_btc,
-            price_total_bch=price_total_bch,
-            price_total_xmr=price_total_xmr,
-            price_per_item_btc=price_per_item_btc,
-            price_per_item_bch=price_per_item_bch,
-            price_per_item_xmr=price_per_item_xmr,
-        )
-        db.session.add(order)
-        db.session.commit()
-        return jsonify({'status': 'success'})
 
 
 @checkout.route('/delete/<int:cartid>', methods=['DELETE'])
@@ -742,148 +872,8 @@ def cart_delete_item(cartid):
         return jsonify({'status': 'error'})
    
     db.session.delete(the_cart_item)
-    
-    cart_calculate_item_shipping_and_price_cart(the_cart_item.id)
-    cart_calculate_total_price(the_cart_item.customer_id)
     db.session.commit()
     return jsonify({'status': 'success'})
-
-
-
-# Checkout page
-@checkout.route('/payment/<string:itemid>', methods=['POST'])
-@login_required
-def checkout_make_payment(userid):
-    """
-    Sends the Payments for the cryptocurrencies
-    """
-    user = Auth_User
-    cart_total = db.session\
-        .query(Checkout_ShoppingCartTotal)\
-        .filter_by(customer=user.id)\
-        .first()
-
-    # turn back if issue
-    if cart_total.btc_sum_of_item == 0 and cart_total.bch_sum_of_item == 0 and cart_total.xmr_sum_of_tems:
-        return jsonify({'status': 'Error.  No Money in your wallet'})
-    if datetime.utcnow() >= user.shopping_timer:
-        return jsonify({'status': 'Error.  Time Ran out to make the purchase'})
-
-    # add security here before proceeding
-    userwallet_bch = db.session\
-        .query(Bch_Wallet)\
-        .filter_by(user_id=user.id)\
-        .first()
-    userwallet_btc = db.session\
-        .query(Btc_Wallet)\
-        .filter_by(user_id=user.id)\
-        .first()
-    userwallet_xmr = db.session\
-        .query(Xmr_Wallet)\
-        .filter_by(user_id=user.id)\
-        .first()
-    # See if customer has the coin
-    current_cart_total_bch = Decimal(cart_total.bch_total_price)
-    if current_cart_total_bch > 0:
-        if Decimal(userwallet_bch.currentbalance) <= current_cart_total_bch:
-           return jsonify({'status': 'Error.  Not Enough BCH in your wallet'})
-
-    current_cart_total_btc = Decimal(cart_total.btc_total_price)
-    if current_cart_total_btc > 0:
-        if Decimal(userwallet_btc.currentbalance) <= current_cart_total_btc:
-           return jsonify({'status': 'Error.  Not Enough BTC in your wallet'})
-
-    current_cart_total_xmr = Decimal(cart_total.xmr_total_price)
-    if current_cart_total_xmr > 0:
-        if Decimal(userwallet_xmr.currentbalance) <= current_cart_total_xmr:
-           return jsonify({'status': 'Error.  Not Enough XMR in your wallet'})
-
-    # get the orders
-    orders = db.session\
-        .query(User_Orders)\
-        .filter(User_Orders.customer_uuid == user.uuid)\
-        .filter(User_Orders.incart == 1)\
-        .group_by(User_Orders.id.asc())\
-        .all()
-
-    # loop through ORDERS. send ccoin and doing transactions 1 by 1.. this does not loop through the shopping cart
-    # creates orders
-    for order in orders:
-        get_item = Item_MarketItem.query\
-            .filter(Item_MarketItem.uuid == order.item_uuid) \
-            .first()
-
-        # update the order to notify vendor
-        order.incart = 0
-        order.vendor_user_name = get_item.vendor_name
-        order.vendor_id = get_item.vendor_id
-        order.vendor_uuid = get_item.vendor_uuid
-
-        # add total sold to item
-        newsold = int(get_item.total_sold) + int(order.quantity)
-        newquantleft = int(get_item.item_count) - int(order.quantity)
-        get_item.total_sold = newsold
-        get_item.item_count = newquantleft
-
-
-        # add a message for each order
-        addmsg = Service_ShippingSecret(
-            user_id=current_user.id,
-            txtmsg=order.private_note,
-            timestamp=datetime.utcnow(),
-            orderid=order.id
-        )
-        # notify vendor
-        notification(type=1,
-                     username=order.vendor_user_name,
-                     user_id=order.vendor_id,
-                     salenumber=order.id,
-                     bitcoin=0)
-
-        notification(type=112,
-                     username=order.customer_user_name,
-                     user_id=order.customer_id,
-                     salenumber=order.id,
-                     bitcoin=0)
-
-        if order.digital_currency == 1:
-            price_of_item_order = floating_decimals(
-                (order.price_total_btc + order.shipping_price), 8)
-            if current_cart_total_btc > 0:
-                btc_send_coin_to_escrow(
-                    amount=price_of_item_order,
-                    comment=order.id,
-                    user_id=order.customer_id
-                )
-        if order.digital_currency == 2:
-            price_of_item_order = floating_decimals(
-                (order.price_total_bch + order.shipping_price), 8)
-            if current_cart_total_bch > 0:
-                bch_send_coin_to_escrow(
-                    amount=price_of_item_order,
-                    comment=order.id,
-                    user_id=order.customer_id
-                )
-
-        if order.digital_currency == 3:
-            price_of_item_order = floating_decimals(
-                (order.price_total_xmr + order.shipping_price_xmr), 12)
-            if current_cart_total_xmr > 0:
-                xmr_send_coin_to_escrow(
-                    amount=price_of_item_order,
-                    comment=order.id,
-                    user_id=order.customer_id
-                )
-        # check if item is now offline
-        checkoutput_item_offline()(get_item.uuid)
-
-        # commit to database
-        db.session.add(order)
-        db.session.add(get_item)
-        db.session.add(addmsg)
-        db.session.commit()
-        return jsonify({'status': 'success'})
-
 
 @checkout.route('/info/delete/<string:itemid>', methods=['POST'])
 @login_required
@@ -937,75 +927,282 @@ def checkout_add_secret_info(itemid):
     
         return jsonify({'status': 'success'})
 
-def checkout_clear_shopping_cart(userid):
-    """
-    Puts totals of cart to zero
-    Then deletes all items in the regular cat
-    """
-    # clear user shoppingcarttotal
-    user = Auth_User.query\
-        .filter_by(username=current_user.username)\
-        .first()
-    get_total_cart_for_user = db.session \
-        .query(Checkout_ShoppingCartTotal) \
-        .filter_by(customer=user.id) \
-        .first()
 
-    get_shopping_cart = Checkout_CheckoutShoppingCart.query\
-        .filter(get_shopping_cart.custer_id == userid)\
+
+##PAYMENT STUFF
+@checkout.route('/payment', methods=['POST'])
+@login_required
+def finalize():
+    x = checkout_make_order()
+    if x is True:
+        y = checkout_make_payment()
+        if y is True:
+            checkout_clear_shopping_cart(current_user.id)
+            db.session.commit()
+            return jsonify({'status': 'success'})
+        else:
+            return jsonify({'status': 'error'})
+    else:
+        return jsonify({'status': 'error'})
+def checkout_make_order():
+    """
+    creates the orders for the shopping cart
+    """
+    # Total cart
+    now = datetime.utcnow()
+    cart = db.session\
+        .query(Checkout_CheckoutShoppingCart)\
+        .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
+                Checkout_CheckoutShoppingCart.saved_for_later == 0)\
         .all()
-    get_total_cart_for_user.btc_sum_of_item = 0
-    get_total_cart_for_user.btc_price = 0
-    get_total_cart_for_user.btc_shipping_price = 0
-    get_total_cart_for_user.btc_total_price = 0
+    
+    for k in cart:
+        sellerfee = Auth_UserFees.query\
+            .filter(Auth_UserFees.user_id == k.vendor_id)\
+            .first()
+        physicalitemfee = sellerfee.vendorfee
+        if k.selected_digital_currency == 1:
+            dbfeetopercent = (floating_decimals((physicalitemfee/100), 8))
+            fee_btc = (floating_decimals(
+                (dbfeetopercent * k.final_price_btc), 8))
+            fee_xmr = 0
+            fee_bch = 0
+            price_total_xmr = 0
+            price_total_bch = 0
+            price_total_btc = k.final_price_btc
+            price_per_item_btc = Decimal(k.final_price_btc) / Decimal(k.quantity_of_item)
+            price_per_item_xmr = 0
+            price_per_item_bch = 0
+            shipping_price_xmr = 0
+            shipping_price_bch = 0
+            shipping_price_btc = k.final_shipping_price_btc
 
-    get_total_cart_for_user.bch_sum_of_item = 0
-    get_total_cart_for_user.bch_price = 0
-    get_total_cart_for_user.bch_shipping_price = 0
-    get_total_cart_for_user.bch_total_price = 0
+        if k.selected_digital_currency == 2:
+            dbfeetopercent = (floating_decimals((physicalitemfee/100), 8))
+            fee_bch = (floating_decimals(
+                (dbfeetopercent * k.final_price_bch), 8))
+            fee_btc = 0
+            fee_xmr = 0
+            price_total_btc = 0
+            price_total_xmr = 0
+            price_total_bch = k.final_price_bch
+            price_per_item_btc = 0
+            price_per_item_xmr = 0
+            price_per_item_bch = Decimal(k.final_price_bch) / Decimal(k.quantity_of_item)
+            shipping_price_btc = 0
+            shipping_price_xmr = 0
+            shipping_price_bch = k.final_shipping_price_bch
 
-    get_total_cart_for_user.xmr_sum_of_item = 0
-    get_total_cart_for_user.xmr_price = 0
-    get_total_cart_for_user.xmr_shipping_price = 0
-    get_total_cart_for_user.xmr_total_price = 0
-    db.session.add(get_total_cart_for_user)
+        if k.selected_digital_currency == 3:
+            dbfeetopercent = (floating_decimals((physicalitemfee/100), 12))
+            fee_xmr = (floating_decimals(
+                (dbfeetopercent * k.final_price_xmr), 12))
+            fee_btc = 0
+            fee_bch = 0
+            price_total_btc = 0
+            price_total_bch = 0
+            price_total_xmr = k.final_price_xmr
+            price_per_item_btc = 0
+            price_per_item_bch = 0
+            price_per_item_xmr = Decimal(
+                k.final_price_xmr) / Decimal(k.quantity_of_item)
+            shipping_price_btc = 0
+            shipping_price_bch = 0
+            shipping_price_xmr = k.final_shipping_price_xmr
 
-    # delete items in cart
-    for cart in get_shopping_cart:
-        db.session.delete(cart)
+        order = User_Orders(
+            title_of_item=k.title_of_item,
+            created=now,
+            item_uuid=k.item_uuid,
+            image_one=k.image_of_item,
+            quantity=k.quantity_of_item,
+            vendor_user_name=k.vendor_user_name,
+            vendor_uuid=k.vendor_uuid,
+            vendor_id=k.vendor_id,
+            customer_user_name=k.customer_user_name,
+            customer_uuid=k.customer_uuid,
+            customer_id=k.customer_id,
+            currency=k.currency,
+            overall_status=1,
+            incart=1,
+            new_order=0,
+            accepted_order=0,
+            waiting_order=0,
+            disputed_order=0,
+            disputed_timer=None,
+            moderator_uuid=None,
+            delivered_order=0,
+            date_shipped=None,
+            completed=0,
+            completed_time=None,
+            released=0,
+            private_note=None,
+            escrow=0,
+            request_cancel=0,
+            reason_cancel=None,
+            cancelled=0,
+            shipping_price_btc=shipping_price_btc,
+            shipping_price_bch=shipping_price_bch,
+            shipping_price_xmr=shipping_price_xmr,
+            shipping_description=None,
+            vendor_feedback=0,
+            user_feedback=0,
+            digital_currency=k.selected_digital_currency,
+            fee_btc=fee_btc,
+            fee_bch=fee_bch,
+            fee_xmr=fee_xmr,
+            price_total_btc=price_total_btc,
+            price_total_bch=price_total_bch,
+            price_total_xmr=price_total_xmr,
+            price_per_item_btc=price_per_item_btc,
+            price_per_item_bch=price_per_item_bch,
+            price_per_item_xmr=price_per_item_xmr,
+        )
+        new_notice_vendor = Vendor_Notification( 
+            dateadded=now,
+            user_id=k.vendor_id,
+            new_feedback=0,
+            new_disputes=0 ,
+            new_orders=1,
+            new_returns=0,
+        )
+        db.session.add(new_notice_vendor)
+        
+        db.session.add(order)
     db.session.flush()
+    return True
 
-def checkout_delete_private_msg(userid):
+
+
+def checkout_make_payment():
     """
-    Deletes the private message
+    Sends the Payments for the cryptocurrencies
     """
-    user = Auth_User.query.filter(Auth_User.id==userid).first()
-    oldmsg = db.session\
-        .query(Service_ShippingSecret)\
-        .filter_by(user_id=user.id, orderid=0)\
+    cart_total = db.session\
+        .query(Checkout_ShoppingCartTotal)\
+        .filter_by(customer_id=current_user.id)\
         .first()
-    db.session.delete(oldmsg)
+
+
+    # add security here before proceeding
+    userwallet_bch = db.session\
+        .query(Bch_Wallet)\
+        .filter_by(user_id=current_user.id)\
+        .first()
+    userwallet_btc = db.session\
+        .query(Btc_Wallet)\
+        .filter_by(user_id=current_user.id)\
+        .first()
+    userwallet_xmr = db.session\
+        .query(Xmr_Wallet)\
+        .filter_by(user_id=current_user.id)\
+        .first()
+
+    # See if customer has the coin
+    current_cart_total_bch = Decimal(cart_total.bch_total_price)
+    if current_cart_total_bch > 0:
+        if Decimal(userwallet_bch.currentbalance) <= current_cart_total_bch:
+           return False
+
+    current_cart_total_btc = Decimal(cart_total.btc_total_price)
+    if current_cart_total_btc > 0:
+        if Decimal(userwallet_btc.currentbalance) <= current_cart_total_btc:
+           return False
+
+    current_cart_total_xmr = Decimal(cart_total.xmr_total_price)
+    if current_cart_total_xmr > 0:
+        if Decimal(userwallet_xmr.currentbalance) <= current_cart_total_xmr:
+           return False
+
+    # get the orders
+    orders = db.session\
+        .query(User_Orders)\
+        .filter(User_Orders.customer_uuid == current_user.uuid)\
+        .filter(User_Orders.incart == 1)\
+        .all()
+
+    # loop through ORDERS. send coin and doing transactions 1 by 1..
+    # this does not loop through the shopping cart
+    # modifies orders
+    for order in orders:
+        get_item = Item_MarketItem.query\
+            .filter(Item_MarketItem.uuid == order.item_uuid) \
+            .first()
+
+        # update the order to notify vendor
+        order.incart = 0
+        order.vendor_user_name = get_item.vendor_name
+        order.vendor_id = get_item.vendor_id
+        order.vendor_uuid = get_item.vendor_uuid
+
+        # add total sold to item
+        newsold = int(get_item.total_sold) + int(order.quantity)
+        newquantleft = int(get_item.item_count) - int(order.quantity)
+        get_item.total_sold = newsold
+        get_item.item_count = newquantleft
+
+        # add a message for each order
+        addmsg = Service_ShippingSecret(
+            user_id=current_user.id,
+            txtmsg=order.private_note,
+            timestamp=datetime.utcnow(),
+            orderid=order.id
+        )
+        # notify vendor
+        notification(type=1,
+                     username=order.vendor_user_name,
+                     user_id=order.vendor_id,
+                     salenumber=order.id,
+                     bitcoin=0,
+                     bitcoincash=0,
+                     monero=0,
+                     )
+
+        notification(type=112,
+                     username=order.customer_user_name,
+                     user_id=order.customer_id,
+                     salenumber=order.id,
+                     bitcoin=0,
+                     bitcoincash=0,
+                     monero=0,
+                     )
+
+        if order.digital_currency == 1:
+            price_of_item_order = floating_decimals((order.price_total_btc + order.shipping_price_btc), 8)
+            if current_cart_total_btc > 0:
+                btc_send_coin_to_escrow(
+                    amount=price_of_item_order,
+                    comment=order.id,
+                    user_id=order.customer_id
+                )
+        if order.digital_currency == 2:
+            price_of_item_order = floating_decimals((order.price_total_bch + order.shipping_price_bch), 8)
+            if current_cart_total_bch > 0:
+                bch_send_coin_to_escrow(
+                    amount=price_of_item_order,
+                    comment=order.id,
+                    user_id=order.customer_id
+                )
+
+        if order.digital_currency == 3:
+            price_of_item_order = floating_decimals((order.price_total_xmr + order.shipping_price_xmr), 12)
+            if current_cart_total_xmr > 0:
+                xmr_send_coin_to_escrow(
+                    amount=price_of_item_order,
+                    comment=order.id,
+                    user_id=order.customer_id
+                )
+        # check if item is now offline
+        checkoutput_item_offline(get_item.uuid)
+
+        # commit to database
+        db.session.add(order)
+        db.session.add(get_item)
+        db.session.add(addmsg)
     db.session.flush()
-
-def checkoutput_item_offline(itemid):
-    """
-    If user bought last or only item..take vendors item offline
-    """
-    getitem = db.session\
-        .query(Item_MarketItem) \
-        .filter_by(id=itemid) \
-        .first()
-        # turn off if item is less than one
-    if getitem.item_count < 1:
-
-        getitem.online = 0
-        db.session.add(getitem)
-
-        # send notification to vendor saying its all sold out
-        notification(type=9,
-                        username=getitem.vendor_name,
-                        user_id=getitem.vendor_id,
-                        salenumber=getitem.uuid,
-                        bitcoin=0)
+    return True
 
 
+
+
+## END PAYMENT STUFF

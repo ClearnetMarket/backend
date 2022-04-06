@@ -4,6 +4,7 @@ from app import db, ma, login_manager
 from datetime import datetime
 from uuid import uuid4
 
+
 def get_uuid():
     return uuid4().hex
 
@@ -51,7 +52,7 @@ class Auth_User(UserMixin, db.Model):
                  email,
                  wallet_pin,
                  profileimage,
-                display_name,
+                 display_name,
                  bio,
                  api_key,
                  country,
@@ -80,7 +81,7 @@ class Auth_User(UserMixin, db.Model):
         self.profileimage = profileimage
         self.display_name = display_name
         self.bio = bio
-        self.api_key= api_key
+        self.api_key = api_key
         self.country = country
         self.currency = currency
         self.vendor_account = vendor_account
@@ -100,7 +101,6 @@ class Auth_User(UserMixin, db.Model):
         self.confirmed = confirmed
         self.passwordpinallowed = passwordpinallowed
 
-
     def is_authenticated(self):
         return True
 
@@ -117,20 +117,19 @@ class Auth_User(UserMixin, db.Model):
 class Auth_User_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Auth_User
+        fields = ("display_name",
+                  "member_since",
+                  "bio",
+                  "admin_role",
+                  "country",
+                  "currency",
+                  "vacation",
+                  "profileimage"
+                  )
 
-    uuid = ma.auto_field()
-    username = ma.auto_field()
-    member_since = ma.auto_field()
-    profileimage = ma.auto_field()
-    bio = ma.auto_field()
-    country = ma.auto_field()
-    currency = ma.auto_field()
-    vendor_account = ma.auto_field()
-    selling_from = ma.auto_field()
-    last_seen = ma.auto_field()
-    vacation = ma.auto_field()
-    shopping_timer = ma.auto_field()
-    confirmed = ma.auto_field()
+
+user_schema = Auth_User_Schema()
+users_schema = Auth_User_Schema(many=True)
 
 
 class Auth_UserFees(db.Model):
@@ -191,7 +190,7 @@ class Auth_AccountSeedWords_Schema(ma.SQLAlchemyAutoSchema):
     word04 = ma.auto_field()
     word05 = ma.auto_field()
 
-    
+
 class AnonymousUser(AnonymousUserMixin):
     def __init__(self):
         self.username = 'Guest'

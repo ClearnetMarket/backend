@@ -33,7 +33,7 @@ def bch_add_transaction(category, amount, user_id, comment, orderid, balance):
             address='',
             fee=0,
             created=now,
-            commentbtc=comment,
+            commentbch=comment,
             amount=amount,
             orderid=orderid,
             balance=balance,
