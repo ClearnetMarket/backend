@@ -37,3 +37,15 @@ def marketitem_item_flagged(item_id):
                             })
         else:
             jsonify({"Error": "No flagged items"}), 401
+
+
+@marketitem.route('/info/<string:item_uuid>', methods=['GET'])
+def marketitem_item_info_title(item_uuid):
+    """
+    Grabs stats of the vendor
+    :return:
+    """
+    if request.method == 'GET':
+        item_for_sale = Item_MarketItem.query.filter(Item_MarketItem.uuid == item_uuid).first()
+        print(item_for_sale.item_title)
+        return jsonify({"item_title": item_for_sale.item_title})

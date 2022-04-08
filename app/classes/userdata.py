@@ -7,32 +7,21 @@ class UserData_History(db.Model):
     __table_args__ = {"schema": "public"}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.INTEGER)
-    recentcat1 = db.Column(db.INTEGER)
-    recentcat1date = db.Column(db.TIMESTAMP())
-    recentcat2 = db.Column(db.INTEGER)
-    recentcat2date = db.Column(db.TIMESTAMP())
-    recentcat3 = db.Column(db.INTEGER)
-    recentcat3date = db.Column(db.TIMESTAMP())
-    recentcat4 = db.Column(db.INTEGER)
-    recentcat4date = db.Column(db.TIMESTAMP())
-    recentcat5 = db.Column(db.INTEGER)
-    recentcat5date = db.Column(db.TIMESTAMP())
+    recent_cat_1 = db.Column(db.INTEGER)
+    recent_cat_1_date = db.Column(db.TIMESTAMP())
+    recent_cat_2 = db.Column(db.INTEGER)
+    recent_cat_2_date = db.Column(db.TIMESTAMP())
+    recent_cat_3 = db.Column(db.INTEGER)
+    recent_cat_3_date = db.Column(db.TIMESTAMP())
+    recent_cat_4 = db.Column(db.INTEGER)
+    recent_cat_4_date = db.Column(db.TIMESTAMP())
+    recent_cat_5 = db.Column(db.INTEGER)
+    recent_cat_5_date = db.Column(db.TIMESTAMP())
 
 class UserData_History_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = UserData_History
-    id = ma.auto_field()
-    user_id = ma.auto_field()
-    recentcat1 = ma.auto_field()
-    recentcat1date = ma.auto_field()
-    recentcat2 = ma.auto_field()
-    recentcat2date = ma.auto_field()
-    recentcat3 = ma.auto_field()
-    recentcat3date = ma.auto_field()
-    recentcat4 = ma.auto_field()
-    recentcat4date = ma.auto_field()
-    recentcat5 = ma.auto_field()
-    recentcat5date = ma.auto_field()
+
 
 
 class UserData_DefaultAddress(db.Model):

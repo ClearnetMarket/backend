@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from flask import request, jsonify
 from flask_login import login_required, current_user
 
@@ -66,11 +67,11 @@ def order_feedback(uuid):
         if get_order:
             # vendor rating
             vendor_rating = request.json["vendorrating"]
-            if 1 <= int(vendor_rating) <= 5:
+            if 0 <= Decimal(vendor_rating) <= 10:
                 vendorrating = int(vendor_rating)
             # item rating
             item_rating = request.json["itemrating"]
-            if 1 <= int(item_rating) <= 5:
+            if 0 <= Decimal(item_rating) <= 10:
                 itemrating = int(item_rating)
             review_by_user = request.json["review"]
 
@@ -91,8 +92,59 @@ def order_feedback(uuid):
                 review=review_by_user
             )
 
-            get_order.user_feedback = 1
+            get_order.vendor_feedback = 1
             db.session.add(get_order)
+            db.session.add(create_new_feedback)
+            db.session.commit()
+            return jsonify({"status": "success"})
+        else:
+            return jsonify({"status": "error"})
+
+
+@orders.route('/feedback/vendor/<string:order_uuid>', methods=['POST'])
+@login_required
+def order_feedback_vendor(order_uuid):
+    """
+    Used on index.  Grabs today's featured items
+    :return:
+    """
+    if request.method == 'POST':
+        now = datetime.utcnow()
+       
+        get_order = db.session \
+            .query(User_Orders) \
+            .filter(User_Orders.vendor_id == current_user.id) \
+            .order_by(User_Orders.uuid == order_uuid) \
+            .first()
+        if get_order:
+          
+            # vendor rating
+            customer_rating = request.json["customerrating"]
+            if 0 <= Decimal(customer_rating) <= 10:
+                customer_rating = int(customer_rating)
+
+            review_by_vendor = request.json["review"]
+           
+            create_new_feedback = Feedback_Feedback(
+                timestamp=now,
+                order_uuid=get_order.uuid,
+                item_uuid=get_order.item_uuid,
+                customer_name=get_order.customer_user_name,
+                customer_uuid=get_order.customer_uuid,
+                vendor_name=get_order.vendor_user_name,
+                vendor_uuid=get_order.vendor_uuid,
+                vendor_comment=None,
+                type_of_feedback=2,
+                author_uuid=current_user.uuid,
+                item_rating=None,
+                vendor_rating=None,
+                customer_rating=customer_rating,
+                review=review_by_vendor
+            )
+
+            get_order.vendor_feedback = 1
+            db.session.add(get_order)
+           
             db.session.add(create_new_feedback)
             db.session.commit()
             return jsonify({"status": "success"})
@@ -115,9 +167,10 @@ def get_order_feedback(uuid):
             .order_by(User_Orders.uuid == uuid) \
             .first()
         if get_order:
-            get_feedback = Feedback_Feedback.query.filter(
-                Feedback_Feedback.order_uuid==uuid).first()
-            print("hereeee")
+            get_feedback = Feedback_Feedback.query\
+                .filter(Feedback_Feedback.order_uuid==uuid)\
+                .first()
+
             return jsonify({
                 "item_rating": get_feedback.item_rating,
                 "vendor_rating": get_feedback.vendor_rating,

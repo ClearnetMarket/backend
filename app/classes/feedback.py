@@ -22,9 +22,9 @@ class Feedback_Feedback(db.Model):
     vendor_comment = db.Column(db.TEXT)
 
     type_of_feedback = db.Column(db.INTEGER)
-    item_rating = db.Column(db.INTEGER)
-    vendor_rating = db.Column(db.INTEGER)
-    customer_rating = db.Column(db.INTEGER)
+    item_rating = db.Column(db.DECIMAL(4, 2))
+    vendor_rating = db.Column(db.DECIMAL(4, 2))
+    customer_rating = db.Column(db.DECIMAL(4, 2))
     author_uuid = db.Column(db.VARCHAR(40))
 
     review = db.Column(db.TEXT)

@@ -118,6 +118,7 @@ class Auth_User_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Auth_User
         fields = ("display_name",
+                  "uuid",
                   "member_since",
                   "bio",
                   "admin_role",
