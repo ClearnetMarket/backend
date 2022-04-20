@@ -57,7 +57,6 @@ class Item_MarketItem(db.Model):
     destination_country_four = db.Column(db.INTEGER)
     destination_country_four_name = db.Column(db.VARCHAR(150))
 
-
     item_title = db.Column(db.VARCHAR(500))
     item_count = db.Column(db.INTEGER)
     item_description = db.Column(db.TEXT)
@@ -100,7 +99,6 @@ class Item_MarketItem(db.Model):
     item_rating = db.Column(db.DECIMAL(20, 2))
     review_count = db.Column(db.INTEGER)
     total_sold = db.Column(db.INTEGER)
-
 
     def __str__(self):
         return 'marketitem %s' % self.id

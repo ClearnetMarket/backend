@@ -154,12 +154,6 @@ def internal_error(error):
 from .main import main as main_blueprint
 app.register_blueprint(main_blueprint, url_prefix='/main')
 
-# from .achievements import achievements as achievements_blueprint
-# app.register_blueprint(achievements_blueprint, url_prefix='/achievements')
-#
-# from .admin import admin as admin_blueprint
-# app.register_blueprint(admin_blueprint, url_prefix='/admin')
-#
 from .auth import auth as auth_blueprint
 app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
@@ -181,19 +175,10 @@ app.register_blueprint(category_blueprint, url_prefix='/category')
 
 from .userdata import userdata as userdata_blueprint
 app.register_blueprint(userdata_blueprint, url_prefix='/info')
-#
-# from .message import message as message_blueprint
-# app.register_blueprint(message_blueprint, url_prefix='/message')
-#
-# from .profile import profile as profile_blueprint
-# app.register_blueprint(profile_blueprint, url_prefix='/profile')
-#
-# from .affiliate import affiliate as affiliate_blueprint
-# app.register_blueprint(affiliate_blueprint, url_prefix='/affiliate')
-#
-# from .promote import promote as promote_blueprint
-# app.register_blueprint(promote_blueprint, url_prefix='/promote')
-#
+
+from .message import message as message_blueprint
+app.register_blueprint(message_blueprint, url_prefix='/msg')
+
 from .checkout import checkout as checkout_blueprint
 app.register_blueprint(checkout_blueprint, url_prefix='/checkout')
 
@@ -206,26 +191,20 @@ app.register_blueprint(vendorcreateitem_blueprint, url_prefix='/vendorcreateitem
 from .vendororders import vendororders as vendororders_blueprint
 app.register_blueprint(vendororders_blueprint, url_prefix='/vendororders')
 
-#
-# from .vendorverification import vendorverification as vendorverification_blueprint
-# app.register_blueprint(vendorverification_blueprint, url_prefix='/vendor-verification')
-#
 from .vendor import vendor as vendor_blueprint
 app.register_blueprint(vendor_blueprint, url_prefix='/vendor')
-#
 
 # bch wallet
 from app.wallet_bch import wallet_bch as wallet_bch_blueprint
 app.register_blueprint(wallet_bch_blueprint, url_prefix='/bch')
-# btc
+# btc wallet
 from app.wallet_btc import wallet_btc as wallet_btc_blueprint
 app.register_blueprint(wallet_btc_blueprint, url_prefix='/btc')
-# xmr
+# xmr wallet
 from app.wallet_xmr import wallet_xmr as wallet_xmr_blueprint
 app.register_blueprint(wallet_xmr_blueprint, url_prefix='/xmr')
 
-# with app.app_context():
-#     db.create_all()
+
 db.configure_mappers()
 db.create_all()
 db.session.commit()

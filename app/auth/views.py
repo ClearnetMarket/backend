@@ -42,7 +42,7 @@ def check_session():
             return jsonify({
                 "login": True,
                 'user': {'user_id': user.uuid,
-                         'user_name': user.username,
+                         'user_name': user.display_name,
                          'user_email': user.email,
                          'user_admin': user.admin_role,
                          'profile_image': user.profileimage,
@@ -93,7 +93,7 @@ def login():
         user = Auth_User.query.filter_by(username=username).first() is not None
 
         if not user:
-        
+
             return jsonify({"error": "Unauthorized"}), 401
         user = Auth_User.query.filter_by(username=username).first()
         if not bcrypt.check_password_hash(user.password_hash, password):
@@ -113,10 +113,11 @@ def login():
         login_user(user)
         current_user.is_authenticated()
         current_user.is_active()
+
         return jsonify({
             "login": True,
             'user': {'user_id': user.uuid,
-                     'user_name': user.username,
+                     'user_name': user.display_name,
                      'user_email': user.email,
                      'profile_image': user.profileimage,
                      'country': user.country,
@@ -193,48 +194,48 @@ def register_user():
 
     # create user stats
     stats = Profile_StatisticsUser(
-        username=new_user.username,
-        totalitemsbought=0,
-        totalbtcspent=0,
-        totalbtcrecieved=0,
-        totalbtccashspent=0,
-        totalbtccashrecieved=0,
-        totalreviews=0,
-        startedbuying=now,
-        diffpartners=0,
-        totalachievements=0,
-        user_id=new_user.id,
-        userrating=0,
-        totaltrades=0,
-        disputecount=0,
-        itemsflagged=0,
-        totalusdspent=0,
+        user_name=new_user.username,
+        total_items_bought=0,
+        total_btc_spent=0,
+        total_btc_recieved=0,
+        total_bch_spent=0,
+        total_bch_recieved=0,
+        total_reviews=0,
+        started_buying=now,
+        diff_partners=0,
+        total_achievements=0,
+        user_uuid=new_user.uuid,
+        user_rating=0,
+        total_trades=0,
+        dispute_count=0,
+        items_flagged=0,
+        total_usd_spent=0,
     )
 
     # create browser history
     browserhistory = UserData_History(
         user_id=new_user.id,
-        recentcat1=1,
-        recentcat1date=now,
-        recentcat2=2,
-        recentcat2date=now,
-        recentcat3=3,
-        recentcat3date=now,
-        recentcat4=4,
-        recentcat4date=now,
-        recentcat5=7,
-        recentcat5date=now,
+        recent_cat_1=1,
+        recent_cat_1_date=now,
+        recent_cat_2=2,
+        recent_cat_2_date=now,
+        recent_cat_3=3,
+        recent_cat_3_date=now,
+        recent_cat_4=4,
+        recent_cat_4_date=now,
+        recent_cat_5=7,
+        recent_cat_5_date=now,
     )
     user_address = UserData_DefaultAddress(
         uuid=new_user.uuid,
-        address_name='', 
-        address='', 
-        apt='', 
+        address_name='',
+        address='',
+        apt='',
         city='',
         country=country,
         state_or_provence='',
-        zip_code='', 
-        msg='' 
+        zip_code='',
+        msg=''
     )
     # create checkout_shopping_cart for user
     newcart = Checkout_ShoppingCartTotal(
@@ -290,7 +291,7 @@ def register_user():
     return jsonify({
         "login": True,
         'user': {'user_id': new_user.uuid,
-                 'user_name': new_user.username,
+                 'user_name': new_user.display_name,
                  'user_email': new_user.email,
                  'profile_image': new_user.profileimage,
                  'country': new_user.country,
@@ -376,7 +377,7 @@ def confirm_seed():
                 word4 = str(request.json["word4"])
                 word5 = str(request.json["word5"])
                 if (word0 != userseed.word00):
-                    
+
                     return jsonify({"error 1": "Seed does not match"}), 409
                 if (word1 != userseed.word01):
                     return jsonify({"error 2": "Seed does not match"}), 409

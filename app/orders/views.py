@@ -9,7 +9,8 @@ from app import db
 
 # models
 from app.classes.user_orders import User_Orders, User_Orders_Schema
-from app.classes.feedback import Feedback_Feedback, Feedback_Feedback_Schema
+from app.classes.feedback import Feedback_Feedback
+from app.classes.vendor import Vendor_Notification
 
 
 @orders.route('', methods=['GET'])
@@ -49,6 +50,24 @@ def get_order(uuid):
         item_schema = User_Orders_Schema()
         return jsonify(item_schema.dump(get_order))
 
+
+@orders.route('/vendor/<string:uuid>', methods=['GET'])
+@login_required
+def get_order_vendor(uuid):
+    """
+    Used on index.  Grabs today's featured items
+    :return:
+    """
+    if request.method == 'GET':
+
+        get_order = db.session \
+            .query(User_Orders) \
+            .filter(User_Orders.vendor_id == current_user.id) \
+            .order_by(User_Orders.uuid == uuid) \
+            .first()
+
+        item_schema = User_Orders_Schema()
+        return jsonify(item_schema.dump(get_order))
 
 @orders.route('/feedback/<string:uuid>', methods=['POST'])
 @login_required
@@ -124,7 +143,7 @@ def order_feedback_vendor(order_uuid):
                 customer_rating = int(customer_rating)
 
             review_by_vendor = request.json["review"]
-           
+            # create a new feedback
             create_new_feedback = Feedback_Feedback(
                 timestamp=now,
                 order_uuid=get_order.uuid,
@@ -141,10 +160,19 @@ def order_feedback_vendor(order_uuid):
                 customer_rating=customer_rating,
                 review=review_by_vendor
             )
-
+            # change order to show it got feedback
             get_order.vendor_feedback = 1
             db.session.add(get_order)
-           
+            # create a new notification for vendor
+            new_notification = Vendor_Notification(
+                dateadded=now,
+                user_id=get_order.vendor_id,
+                new_feedback=1,
+                new_disputes=0,
+                new_orders=0,
+                new_returns=0,
+            )
+            db.session.add(new_notification)
             db.session.add(create_new_feedback)
             db.session.commit()
             return jsonify({"status": "success"})

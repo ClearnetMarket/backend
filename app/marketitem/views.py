@@ -47,5 +47,5 @@ def marketitem_item_info_title(item_uuid):
     """
     if request.method == 'GET':
         item_for_sale = Item_MarketItem.query.filter(Item_MarketItem.uuid == item_uuid).first()
-        print(item_for_sale.item_title)
+    
         return jsonify({"item_title": item_for_sale.item_title})

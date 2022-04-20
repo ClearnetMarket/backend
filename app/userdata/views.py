@@ -62,9 +62,11 @@ def userdata_home(user_uuid):
     """
  
     if request.method == 'GET':
+        print(user_uuid)
         userdata = Auth_User.query\
             .filter(Auth_User.uuid == user_uuid)\
             .first()
+        print(userdata.username)
         user_schema = Auth_User_Schema()
         return jsonify(user_schema.dump(userdata))
 
