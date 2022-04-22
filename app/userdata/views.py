@@ -123,28 +123,63 @@ def userdata_update_address():
         user_address = UserData_DefaultAddress.query\
             .filter(UserData_DefaultAddress.uuid == current_user.uuid)\
             .first()
-        address_name = request.json["address_name"]
-        address = request.json["address"]
-        country = request.json["country"]
-        apt = request.json["apt"]
-        city = request.json["city"]
-        state_or_provence = request.json["stateorprovence"]
-        zipcode = request.json["zip"]
-        message = request.json["message"]
-        user_address.address_name = address_name
-        user_address.address = address
-        user_address.country = int(country)
-        user_address.apt = apt
-        user_address.city = city
-        user_address.state_or_provence = state_or_provence
-        user_address.zip_code = zipcode
-        user_address.msg = message
+        if "address_name" in request.json:
+            address_name = request.json["address_name"]
+        else:
+            address_name = None
+        if "address" in request.json:
+            address = request.json["address"]
+        else:
+            address = None
+        if "country" in request.json:
+            country = request.json["country"]
+        else:
+            country = None
+        if "apt" in request.json:
+            apt = request.json["apt"]
+        else:
+            apt = None
+        if "city" in request.json:
+            city = request.json["city"]
+        else:
+            city = None
+        if "stateorprovence" in request.json:
+            state_or_provence = request.json["stateorprovence"]
+        else:
+            state_or_provence = None
+        if "zip" in request.json:
+            zipcode = request.json["zip"]
+        else:
+            zipcode = None
+        if "message" in request.json:
+            message = request.json["message"]
+        else:
+            message = None
 
-        db.session.add(user_address)
+        if user_address:
+            user_address.country = int(country)
+            user_address.address = address
+            user_address.address_name = address_name
+            user_address.apt = apt
+            user_address.city = city
+            user_address.state_or_provence = state_or_provence
+            user_address.zip_code = zipcode
+            user_address.msg = message
+            db.session.add(user_address)
+        else:
+            new_address = UserData_DefaultAddress(
+                uuid=current_user.uuid,
+                address_name = address_name,
+                apt=apt,
+                city=city,
+                state_or_provence=state_or_provence,
+                country=current_user.country,
+                zip_code=zipcode,
+                msg=message,
+            )
+            db.session.add(new_address)
         db.session.commit()
-
         return jsonify({"status": 'success'})
-       
 
 @userdata.route('/getdefaultaddress', methods=['GET'])
 @login_required
@@ -157,18 +192,19 @@ def userdata_get_address():
         user_address = UserData_DefaultAddress.query\
             .filter(UserData_DefaultAddress.uuid == current_user.uuid)\
             .first()
-
-        return jsonify({
-            'address_name': user_address.address_name,
-            'address': user_address.address,
-            'apt': user_address.apt,
-            'city': user_address.city,
-            'country': user_address.country,
-            'state_or_provence': user_address.state_or_provence,
-            'zip': user_address.zip_code,
-            'message': user_address.msg,
-        })
-
+        if user_address:
+            return jsonify({
+                'address_name': user_address.address_name,
+                'address': user_address.address,
+                'apt': user_address.apt,
+                'city': user_address.city,
+                'country': user_address.country,
+                'state_or_provence': user_address.state_or_provence,
+                'zip': user_address.zip_code,
+                'message': user_address.msg,
+            })
+        else:
+            return jsonify(({'status': "Address not found" }))
 
 @userdata.route('/user-feedback/<string:user_uuid>', methods=['GET'])
 def userdata_get_all_feedback(user_uuid):

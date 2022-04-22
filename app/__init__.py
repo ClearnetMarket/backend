@@ -148,8 +148,6 @@ def internal_error403(error):
 def internal_error(error):
     return jsonify({"error": "Internal Error 405"}), 405
 
-
-
 # link locations
 from .main import main as main_blueprint
 app.register_blueprint(main_blueprint, url_prefix='/main')
@@ -157,13 +155,12 @@ app.register_blueprint(main_blueprint, url_prefix='/main')
 from .auth import auth as auth_blueprint
 app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
-
 from .orders import orders as orders_blueprint
 app.register_blueprint(orders_blueprint, url_prefix='/orders')
 
-# from .search import search as search_blueprint
-# app.register_blueprint(search_blueprint, url_prefix='/search')
-#
+from .search import search as search_blueprint
+app.register_blueprint(search_blueprint, url_prefix='/search')
+
 from .marketitem import marketitem as marketitem_blueprint
 app.register_blueprint(marketitem_blueprint, url_prefix='/item')
 
@@ -172,6 +169,9 @@ app.register_blueprint(customerservice_blueprint, url_prefix='/customer-service'
 
 from .category import category as category_blueprint
 app.register_blueprint(category_blueprint, url_prefix='/category')
+
+from .price import price as price_blueprint
+app.register_blueprint(price_blueprint, url_prefix='/price')
 
 from .userdata import userdata as userdata_blueprint
 app.register_blueprint(userdata_blueprint, url_prefix='/info')

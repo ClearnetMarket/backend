@@ -92,6 +92,7 @@ def message_msg_comments(post_id):
         .filter(Message_Chat.post_id == post_id)\
         .first()
     if get_msg_post is not None:
+        
         get_msg_post_comments = Message_Comment.query\
             .filter(Message_Comment.post_id == post_id)\
             .order_by(Message_Comment.timestamp.desc())\

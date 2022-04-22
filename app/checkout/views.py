@@ -480,7 +480,7 @@ def checkout_update_cart_information():
             f.quantity_of_item = get_market_item.item_count
             
         db.session.add(f)
-    print(new_amount)
+    
     if new_amount > 0:
         print("commited")
         db.session.commit()
