@@ -221,64 +221,6 @@ def bch_send_coin(user_id, sendto, amount, comment):
         )
 
 
-def bch_send_coin_to_escrow(amount, comment, user_id):
-    """
-    # TO clearnet_webapp Wallet
-    # this function will move the coin to clearnets wallet_btc from a user
-    :param amount:
-    :param comment:
-    :param user_id:
-    :return:
-    """
-    a = bch_check_balance(user_id=user_id, amount=amount)
-    if a == 1:
-        try:
-            type_transaction = 4
-            userswallet = db.session\
-                .query(Bch_Wallet)\
-                .filter_by(user_id=user_id)\
-                .first()
-            curbal = Decimal(userswallet.currentbalance)
-            amounttomod = Decimal(amount)
-            newbalance = Decimal(curbal) - Decimal(amounttomod)
-            userswallet.currentbalance = newbalance
-            db.session.add(userswallet)
-
-            oid = int(comment)
-            bch_add_transaction(category=type_transaction,
-                                amount=amount,
-                                user_id=user_id,
-                                comment='Sent Coin To Escrow',
-
-                                orderid=oid,
-                                balance=newbalance
-                                )
-
-        except Exception as e:
-            print(str(e))
-            notification(
-                type=34,
-                username='',
-                user_id=user_id,
-                salenumber=comment,
-                bitcoin=amount,
-                bitcoincash=0,
-                monero=0,
-            
-            )
-
-    else:
-        
-        notification(
-            type=34,
-            username='',
-            user_id=user_id,
-            salenumber=comment,
-            bitcoin=amount,
-            bitcoincash=0,
-            monero=0,
-             )
-        
 
 
 def bch_send_coin_to_user_as_admin(amount, comment, user_id):
@@ -358,180 +300,63 @@ def bch_take_coin_to_user_as_admin(amount, comment, user_id):
     db.session.add(prof)
 
 
-def bch_send_coin_for_ad(amount, user_id, comment):
+def bch_send_coin_to_escrow(amount, comment, user_id):
     """
-    # TO clearnet_webapp
-    # this function will move the coin from vendor to clearnet holdings.  This is for vendor verification
+    # TO clearnet_webapp Wallet
+    # this function will move the coin to clearnets wallet_btc from a user
     :param amount:
-    :param user_id:
     :param comment:
+    :param user_id:
     :return:
     """
     a = bch_check_balance(user_id=user_id, amount=amount)
     if a == 1:
-        type_transaction = 9
-        now = datetime.datetime.utcnow()
-        user = db.session\
-            .query(Auth_User)\
-            .filter(Auth_User.id == user_id)\
-            .first()
-        userswallet = db.session\
-            .query(Bch_Wallet)\
-            .filter_by(user_id=user_id)\
-            .first()
-        curbal = Decimal(userswallet.currentbalance)
-        amounttomod = floating_decimals(amount, 8)
-        newbalance = floating_decimals(
-            curbal, 8) - floating_decimals(amounttomod, 8)
-        userswallet.currentbalance = newbalance
-        db.session.add(userswallet)
-        db.session.flush()
+        try:
+            type_transaction = 4
+            userswallet = db.session\
+                .query(Bch_Wallet)\
+                .filter_by(user_id=user_id)\
+                .first()
+            curbal = Decimal(userswallet.currentbalance)
+            amounttomod = Decimal(amount)
+            newbalance = Decimal(curbal) - Decimal(amounttomod)
+            userswallet.currentbalance = newbalance
+            db.session.add(userswallet)
 
-        c = str(comment)
-        a = Decimal(amount)
-        commentstring = (f"Sent money for ad {c}")
-        bch_add_transaction(category=type_transaction,
-                            amount=amount,
-                            user_id=user.id,
-                            comment=commentstring,
+            oid = int(comment)
+            bch_add_transaction(category=type_transaction,
+                                amount=amount,
+                                user_id=user_id,
+                                comment='Sent Coin To Escrow',
 
-                            orderid=0,
-                            balance=newbalance
-                            )
+                                orderid=oid,
+                                balance=newbalance
+                                )
 
-        getcurrentholdings = db.session\
-            .query(Admin_ClearnetHoldingsBCH)\
-            .order_by(Admin_ClearnetHoldingsBCH.id.desc())\
-            .first()
-        currentamount = floating_decimals(getcurrentholdings.total, 8)
-        newamount = floating_decimals(
-            currentamount, 8) + floating_decimals(a, 8)
+        except Exception as e:
+            print(str(e))
+            notification(
+                type=34,
+                username='',
+                user_id=user_id,
+                salenumber=comment,
+                bitcoin=amount,
+                bitcoincash=0,
+                monero=0,
 
-        holdingsaccount = Admin_ClearnetHoldingsBCH(
-            amount=a,
-            timestamp=now,
+            )
+
+    else:
+
+        notification(
+            type=34,
+            username='',
             user_id=user_id,
-            total=newamount
+            salenumber=comment,
+            bitcoin=amount,
+            bitcoincash=0,
+            monero=0,
         )
-
-        db.session.add(holdingsaccount)
-
-
-def bch_send_coin_to_holdings(amount, user_id, comment):
-    """
-    # TO clearnet_webapp
-    # this function will move the coin from vendor to clearnet holdings.  This is for vendor verification
-    :param amount:
-    :param user_id:
-    :param comment:
-    :return:
-    """
-    a = bch_check_balance(user_id=user_id, amount=amount)
-    if a == 1:
-        type_transaction = 7
-        now = datetime.datetime.utcnow()
-        user = db.session\
-            .query(Auth_User)\
-            .filter(Auth_User.id == user_id)\
-            .first()
-        userswallet = db.session\
-            .query(Bch_Wallet)\
-            .filter_by(user_id=user_id)\
-            .first()
-        curbal = Decimal(userswallet.currentbalance)
-        amounttomod = floating_decimals(amount, 8)
-        newbalance = floating_decimals(
-            curbal, 8) - floating_decimals(amounttomod, 8)
-        userswallet.currentbalance = newbalance
-        db.session.add(userswallet)
-        db.session.flush()
-
-        c = str(comment)
-        a = Decimal(amount)
-        commentstring = "Vendor Verification: Level " + c
-        bch_add_transaction(category=type_transaction,
-                            amount=amount,
-                            user_id=user.id,
-                            comment=commentstring,
-
-                            orderid=0,
-                            balance=newbalance
-                            )
-
-        getcurrentholdings = db.session\
-            .query(Admin_ClearnetHoldingsBCH)\
-            .order_by(Admin_ClearnetHoldingsBCH.id.desc())\
-            .first()
-        currentamount = floating_decimals(getcurrentholdings.total, 8)
-        newamount = floating_decimals(
-            currentamount, 8) + floating_decimals(a, 8)
-
-        holdingsaccount = Admin_ClearnetHoldingsBCH(
-            amount=a,
-            timestamp=now,
-            user_id=user_id,
-            total=newamount
-        )
-
-        db.session.add(holdingsaccount)
-
-
-def bch_send_coin_from_holdings(amount, user_id, comment):
-    """
-    # TO clearnet_webapp
-    # this function will move the coin from holdings back to vendor.  
-    # This is for vendor verification
-    :param amount:
-    :param user_id:
-    :param comment:
-    :return:
-    """
-
-    type_transaction = 8
-    now = datetime.datetime.utcnow()
-    user = db.session\
-        .query(Auth_User)\
-        .filter(Auth_User.id == user_id)\
-        .first()
-    userswallet = db.session\
-        .query(Bch_Wallet)\
-        .filter_by(user_id=user_id)\
-        .first()
-    curbal = Decimal(userswallet.currentbalance)
-    amounttomod = Decimal(amount)
-    newbalance = Decimal(curbal) + Decimal(amounttomod)
-    userswallet.currentbalance = newbalance
-
-    db.session.add(userswallet)
-    db.session.flush()
-
-    c = str(comment)
-    a = Decimal(amount)
-    commentstring = "Vendor Verification Refund: Level " + c
-
-    bch_add_transaction(category=type_transaction,
-                        amount=amount,
-                        user_id=user.id,
-                        comment=commentstring,
-
-                        orderid=0,
-                        balance=newbalance
-                        )
-
-    getcurrentholdings = db.session\
-        .query(Admin_ClearnetHoldingsBCH)\
-        .order_by(Admin_ClearnetHoldingsBCH.id.desc())\
-        .first()
-    currentamount = floating_decimals(getcurrentholdings.total, 8)
-    newamount = floating_decimals(currentamount, 8) - floating_decimals(a, 8)
-
-    holdingsaccount = Admin_ClearnetHoldingsBCH(
-        amount=a,
-        timestamp=now,
-        user_id=user_id,
-        total=newamount
-    )
-    db.session.add(holdingsaccount)
 
 
 def bch_send_coin_to_clearnet(amount, comment):
@@ -575,7 +400,7 @@ def bch_send_coin_to_clearnet(amount, comment):
 def bch_send_coin_to_user(amount, comment, user_id):
     """
     #TO User
-    ##this function will move the coin from clearnets wallet_btc to a user
+    ##this function will move the coin from clearnets wallet bch to a user
     :param amount:
     :param comment:
     :param user_id:
@@ -604,36 +429,3 @@ def bch_send_coin_to_user(amount, comment, user_id):
                         balance=newbalance
                         )
 
-
-def bch_send_coin_to_affiliate(amount, comment, user_id):
-    """
-    # TO clearnet_webapp
-    # this function will move the coin from clearnets escrow to profit account
-    # no balance necessary
-    :param amount:
-    :param comment:
-    :param user_id:
-    :return:
-    """
-
-    type_transaction = 11
-
-    oid = int(comment)
-
-    userswallet = db.session\
-        .query(Bch_Wallet)\
-        .filter_by(user_id=user_id)\
-        .first()
-    curbal = Decimal(userswallet.currentbalance)
-    amounttomod = Decimal(amount)
-    newbalance = Decimal(curbal) + Decimal(amounttomod)
-    userswallet.currentbalance = newbalance
-    db.session.add(userswallet)
-
-    bch_add_transaction(category=type_transaction,
-                        amount=amount,
-                        user_id=user_id,
-                        comment='Transaction',
-                        orderid=oid,
-                        balance=newbalance
-                        )

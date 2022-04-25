@@ -225,6 +225,84 @@ def btc_send_coin(user_id, sendto, amount, comment):
         )
 
 
+# admin
+def btc_send_coin_to_user_as_admin(amount, comment, user_id):
+    """
+    #to User
+    # this function will move the coin from clearnets wallet_btc to a user as an admin
+    :param amount:
+    :param comment:
+    :param user_id:
+    :return:
+    """
+
+    type_transaction = 9
+
+    userswallet = db.session \
+        .query(Btc_Wallet)\
+        .filter_by(user_id=user_id)\
+        .first()
+    curbal = Decimal(userswallet.currentbalance)
+    amounttomod = Decimal(amount)
+    newbalance = Decimal(curbal) + Decimal(amounttomod)
+    userswallet.currentbalance = newbalance
+    db.session.add(userswallet)
+    db.session.flush()
+
+    btc_addtransaction(category=type_transaction,
+                       amount=amount,
+                       user_id=user_id,
+                       comment=comment,
+                       orderid=0,
+                       balance=newbalance
+                       )
+
+# admin
+def btc_take_coin_to_user_as_admin(amount, comment, user_id):
+    """
+    # TO User
+    # this function will move the coin from clearnets wallet_btc to a user as an admin
+    :param amount:
+    :param comment:
+    :param user_id:
+    :return:
+    """
+
+    type_transaction = 10
+    a = Decimal(amount)
+    userswallet = db.session\
+        .query(Btc_Wallet)\
+        .filter_by(user_id=user_id)\
+        .first()
+    curbal = Decimal(userswallet.currentbalance)
+    amounttomod = Decimal(amount)
+    newbalance = Decimal(curbal) - Decimal(amounttomod)
+    userswallet.currentbalance = newbalance
+    db.session.add(userswallet)
+    db.session.flush()
+
+    btc_addtransaction(category=type_transaction,
+                       amount=amount,
+                       user_id=user_id,
+                       comment=comment,
+                       orderid=0,
+                       balance=newbalance
+                       )
+
+    getcurrentprofit = db.session\
+        .query(Admin_ClearnetProfitBtc)\
+        .order_by(Admin_ClearnetProfitBtc.id.desc())\
+        .first()
+    currentamount = floating_decimals(getcurrentprofit.total, 8)
+    newamount = floating_decimals(currentamount, 8) + floating_decimals(a, 8)
+    prof = Admin_ClearnetProfitBtc(
+        amount=amount,
+        timestamp=datetime.datetime.utcnow(),
+        total=newamount
+    )
+    db.session.add(prof)
+
+# send coin to escrow for sale
 def btc_send_coin_to_escrow(amount, comment, user_id):
     """
     # TO clearnet_webapp Wallet
@@ -278,259 +356,7 @@ def btc_send_coin_to_escrow(amount, comment, user_id):
                      monero=0,
         )
 
-
-def btc_send_coin_to_user_as_admin(amount, comment, user_id):
-    """
-    #to User
-    # this function will move the coin from clearnets wallet_btc to a user as an admin
-    :param amount:
-    :param comment:
-    :param user_id:
-    :return:
-    """
-
-    type_transaction = 9
-
-    userswallet = db.session \
-        .query(Btc_Wallet)\
-        .filter_by(user_id=user_id)\
-        .first()
-    curbal = Decimal(userswallet.currentbalance)
-    amounttomod = Decimal(amount)
-    newbalance = Decimal(curbal) + Decimal(amounttomod)
-    userswallet.currentbalance = newbalance
-    db.session.add(userswallet)
-    db.session.flush()
-
-    btc_addtransaction(category=type_transaction,
-                       amount=amount,
-                       user_id=user_id,
-                       comment=comment,
-                       orderid=0,
-                       balance=newbalance
-                       )
-
-
-def btc_take_coin_to_user_as_admin(amount, comment, user_id):
-    """
-    # TO User
-    # this function will move the coin from clearnets wallet_btc to a user as an admin
-    :param amount:
-    :param comment:
-    :param user_id:
-    :return:
-    """
-
-    type_transaction = 10
-    a = Decimal(amount)
-    userswallet = db.session\
-        .query(Btc_Wallet)\
-        .filter_by(user_id=user_id)\
-        .first()
-    curbal = Decimal(userswallet.currentbalance)
-    amounttomod = Decimal(amount)
-    newbalance = Decimal(curbal) - Decimal(amounttomod)
-    userswallet.currentbalance = newbalance
-    db.session.add(userswallet)
-    db.session.flush()
-
-    btc_addtransaction(category=type_transaction,
-                       amount=amount,
-                       user_id=user_id,
-                       comment=comment,
-                       orderid=0,
-                       balance=newbalance
-                       )
-
-    getcurrentprofit = db.session\
-        .query(Admin_ClearnetProfitBtc)\
-        .order_by(Admin_ClearnetProfitBtc.id.desc())\
-        .first()
-    currentamount = floating_decimals(getcurrentprofit.total, 8)
-    newamount = floating_decimals(currentamount, 8) + floating_decimals(a, 8)
-    prof = Admin_ClearnetProfitBtc(
-        amount=amount,
-        timestamp=datetime.datetime.utcnow(),
-        total=newamount
-    )
-    db.session.add(prof)
-
-
-def btc_send_coin_for_ad(amount, user_id, comment):
-    """
-    # TO clearnet_webapp
-    # this function will move the coin from vendor to clearnet holdings.
-    # This is for vendor verification
-    :param amount:
-    :param user_id:
-    :param comment:
-    :return:
-    """
-    a = btc_check_balance(user_id=user_id, amount=amount)
-    if a == 1:
-        type_transaction = 9
-        now = datetime.datetime.utcnow()
-        user = db.session\
-            .query(Auth_User)\
-            .filter(Auth_User.id == user_id)\
-            .first()
-        userswallet = db.session\
-            .query(Btc_Wallet)\
-            .filter_by(user_id=user_id)\
-            .first()
-        curbal = Decimal(userswallet.currentbalance)
-        amounttomod = floating_decimals(amount, 8)
-        newbalance = floating_decimals(
-            curbal, 8) - floating_decimals(amounttomod, 8)
-        userswallet.currentbalance = newbalance
-        db.session.add(userswallet)
-        db.session.flush()
-
-        c = str(comment)
-        a = Decimal(amount)
-        commentstring = "Sent money for ad " + c
-        btc_addtransaction(category=type_transaction,
-                           amount=amount,
-                           user_id=user.id,
-                           comment=commentstring,
-                           orderid=0,
-                           balance=newbalance
-                           )
-
-        getcurrentholdings = db.session\
-            .query(Admin_ClearnetHoldingsBtc)\
-            .order_by(Admin_ClearnetHoldingsBtc.id.desc())\
-            .first()
-        currentamount = floating_decimals(getcurrentholdings.total, 8)
-        newamount = floating_decimals(
-            currentamount, 8) + floating_decimals(a, 8)
-
-        holdingsaccount = Admin_ClearnetHoldingsBtc(
-            amount=a,
-            timestamp=now,
-            user_id=user_id,
-            total=newamount
-        )
-
-        db.session.add(holdingsaccount)
-
-
-def btc_send_coin_to_holdings(amount, user_id, comment):
-    """
-    # TO clearnet_webapp
-    # this function will move the coin from vendor to clearnet holdings. 
-    # This is for vendor verification
-    :param amount:
-    :param user_id:
-    :param comment:
-    :return:
-    """
-    a = btc_check_balance(user_id=user_id, amount=amount)
-    if a == 1:
-        type_transaction = 7
-        now = datetime.datetime.utcnow()
-        user = db.session\
-            .query(Auth_User)\
-            .filter(Auth_User.id == user_id)\
-            .first()
-        userswallet = db.session\
-            .query(Btc_Wallet)\
-            .filter_by(user_id=user_id)\
-            .first()
-        curbal = Decimal(userswallet.currentbalance)
-        amounttomod = floating_decimals(amount, 8)
-        newbalance = floating_decimals(
-            curbal, 8) - floating_decimals(amounttomod, 8)
-        userswallet.currentbalance = newbalance
-        db.session.add(userswallet)
-        db.session.flush()
-
-        c = str(comment)
-        a = Decimal(amount)
-        commentstring = "Vendor Verification: Level " + c
-        btc_addtransaction(category=type_transaction,
-                           amount=amount,
-                           user_id=user.id,
-                           comment=commentstring,
-                           orderid=0,
-                           balance=newbalance
-                           )
-
-        getcurrentholdings = db.session\
-            .query(Admin_ClearnetHoldingsBtc)\
-            .order_by(Admin_ClearnetHoldingsBtc.id.desc())\
-            .first()
-        currentamount = floating_decimals(getcurrentholdings.total, 8)
-        newamount = floating_decimals(
-            currentamount, 8) + floating_decimals(a, 8)
-
-        holdingsaccount = Admin_ClearnetHoldingsBtc(
-            amount=a,
-            timestamp=now,
-            user_id=user_id,
-            total=newamount
-        )
-
-        db.session.add(holdingsaccount)
-
-
-def btc_send_coin_from_holdings(amount, user_id, comment):
-    """
-    # TO clearnet_webapp
-    # this function will move the coin from holdings back to vendor. 
-    # This is for vendor verification
-    :param amount:
-    :param user_id:
-    :param comment:
-    :return:
-    """
-
-    type_transaction = 8
-    now = datetime.datetime.utcnow()
-    user = db.session\
-        .query(Auth_User)\
-        .filter(Auth_User.id == user_id)\
-        .first()
-    userswallet = db.session\
-        .query(Btc_Wallet)\
-        .filter_by(user_id=user_id)\
-        .first()
-    curbal = Decimal(userswallet.currentbalance)
-    amounttomod = Decimal(amount)
-    newbalance = Decimal(curbal) + Decimal(amounttomod)
-    userswallet.currentbalance = newbalance
-
-    db.session.add(userswallet)
-    db.session.flush()
-
-    c = str(comment)
-    a = Decimal(amount)
-    commentstring = "Vendor Verification Refund: Level " + c
-
-    btc_addtransaction(category=type_transaction,
-                       amount=amount,
-                       user_id=user.id,
-                       comment=commentstring,
-                       orderid=0,
-                       balance=newbalance
-                       )
-
-    getcurrentholdings = db.session\
-        .query(Admin_ClearnetHoldingsBtc)\
-        .order_by(Admin_ClearnetHoldingsBtc.id.desc())\
-        .first()
-    currentamount = floating_decimals(getcurrentholdings.total, 8)
-    newamount = floating_decimals(currentamount, 8) - floating_decimals(a, 8)
-
-    holdingsaccount = Admin_ClearnetHoldingsBtc(
-        amount=a,
-        timestamp=now,
-        user_id=user_id,
-        total=newamount
-    )
-    db.session.add(holdingsaccount)
-
-
+# send profit to clearnet
 def btc_send_coin_to_clearnet(amount, comment):
     """
     # TO clearnet_webapp
@@ -570,7 +396,7 @@ def btc_send_coin_to_clearnet(amount, comment):
         balance=0
     )
 
-
+# send coin to user from escrow
 def btc_send_coin_to_user(amount, comment, user_id):
     """
     # to User
@@ -603,37 +429,3 @@ def btc_send_coin_to_user(amount, comment, user_id):
                        balance=newbalance
                        )
 
-
-def btc_send_coin_to_affiliate(amount, comment, user_id):
-    """
-    # TO clearnet 
-    # this function will move the coin from clearnets escrow to profit account
-    # no balance necessary
-    :param amount:
-    :param user_id:
-    :param comment:
-
-    :return:
-    """
-
-    type_transaction = 11
-
-    oid = int(comment)
-
-    userswallet = db.session\
-        .query(Btc_Wallet)\
-        .filter_by(user_id=user_id)\
-        .first()
-    curbal = Decimal(userswallet.currentbalance)
-    amounttomod = Decimal(amount)
-    newbalance = Decimal(curbal) + Decimal(amounttomod)
-    userswallet.currentbalance = newbalance
-    db.session.add(userswallet)
-
-    btc_addtransaction(category=type_transaction,
-                       amount=amount,
-                       user_id=user_id,
-                       comment='Transaction',
-                       orderid=oid,
-                       balance=newbalance
-                       )

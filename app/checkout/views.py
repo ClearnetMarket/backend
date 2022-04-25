@@ -11,7 +11,7 @@ from decimal import Decimal
 from app.classes.checkout import\
     Checkout_CheckoutShoppingCart,\
     Checkout_ShoppingCartTotal,\
-    carts_schema, carts_total_schema
+    carts_schema
 
 from app.classes.auth import\
     Auth_User,\
@@ -21,10 +21,12 @@ from app.classes.item import \
 from app.classes.service import \
     Service_ShippingSecret
 from app.classes.user_orders import User_Orders
+from app.classes.models import Query_Country
 from app.classes.wallet_btc import Btc_Wallet
 from app.classes.wallet_bch import Bch_Wallet
 from app.classes.wallet_xmr import Xmr_Wallet
 from app.classes.vendor import Vendor_Notification
+from app.classes.userdata import UserData_DefaultAddress, UserData_DefaultAddress_Schema
 # endmodels
 
 from app.wallet_bch.wallet_bch_work import bch_send_coin_to_escrow
@@ -60,6 +62,7 @@ def cart_calculate_total_price(user_id):
     btc_pricelist = []
     btc_shipping_pricelist = []
     btc_items_quan = []
+
     # Bitcoin cash
     bch_pricelist = []
     bch_shipping_pricelist = []
@@ -83,11 +86,17 @@ def cart_calculate_total_price(user_id):
     total_cart.xmr_shipping_price = 0
     total_cart.xmr_total_price = 0
     for cart in shopping_cart:
+
+        print("poop")
+        print(cart.selected_digital_currency)
+        print("poop")
         if cart.selected_digital_currency == 1:
+            print("BITCOIN")
             btc_pricelist.append(cart.final_price_btc)
             btc_shipping_pricelist.append(cart.final_shipping_price_btc)
             btc_items_quan.append(int(cart.quantity_of_item))
         elif cart.selected_digital_currency == 2:
+            print("BITCOIN CASH")
             bch_pricelist.append(cart.final_price_bch)
             bch_shipping_pricelist.append(cart.final_shipping_price_bch)
             bch_items_quan.append(int(cart.quantity_of_item))
@@ -805,20 +814,22 @@ def cart_update_payment_option(cartid):
         .first()
     new_currency = request.json["new_currency"]
     new_currency = int(new_currency)
-
+    print("new currency")
+    print(new_currency)
     if new_currency == 1:
         if getitem.digital_currency_1 is False:
             return jsonify({'status': 'error'})
         else:
-           
+            print("its no 1")
             the_cart_item.selected_digital_currency = new_currency
-        
     if new_currency == 2:
+   
         if getitem.digital_currency_2 is False:
+            
             return jsonify({'status': 'error'})
         else:
+            print("its no 2")
             the_cart_item.selected_digital_currency = new_currency
-         
     if new_currency == 3:
         if getitem.digital_currency_3 is False:
             return jsonify({'status': 'error'})
@@ -939,23 +950,28 @@ def finalize():
         if y is True:
             checkout_clear_shopping_cart(current_user.id)
             db.session.commit()
-            return jsonify({'status': 'success'})
+            return jsonify({'status': 'success'}), 200
         else:
-            return jsonify({'status': 'error'})
+            return jsonify({'status': 'Error with Payment.  Insuffied Funds.'}), 200
     else:
-        return jsonify({'status': 'error'})
+        return jsonify({'status': 'Error Creating Order'}), 200
+
+
 def checkout_make_order():
     """
     creates the orders for the shopping cart
     """
     # Total cart
     now = datetime.utcnow()
+
     cart = db.session\
         .query(Checkout_CheckoutShoppingCart)\
         .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
                 Checkout_CheckoutShoppingCart.saved_for_later == 0)\
         .all()
-    
+    get_customer_shipping = UserData_DefaultAddress.query\
+        .filter(UserData_DefaultAddress.uuid == Checkout_CheckoutShoppingCart.customer_uuid)\
+        .first()
     for k in cart:
         sellerfee = Auth_UserFees.query\
             .filter(Auth_UserFees.user_id == k.vendor_id)\
@@ -977,7 +993,7 @@ def checkout_make_order():
             shipping_price_bch = 0
             shipping_price_btc = k.final_shipping_price_btc
 
-        if k.selected_digital_currency == 2:
+        elif k.selected_digital_currency == 2:
             dbfeetopercent = (floating_decimals((physicalitemfee/100), 8))
             fee_bch = (floating_decimals(
                 (dbfeetopercent * k.final_price_bch), 8))
@@ -993,7 +1009,7 @@ def checkout_make_order():
             shipping_price_xmr = 0
             shipping_price_bch = k.final_shipping_price_bch
 
-        if k.selected_digital_currency == 3:
+        elif k.selected_digital_currency == 3:
             dbfeetopercent = (floating_decimals((physicalitemfee/100), 12))
             fee_xmr = (floating_decimals(
                 (dbfeetopercent * k.final_price_xmr), 12))
@@ -1009,7 +1025,14 @@ def checkout_make_order():
             shipping_price_btc = 0
             shipping_price_bch = 0
             shipping_price_xmr = k.final_shipping_price_xmr
+        else:
 
+            return False
+
+        get_customer_country = Query_Country.query\
+        .filter(Query_Country.value ==get_customer_shipping.country)\
+        .first()
+        user_country = get_customer_country.name
         order = User_Orders(
             title_of_item=k.title_of_item,
             created=now,
@@ -1024,27 +1047,19 @@ def checkout_make_order():
             customer_id=k.customer_id,
             currency=k.currency,
             overall_status=1,
-            incart=1,
-            new_order=0,
-            accepted_order=0,
-            waiting_order=0,
-            disputed_order=0,
             disputed_timer=None,
             moderator_uuid=None,
-            delivered_order=0,
             date_shipped=None,
-            completed=0,
             completed_time=None,
             released=0,
             private_note=None,
             escrow=0,
             request_cancel=0,
             reason_cancel=None,
-            cancelled=0,
             shipping_price_btc=shipping_price_btc,
             shipping_price_bch=shipping_price_bch,
             shipping_price_xmr=shipping_price_xmr,
-            shipping_description=None,
+            shipping_description=k.selected_shipping_description,
             vendor_feedback=0,
             user_feedback=0,
             digital_currency=k.selected_digital_currency,
@@ -1057,6 +1072,15 @@ def checkout_make_order():
             price_per_item_btc=price_per_item_btc,
             price_per_item_bch=price_per_item_bch,
             price_per_item_xmr=price_per_item_xmr,
+
+            address_name = get_customer_shipping.address_name,
+            address = get_customer_shipping.address,
+            apt = get_customer_shipping.apt,
+            city = get_customer_shipping.city,
+            country = user_country,
+            state_or_provence = get_customer_shipping.state_or_provence,
+            zip_code = get_customer_shipping.zip_code,
+            msg = get_customer_shipping.msg
         )
         new_notice_vendor = Vendor_Notification( 
             dateadded=now,
@@ -1118,7 +1142,6 @@ def checkout_make_payment():
     orders = db.session\
         .query(User_Orders)\
         .filter(User_Orders.customer_uuid == current_user.uuid)\
-        .filter(User_Orders.incart == 1)\
         .all()
 
     # loop through ORDERS. send coin and doing transactions 1 by 1..

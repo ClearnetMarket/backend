@@ -51,26 +51,38 @@ class User_Orders(db.Model):
     fee_btc = db.Column(db.DECIMAL(20, 8))
     fee_bch = db.Column(db.DECIMAL(20, 8))
     fee_xmr = db.Column(db.DECIMAL(20, 8))
-    price_total_btc = db.Column(db.DECIMAL(20, 8))
-    price_total_bch = db.Column(db.DECIMAL(20, 8))
-    price_total_xmr = db.Column(db.DECIMAL(20, 12))
+
     price_per_item_btc = db.Column(db.DECIMAL(20, 8))
     price_per_item_bch = db.Column(db.DECIMAL(20, 8))
     price_per_item_xmr = db.Column(db.DECIMAL(20, 12))
 
-
+    price_total_btc = db.Column(db.DECIMAL(20, 8))
+    price_total_bch = db.Column(db.DECIMAL(20, 8))
+    price_total_xmr = db.Column(db.DECIMAL(20, 12))
+    
+    address_name = db.Column(db.VARCHAR(1000))
+    address = db.Column(db.VARCHAR(1000))
+    apt = db.Column(db.VARCHAR(1000))
+    city = db.Column(db.VARCHAR(1000))
+    country = db.Column(db.VARCHAR(1000))
+    state_or_provence = db.Column(db.VARCHAR(1000))
+    zip_code = db.Column(db.VARCHAR(200))
+    msg = db.Column(db.VARCHAR(2500))
 
 class User_Orders_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = User_Orders
-        fields = ('uuid','created', 'title_of_item', 'item_uuid', 'image_one',
+        fields = ('uuid', 'created', 'quantity', 'title_of_item', 'item_uuid', 'image_one',
                   'currency', 'vendor_user_name', 'customer_user_name',
                   'customer_uuid', 'vendor_uuid', 'overall_status', 'date_shipped',
                   'completed', 'completed_time', 'released',
                   'shipping_price_btc', 'shipping_price_bch', 'shipping_price_xmr',
                   'shipping_description', 'vendor_feedback', 'user_feedback', 'digital_currency',
                   'fee_btc', 'fee_bch', 'fee_xmr', 'price_total_btc', 'price_total_bch', 'price_total_xmr',
-                  'price_per_item_btc', 'price_per_item_bch', 'price_per_item_xmr')
+                  'price_per_item_btc', 'price_per_item_bch', 'price_per_item_xmr',
+                  'address_name', 'address', 'apt', 'country',
+                  'city', 'state_or_provence', 'zip_code', 'msg'
+                  )
 
 
 class User_Orders_Tracking(db.Model):

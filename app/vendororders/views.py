@@ -144,8 +144,6 @@ def vendor_orders_shipped():
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=3) \
             .all()
-        for f in vendor_orders:
-            print(f.digital_currency)
         
         user_order_info = User_Orders_Schema(many=True)
         return jsonify(user_order_info.dump(vendor_orders))

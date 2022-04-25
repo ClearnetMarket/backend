@@ -167,7 +167,6 @@ def xmr_send_coin_to_escrow(amount, comment, user_id):
         xmr_add_transaction(category=type_transaction,
                             amount=amount,
                             user_id=user_id,
-                      
                             comment='Sent Coin To Escrow',
                             orderid=oid,
                             balance=newbalance
@@ -181,3 +180,36 @@ def xmr_send_coin_to_escrow(amount, comment, user_id):
             salenumber=comment,
             bitcoin=amount
         )
+
+def xmr_send_coin_to_user(amount, comment, user_id):
+    """
+    # TO User
+    # this function will move the coin from clearnets wallet xmr to a user
+    :param amount:
+    :param comment:
+    :param user_id:
+    :return:
+    """
+
+    type_transaction = 5
+    oid = int(comment)
+
+    userswallet = db.session\
+        .query(Xmr_Wallet)\
+        .filter_by(user_id=user_id)\
+        .first()
+    curbal = Decimal(userswallet.currentbalance)
+    amounttomod = Decimal(amount)
+    newbalance = Decimal(curbal) + Decimal(amounttomod)
+    userswallet.currentbalance = newbalance
+    db.session.add(userswallet)
+    db.session.flush()
+
+    xmr_add_transaction(category=type_transaction,
+                        amount=amount,
+                        user_id=user_id,
+                        comment='Transaction',
+                        orderid=oid,
+                        balance=newbalance
+                        )
+

@@ -12,6 +12,10 @@ from app.classes.user_orders import User_Orders, User_Orders_Schema
 from app.classes.feedback import Feedback_Feedback
 from app.classes.vendor import Vendor_Notification
 
+from app.wallet_btc.wallet_btc_work import btc_send_coin_to_user
+from app.wallet_bch.wallet_bch_work import bch_send_coin_to_user
+from app.wallet_xmr.wallet_xmr_work import xmr_send_coin_to_user
+
 
 @orders.route('', methods=['GET'])
 @login_required
@@ -208,3 +212,59 @@ def get_order_feedback(uuid):
             return jsonify({"status": "error"})
 
             
+
+@orders.route('/mark/disputed/<string:uuid>', methods=['GET'])
+@login_required
+def mark_order_disputed(uuid):
+    """
+    Used on index.  Grabs today's featured items
+    :return:
+    """
+    if request.method == 'GET':
+
+        get_order = db.session \
+            .query(User_Orders) \
+            .filter(User_Orders.customer_id == current_user.id) \
+            .order_by(User_Orders.uuid == uuid) \
+            .first()
+        if get_order:
+            get_order.overall_status = 8
+            db.session.add(get_order)
+            db.session.commit()
+            return jsonify({"status": "error"})
+
+
+@orders.route('/mark/delivered/<string:uuid>', methods=['GET'])
+@login_required
+def mark_order_delivered(uuid):
+    """
+    Used on index.  Grabs today's featured items
+    :return:
+    """
+    if request.method == 'GET':
+
+        get_order = db.session \
+            .query(User_Orders) \
+            .filter(User_Orders.customer_id == current_user.id) \
+            .order_by(User_Orders.uuid == uuid) \
+            .first()
+        if get_order:
+            if get_order.digital_currency == 1:
+                btc_send_coin_to_user(
+                    amount=get_order.price_total_btc, comment=get_order.uuid, user_id=get_order.customer_id
+                    )
+            if get_order.digital_currency == 2:
+                bch_send_coin_to_user(
+                    amount=get_order.price_total_bch, comment=get_order.uuid, user_id=get_order.customer_id
+                    )
+            if get_order.digital_currency == 3:
+                xmr_send_coin_to_user(
+                    amount=get_order.price_total_xmr, comment=get_order.uuid, user_id=get_order.customer_id
+                    )
+
+            get_order.overall_status = 4
+
+            db.session.add(get_order)
+            db.session.commit()
+            
+            return jsonify({"status": "success"})
