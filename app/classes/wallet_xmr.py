@@ -68,6 +68,8 @@ class Xmr_Transactions(db.Model):
     fee = db.Column(db.DECIMAL(20, 12))
     orderid = db.Column(db.INTEGER)
     digital_currency = db.Column(db.INTEGER)
+    order_uuid = db.Column(db.VARCHAR(140))
+
 
 class Xmr_Transactions_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:

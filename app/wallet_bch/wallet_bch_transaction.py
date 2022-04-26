@@ -3,7 +3,7 @@ from datetime import datetime
 from app.classes.wallet_bch import Bch_WalletTransactions
 
 
-def bch_add_transaction(category, amount, user_id, comment, orderid, balance):
+def bch_add_transaction(category, amount, user_id, comment, balance, order_uuid):
     """
     # this function will move the coin from holdings back to vendor.  This is for vendor verification
     :param category:
@@ -18,7 +18,6 @@ def bch_add_transaction(category, amount, user_id, comment, orderid, balance):
 
         now = datetime.utcnow()
         comment = str(comment)
-        orderid = int(orderid)
 
         trans = Bch_WalletTransactions(
             category=category,
@@ -35,12 +34,12 @@ def bch_add_transaction(category, amount, user_id, comment, orderid, balance):
             created=now,
             commentbch=comment,
             amount=amount,
-            orderid=orderid,
             balance=balance,
-            digital_currency=3
+            digital_currency=2,
+            order_uuid=order_uuid,
         )
         db.session.add(trans)
 
     except Exception as e:
-        print("transaction error")
+        
         print(str(e))

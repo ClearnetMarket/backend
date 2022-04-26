@@ -145,7 +145,8 @@ class Btc_TransactionsBtc(db.Model):
     confirmed = db.Column(db.INTEGER)
     confirmed_fee = db.Column(db.DECIMAL(20, 8))
     digital_currency = db.Column(db.INTEGER)
-
+    order_uuid = db.Column(db.VARCHAR(140))
+    
 
 class Btc_TransactionsBtc_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:

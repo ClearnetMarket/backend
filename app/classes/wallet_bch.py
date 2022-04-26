@@ -154,6 +154,8 @@ class Bch_WalletTransactions(db.Model):
     confirmed = db.Column(db.INTEGER)
     confirmed_fee = db.Column(db.DECIMAL(20, 8))
     digital_currency = db.Column(db.INTEGER)
+    order_uuid = db.Column(db.VARCHAR(140))
+
 
 class Bch_WalletTransactions_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:

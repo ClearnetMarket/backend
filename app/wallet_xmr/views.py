@@ -1,16 +1,12 @@
 from flask import request, jsonify
-from app import db, bcrypt, UPLOADED_FILES_DEST_USER
-from app.wallet_xmr import wallet_xmr
-from app.wallet_xmr.wallet_xmr_work import xmr_send_coin
 from flask_login import current_user
+from app import db, bcrypt, UPLOADED_FILES_DEST_USER
 import os
-from app.notification import notification
+from decimal import Decimal
 from app.common.functions import floating_decimals
 from app.common.decorators import login_required
-
-from app.wallet_xmr.security import xmr_check_balance
-from app.wallet_xmr.transaction import xmr_add_transaction
-from decimal import Decimal
+from app.wallet_xmr import wallet_xmr
+from app.wallet_xmr.wallet_xmr_work import xmr_send_coin
 # models
 from app.classes.auth import Auth_User
 from app.classes.wallet_xmr import\
@@ -23,7 +19,6 @@ from app.classes.wallet_xmr import\
 
 
 @wallet_xmr.route('/price', methods=['GET'])
-
 def xmr_price_usd():
     """
     Gets current price of bitcoin cash
@@ -90,7 +85,6 @@ def xmr_receive():
     qr = wallet.address1 + '.png'
     wallet_qr_code = os.path.join(UPLOADED_FILES_DEST_USER, str(current_user.uuid), 'qr', qr)
     
-
     return jsonify({"xmr_address": wallet.address1,
                     "xmr_qr_code": wallet_qr_code
                         }), 200

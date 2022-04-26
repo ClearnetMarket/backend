@@ -1,14 +1,11 @@
-from flask import request, session, jsonify
+from flask import request, jsonify
+from flask_login import current_user, login_required
 from app import db, bcrypt
+from datetime import datetime
 from app.wallet_bch import wallet_bch
 from app.wallet_bch.wallet_bch_work import bch_send_coin
-from flask_login import current_user, login_required
-from datetime import datetime
 from app.common.functions import floating_decimals
-
-from app.achs.b import likemoneyinthebank,withdrawl
 from decimal import Decimal
-
 # models
 from app.classes.auth import Auth_User
 from app.classes.wallet_bch import\
@@ -20,21 +17,18 @@ from app.classes.wallet_bch import\
 # end models
 
 @wallet_bch.route('/price', methods=['GET'])
-
 def bch_price_usd():
     """
     Gets current price of bitcoin cash
     :return:
     """
-
     price_bch_usd = Bch_Prices.query.filter_by(currency_id=0).first()
-
     if price_bch_usd.price > 0:
         try:
             price_bch_usd = str(price_bch_usd.price)
         except:
             price_bch_usd = 0
- 
+
         return jsonify({
             "bch_price_usd": price_bch_usd,
         })
@@ -51,9 +45,7 @@ def bch_balance_plus_unconfirmed():
     Gets current balance and any unconirmed transactions
     :return:
     """
-  
     userwallet = Bch_Wallet.query.filter_by(user_id=current_user.id).first()
- 
     try:
         userbalance = str(userwallet.currentbalance)
         unconfirmed = str(userwallet.unconfirmed)
@@ -65,6 +57,7 @@ def bch_balance_plus_unconfirmed():
         "bch_balance": userbalance,
         "bch_unconfirmed": unconfirmed,
     })
+
 
 @wallet_bch.route('/transactions', methods=['GET'])
 @login_required
@@ -79,19 +72,18 @@ def bch_transactions():
     transactions_list = Bch_WalletTransactions_Schema(many=True)
     return jsonify(transactions_list.dump(transactfull)), 200
 
+
 @wallet_bch.route('/receive', methods=['GET'])
 @login_required
 def bch_receive():
     
     wallet = Bch_Wallet.query.filter(Bch_Wallet.user_id==current_user.id).first()
-    print(wallet)
-    print(wallet.address1)
     return jsonify({"bch_address": wallet.address1}), 200
+
 
 @wallet_bch.route('/send', methods=['POST'])
 @login_required
 def bch_send():
-
     # Get wallet_btc
     user = Auth_User.query.filter_by(id=current_user.id).first()
     wallet = Bch_Wallet.query.filter_by(user_id=current_user.id).first()
@@ -121,8 +113,6 @@ def bch_send():
                         amount=amount,
                         comment=comment_on_blockchain
                     )
-                    # achievement
-                    withdrawl(user_id=current_user.id)
                     db.session.commit()
                     return jsonify({"status": "request sent to wallet"}), 200
                 else:

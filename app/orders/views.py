@@ -12,9 +12,9 @@ from app.classes.user_orders import User_Orders, User_Orders_Schema
 from app.classes.feedback import Feedback_Feedback
 from app.classes.vendor import Vendor_Notification
 
-from app.wallet_btc.wallet_btc_work import btc_send_coin_to_user
-from app.wallet_bch.wallet_bch_work import bch_send_coin_to_user
-from app.wallet_xmr.wallet_xmr_work import xmr_send_coin_to_user
+from app.wallet_btc.wallet_btc_work import finalize_order_btc
+from app.wallet_bch.wallet_bch_work import finalize_order_bch
+from app.wallet_xmr.wallet_xmr_work import finalize_order_xmr
 
 
 @orders.route('', methods=['GET'])
@@ -48,7 +48,7 @@ def get_order(uuid):
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.customer_id == current_user.id) \
-            .order_by(User_Orders.uuid == uuid) \
+            .filter(User_Orders.uuid == uuid) \
             .first()
         
         item_schema = User_Orders_Schema()
@@ -67,7 +67,7 @@ def get_order_vendor(uuid):
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.vendor_id == current_user.id) \
-            .order_by(User_Orders.uuid == uuid) \
+            .filter(User_Orders.uuid == uuid) \
             .first()
 
         item_schema = User_Orders_Schema()
@@ -85,7 +85,7 @@ def order_feedback(uuid):
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.customer_id == current_user.id) \
-            .order_by(User_Orders.uuid == uuid) \
+            .filter(User_Orders.uuid == uuid) \
             .first()
         if get_order:
             # vendor rating
@@ -137,7 +137,7 @@ def order_feedback_vendor(order_uuid):
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.vendor_id == current_user.id) \
-            .order_by(User_Orders.uuid == order_uuid) \
+            .filter(User_Orders.uuid == order_uuid) \
             .first()
         if get_order:
           
@@ -196,7 +196,7 @@ def get_order_feedback(uuid):
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.customer_id == current_user.id) \
-            .order_by(User_Orders.uuid == uuid) \
+            .filter(User_Orders.uuid == uuid) \
             .first()
         if get_order:
             get_feedback = Feedback_Feedback.query\
@@ -225,7 +225,7 @@ def mark_order_disputed(uuid):
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.customer_id == current_user.id) \
-            .order_by(User_Orders.uuid == uuid) \
+            .filter(User_Orders.uuid == uuid) \
             .first()
         if get_order:
             get_order.overall_status = 8
@@ -246,24 +246,18 @@ def mark_order_delivered(uuid):
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.customer_id == current_user.id) \
-            .order_by(User_Orders.uuid == uuid) \
+            .filter(User_Orders.uuid == uuid) \
             .first()
         if get_order:
             if get_order.digital_currency == 1:
-                btc_send_coin_to_user(
-                    amount=get_order.price_total_btc, comment=get_order.uuid, user_id=get_order.customer_id
-                    )
+                finalize_order_btc(get_order.uuid)
             if get_order.digital_currency == 2:
-                bch_send_coin_to_user(
-                    amount=get_order.price_total_bch, comment=get_order.uuid, user_id=get_order.customer_id
-                    )
+                finalize_order_bch(get_order.uuid)
             if get_order.digital_currency == 3:
-                xmr_send_coin_to_user(
-                    amount=get_order.price_total_xmr, comment=get_order.uuid, user_id=get_order.customer_id
-                    )
-
+                finalize_order_xmr(get_order.uuid)
+                
             get_order.overall_status = 4
-
+            
             db.session.add(get_order)
             db.session.commit()
             

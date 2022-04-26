@@ -3,9 +3,10 @@ from datetime import datetime
 from app.classes.wallet_xmr import Xmr_Transactions
 
 # this function will move the coin from holdings back to vendor.  This is for vendor verification
-def xmr_add_transaction(category, amount, user_id, orderid, balance, comment):
+
+
+def xmr_add_transaction(category, amount, user_id, balance, comment, order_uuid):
     now = datetime.utcnow()
-    orderid = int(orderid)
 
     trans = Xmr_Transactions(
         category=category,
@@ -19,9 +20,9 @@ def xmr_add_transaction(category, amount, user_id, orderid, balance, comment):
         address='',
         note=comment,
         fee=0,
-        orderid=orderid,
         digital_currency=3,
         confirmed=0,
+        order_uuid=order_uuid,
     )
     db.session.add(trans)
 

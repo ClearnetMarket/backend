@@ -8,16 +8,16 @@ import datetime
 import os
 import qrcode
 # models
-from app.classes.auth import Auth_User
-from app.classes.admin import \
-    Admin_ClearnetProfitBCH, \
-    Admin_ClearnetHoldingsBCH
+from app.classes.auth import Auth_User, Auth_UserFees
+
 from app.classes.wallet_bch import \
     Bch_Wallet, \
     Bch_WalletAddresses, \
     Bch_WalletFee, \
     Bch_WalletUnconfirmed, \
     Bch_WalletWork
+from app.classes.user_orders import User_Orders
+
 # end models
 
 
@@ -30,9 +30,9 @@ def bch_create_wallet(user_id):
     """
 
     userswallet = db.session\
-                    .query(Bch_Wallet)\
-                    .filter(Bch_Wallet.user_id == user_id)\
-                    .first()
+                .query(Bch_Wallet)\
+                .filter(Bch_Wallet.user_id == user_id)\
+                .first()
 
     if userswallet:
         # find a new clean address
@@ -177,7 +177,6 @@ def bch_send_coin(user_id, sendto, amount, comment):
     walletfee = getwallet.btc
     a = bch_check_balance(user_id=user_id, amount=amount)
     if a == 1:
-
         strcomment = str(comment)
         type_transaction = 2
         userswallet = db.session\
@@ -205,25 +204,16 @@ def bch_send_coin(user_id, sendto, amount, comment):
         # gets amount and fee
         amountandfee = floating_decimals(amounttomod + walletfee, 8)
         # subtracts amount and fee from current balance
-        y = floating_decimals(curbalance - amountandfee, 8)
+        amountfromfee = floating_decimals(curbalance - amountandfee, 8)
         # set balance as new amount
-        userswallet.currentbalance = floating_decimals(y, 8)
+        userswallet.currentbalance = floating_decimals(amountfromfee, 8)
         db.session.add(userswallet)
     else:
-        notification(
-            type=34,
-            username='',
-            user_id=user_id,
-            salenumber=0,
-            bitcoin=amount,
-            bitcoincash=0,
-            monero=0,
-        )
+        pass
 
 
-
-
-def bch_send_coin_to_user_as_admin(amount, comment, user_id):
+##INNER FUNCTIONS
+def bch_send_coin_to_user_as_admin(amount, comment, user_id, order_uuid):
     """
     #to User
     # this function will move the coin from clearnets wallet_btc to a user as an admin
@@ -250,12 +240,12 @@ def bch_send_coin_to_user_as_admin(amount, comment, user_id):
                         amount=amount,
                         user_id=user_id,
                         comment=comment,
-                        orderid=0,
-                        balance=newbalance
+                        balance=newbalance,
+                        order_uuid=order_uuid
                         )
 
 
-def bch_take_coin_to_user_as_admin(amount, comment, user_id):
+def bch_take_coin_to_user_as_admin(amount, user_id, order_uuid):
     """
     # TO User
     # this function will move the coin from clearnets wallet_btc to a user as an admin
@@ -266,7 +256,7 @@ def bch_take_coin_to_user_as_admin(amount, comment, user_id):
     """
 
     type_transaction = 10
-    a = Decimal(amount)
+
     userswallet = db.session\
         .query(Bch_Wallet)\
         .filter_by(user_id=user_id)\
@@ -281,26 +271,13 @@ def bch_take_coin_to_user_as_admin(amount, comment, user_id):
     bch_add_transaction(category=type_transaction,
                         amount=amount,
                         user_id=user_id,
-                        comment=comment,
-                        orderid=0,
-                        balance=newbalance
+                        comment='Admin moved money',
+                        balance=newbalance,
+                        order_uuid=order_uuid
                         )
 
-    getcurrentprofit = db.session\
-        .query(Admin_ClearnetProfitBCH)\
-        .order_by(Admin_ClearnetProfitBCH.id.desc())\
-        .first()
-    currentamount = floating_decimals(getcurrentprofit.total, 8)
-    newamount = floating_decimals(currentamount, 8) + floating_decimals(a, 8)
-    prof = Admin_ClearnetProfitBCH(
-        amount=amount,
-        timestamp=datetime.datetime.utcnow(),
-        total=newamount
-    )
-    db.session.add(prof)
 
-
-def bch_send_coin_to_escrow(amount, comment, user_id):
+def bch_send_coin_to_escrow(amount, user_id, order_uuid):
     """
     # TO clearnet_webapp Wallet
     # this function will move the coin to clearnets wallet_btc from a user
@@ -322,82 +299,21 @@ def bch_send_coin_to_escrow(amount, comment, user_id):
             newbalance = Decimal(curbal) - Decimal(amounttomod)
             userswallet.currentbalance = newbalance
             db.session.add(userswallet)
-
-            oid = int(comment)
+            
             bch_add_transaction(category=type_transaction,
                                 amount=amount,
                                 user_id=user_id,
                                 comment='Sent Coin To Escrow',
-
-                                orderid=oid,
-                                balance=newbalance
+                                balance=newbalance,
+                                order_uuid=order_uuid
                                 )
-
         except Exception as e:
-            print(str(e))
-            notification(
-                type=34,
-                username='',
-                user_id=user_id,
-                salenumber=comment,
-                bitcoin=amount,
-                bitcoincash=0,
-                monero=0,
-
-            )
-
+            pass
     else:
-
-        notification(
-            type=34,
-            username='',
-            user_id=user_id,
-            salenumber=comment,
-            bitcoin=amount,
-            bitcoincash=0,
-            monero=0,
-        )
+        pass
 
 
-def bch_send_coin_to_clearnet(amount, comment):
-    """
-    # TO clearnet_webapp
-    # this function will move the coin from clearnets escrow to profit account
-    # no balance necessary
-    :param amount:
-    :param comment:
-    :return:
-    """
-
-    type_transaction = 6
-    now = datetime.datetime.utcnow()
-    oid = int(comment)
-    a = Decimal(amount)
-    bch_add_transaction(
-        category=type_transaction,
-        amount=amount,
-        user_id=1,
-        comment='Sent Coin to clearnet_webapp profit',
-        orderid=oid,
-        balance=0
-    )
-
-    getcurrentprofit = db.session\
-        .query(Admin_ClearnetProfitBCH)\
-        .order_by(Admin_ClearnetProfitBCH.id.desc())\
-        .first()
-    currentamount = floating_decimals(getcurrentprofit.total, 8)
-    newamount = floating_decimals(currentamount, 8) + floating_decimals(a, 8)
-    prof = Admin_ClearnetProfitBCH(
-        amount=amount,
-        order=oid,
-        timestamp=now,
-        total=newamount
-    )
-    db.session.add(prof)
-
-
-def bch_send_coin_to_user(amount, comment, user_id):
+def bch_send_coin_to_user(amount, user_id, order_uuid):
     """
     #TO User
     ##this function will move the coin from clearnets wallet bch to a user
@@ -408,7 +324,6 @@ def bch_send_coin_to_user(amount, comment, user_id):
     """
 
     type_transaction = 5
-    oid = int(comment)
 
     userswallet = db.session\
         .query(Bch_Wallet)\
@@ -425,7 +340,40 @@ def bch_send_coin_to_user(amount, comment, user_id):
                         amount=amount,
                         user_id=user_id,
                         comment='Transaction',
-                        orderid=oid,
-                        balance=newbalance
+                        balance=newbalance,
+                        order_uuid=order_uuid
                         )
 
+
+def finalize_order_bch(order_uuid):
+    """
+    Finalizes an bch order
+    """
+    get_order = db.session \
+        .query(User_Orders) \
+        .filter(User_Orders.uuid == order_uuid) \
+        .first()
+
+    # get total
+    total_amount_from_sale = get_order.price_total_bch
+
+    # get vendor fee
+    get_vendor_fee = Auth_UserFees.query\
+        .filter(Auth_UserFees.user_id == get_order.vendor_id)\
+        .first()
+    vendor_fee_percent = get_vendor_fee.vendorfee
+    fee_for_freeport = Decimal(total_amount_from_sale) * \
+        Decimal(vendor_fee_percent)
+    fee_for_freeport_exact = floating_decimals(fee_for_freeport, 8)
+    amount_for_vendor = total_amount_from_sale - fee_for_freeport
+    amount_for_vendor_exact = floating_decimals(amount_for_vendor, 8)
+
+    # send fee to freeport
+    bch_send_coin_to_user(amount=fee_for_freeport_exact,
+                          user_id=1,
+                          order_uuid=get_order.uuid)
+
+    # send coin to vendor
+    bch_send_coin_to_user(amount=amount_for_vendor_exact,
+                          user_id=get_order.vendor_id,
+                          order_uuid=get_order.uuid)

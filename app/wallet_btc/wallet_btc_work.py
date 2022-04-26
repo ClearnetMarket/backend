@@ -3,17 +3,16 @@ from app.common.functions import\
     floating_decimals, \
     userimagelocation
 from app.notification import notification
-from app.wallet_btc.wallet_btc_addtransaction import btc_addtransaction
+from app.wallet_btc.wallet_btc_addtransaction import btc_add_transaction
 from app.wallet_btc.wallet_btc_security import btc_check_balance
 from decimal import Decimal
 import datetime
 import os
 import qrcode
 # models
-from app.classes.auth import Auth_User
-from app.classes.admin import\
-    Admin_ClearnetProfitBtc,\
-    Admin_ClearnetHoldingsBtc
+from app.classes.auth import Auth_User, Auth_UserFees
+from app.classes.user_orders import User_Orders
+
 from app.classes.wallet_btc import \
     Btc_Unconfirmed, \
     Btc_Wallet, \
@@ -213,20 +212,11 @@ def btc_send_coin(user_id, sendto, amount, comment):
         db.session.add(userswallet)
 
     else:
-        notification(
-            type=34,
-            username='',
-            user_id=user_id,
-            salenumber=0,
-            bitcoin=amount,
-
-                     bitcoincash=0,
-                     monero=0,
-        )
+        pass
 
 
-# admin
-def btc_send_coin_to_user_as_admin(amount, comment, user_id):
+##INNER FUNCTIONS
+def btc_send_coin_to_user_as_admin(amount, comment, user_id, order_uuid):
     """
     #to User
     # this function will move the coin from clearnets wallet_btc to a user as an admin
@@ -238,7 +228,7 @@ def btc_send_coin_to_user_as_admin(amount, comment, user_id):
 
     type_transaction = 9
 
-    userswallet = db.session \
+    userswallet = db.session\
         .query(Btc_Wallet)\
         .filter_by(user_id=user_id)\
         .first()
@@ -249,16 +239,16 @@ def btc_send_coin_to_user_as_admin(amount, comment, user_id):
     db.session.add(userswallet)
     db.session.flush()
 
-    btc_addtransaction(category=type_transaction,
-                       amount=amount,
-                       user_id=user_id,
-                       comment=comment,
-                       orderid=0,
-                       balance=newbalance
-                       )
+    btc_add_transaction(category=type_transaction,
+                        amount=amount,
+                        user_id=user_id,
+                        comment=comment,
+                        balance=newbalance,
+                        order_uuid=order_uuid
+                        )
 
-# admin
-def btc_take_coin_to_user_as_admin(amount, comment, user_id):
+
+def btc_take_coin_to_user_as_admin(amount, user_id, order_uuid):
     """
     # TO User
     # this function will move the coin from clearnets wallet_btc to a user as an admin
@@ -269,7 +259,7 @@ def btc_take_coin_to_user_as_admin(amount, comment, user_id):
     """
 
     type_transaction = 10
-    a = Decimal(amount)
+
     userswallet = db.session\
         .query(Btc_Wallet)\
         .filter_by(user_id=user_id)\
@@ -281,29 +271,16 @@ def btc_take_coin_to_user_as_admin(amount, comment, user_id):
     db.session.add(userswallet)
     db.session.flush()
 
-    btc_addtransaction(category=type_transaction,
-                       amount=amount,
-                       user_id=user_id,
-                       comment=comment,
-                       orderid=0,
-                       balance=newbalance
-                       )
+    btc_add_transaction(category=type_transaction,
+                        amount=amount,
+                        user_id=user_id,
+                        comment='Admin moved money',
+                        balance=newbalance,
+                        order_uuid=order_uuid
+                        )
 
-    getcurrentprofit = db.session\
-        .query(Admin_ClearnetProfitBtc)\
-        .order_by(Admin_ClearnetProfitBtc.id.desc())\
-        .first()
-    currentamount = floating_decimals(getcurrentprofit.total, 8)
-    newamount = floating_decimals(currentamount, 8) + floating_decimals(a, 8)
-    prof = Admin_ClearnetProfitBtc(
-        amount=amount,
-        timestamp=datetime.datetime.utcnow(),
-        total=newamount
-    )
-    db.session.add(prof)
 
-# send coin to escrow for sale
-def btc_send_coin_to_escrow(amount, comment, user_id):
+def btc_send_coin_to_escrow(amount, user_id, order_uuid):
     """
     # TO clearnet_webapp Wallet
     # this function will move the coin to clearnets wallet_btc from a user
@@ -316,91 +293,34 @@ def btc_send_coin_to_escrow(amount, comment, user_id):
     if a == 1:
         try:
             type_transaction = 4
-            userswallet = db.session.query(
-                Btc_Wallet).filter_by(user_id=user_id).first()
+            userswallet = db.session\
+                .query(Btc_Wallet)\
+                .filter_by(user_id=user_id)\
+                .first()
             curbal = Decimal(userswallet.currentbalance)
             amounttomod = Decimal(amount)
             newbalance = Decimal(curbal) - Decimal(amounttomod)
             userswallet.currentbalance = newbalance
             db.session.add(userswallet)
 
-            oid = int(comment)
-            btc_addtransaction(category=type_transaction,
-                               amount=amount,
-                               user_id=user_id,
-                               comment='Sent Coin To Escrow',
-                               orderid=oid,
-                               balance=newbalance
-                               )
+            btc_add_transaction(category=type_transaction,
+                                amount=amount,
+                                user_id=user_id,
+                                comment='Sent Coin To Escrow',
+                                balance=newbalance,
+                                order_uuid=order_uuid
+                                )
 
         except Exception as e:
-            notification(
-                type=34,
-                username='',
-                user_id=user_id,
-                salenumber=comment,
-                bitcoin=amount,
-                bitcoincash=0,
-                monero=0,
-
-            )
-
+            pass
     else:
-        notification(
-            type=34,
-            username='',
-            user_id=user_id,
-            salenumber=comment,
-            bitcoin=amount,
-                     bitcoincash=0,
-                     monero=0,
-        )
+        pass
 
-# send profit to clearnet
-def btc_send_coin_to_clearnet(amount, comment):
+
+def btc_send_coin_to_user(amount, user_id, order_uuid):
     """
-    # TO clearnet_webapp
-    # this function will move the coin from clearnets escrow to profit account
-    # no balance necessary
-    :param amount:
-    :param comment:
-    :param shard:
-    :return:
-    """
-
-    type_transaction = 6
-    now = datetime.datetime.utcnow()
-    oid = int(comment)
-    a = Decimal(amount)
-
-    getcurrentprofit = db.session\
-        .query(Admin_ClearnetProfitBtc)\
-        .order_by(Admin_ClearnetProfitBtc.id.desc())\
-        .first()
-    currentamount = floating_decimals(getcurrentprofit.total, 8)
-    newamount = floating_decimals(currentamount, 8) + floating_decimals(a, 8)
-    prof = Admin_ClearnetProfitBtc(
-        amount=amount,
-        order=oid,
-        timestamp=now,
-        total=newamount
-    )
-    db.session.add(prof)
-
-    btc_addtransaction(
-        category=type_transaction,
-        amount=amount,
-        user_id=1,
-        comment='Sent Coin to clearnet profit',
-        orderid=oid,
-        balance=0
-    )
-
-# send coin to user from escrow
-def btc_send_coin_to_user(amount, comment, user_id):
-    """
-    # to User
-    # this function will move the coin from clearnets wallet_btc to a user
+    #TO User
+    ##this function will move the coin from clearnets wallet btc to a user
     :param amount:
     :param comment:
     :param user_id:
@@ -408,7 +328,6 @@ def btc_send_coin_to_user(amount, comment, user_id):
     """
 
     type_transaction = 5
-    oid = int(comment)
 
     userswallet = db.session\
         .query(Btc_Wallet)\
@@ -421,11 +340,44 @@ def btc_send_coin_to_user(amount, comment, user_id):
     db.session.add(userswallet)
     db.session.flush()
 
-    btc_addtransaction(category=type_transaction,
-                       amount=amount,
-                       user_id=user_id,
-                       comment='Transaction',
-                       orderid=oid,
-                       balance=newbalance
-                       )
+    btc_add_transaction(category=type_transaction,
+                        amount=amount,
+                        user_id=user_id,
+                        comment='Transaction',
+                        balance=newbalance,
+                        order_uuid=order_uuid
+                        )
 
+
+def finalize_order_btc(order_uuid):
+    """
+    Finalizes btc order
+    """
+    get_order = db.session \
+        .query(User_Orders) \
+        .filter(User_Orders.uuid == order_uuid) \
+        .first()
+
+    # get total
+    total_amount_from_sale = get_order.price_total_btc
+
+    # get vendor fee
+    get_vendor_fee = Auth_UserFees.query\
+        .filter(Auth_UserFees.user_id == get_order.vendor_id)\
+        .first()
+    vendor_fee_percent = get_vendor_fee.vendorfee
+    fee_for_freeport = Decimal(total_amount_from_sale) * \
+        Decimal(vendor_fee_percent)
+    fee_for_freeport_exact = floating_decimals(fee_for_freeport, 8)
+    amount_for_vendor = total_amount_from_sale - fee_for_freeport
+    amount_for_vendor_exact = floating_decimals(amount_for_vendor, 8)
+
+    # send fee to freeport
+    btc_send_coin_to_user(amount=fee_for_freeport_exact,
+                          user_id=1,
+                          order_uuid=get_order.uuid)
+
+    # send coin to vendor
+    btc_send_coin_to_user(amount=amount_for_vendor_exact,
+                          user_id=get_order.vendor_id,
+                          order_uuid=get_order.uuid)

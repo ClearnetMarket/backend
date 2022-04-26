@@ -1,16 +1,13 @@
-from flask import request, session, jsonify
+from flask import request, jsonify
 from app import db, bcrypt
 from app.wallet_btc import wallet_btc
 from app.wallet_btc.wallet_btc_work import btc_send_coin
 from flask_login import current_user
 from app.common.functions import floating_decimals
 from app.common.decorators import login_required
-
 from decimal import Decimal
-
 # models
 from app.classes.auth import Auth_User
-
 from app.classes.wallet_btc import \
     Btc_TransactionsBtc,\
     Btc_TransactionsBtc_Schema,\
@@ -47,14 +44,11 @@ def btc_balance_plus_unconfirmed():
     Gets current balance and any unconirmed transactions
     :return:
     """
-
     userwallet = Btc_Wallet.query.filter(Btc_Wallet.user_id == current_user.id).first()
-   
     try:
         userbalance = str(userwallet.currentbalance)
         unconfirmed = str(userwallet.unconfirmed)
     except Exception as e:
-        print(str(e))
         userbalance = 0
         unconfirmed = 0
 
@@ -81,7 +75,6 @@ def btc_transactions():
 @login_required
 def btc_receive():
     userwallet = Btc_Wallet.query.filter(Btc_Wallet.user_id == current_user.id).first()
-    print(userwallet.address1)
     return jsonify({"btc_address": userwallet.address1}), 200
 
 
