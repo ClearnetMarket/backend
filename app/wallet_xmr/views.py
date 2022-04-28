@@ -24,7 +24,6 @@ def xmr_price_usd():
     Gets current price of bitcoin cash
     :return:
     """
-
     price_xmr_usd = Xmr_Prices.query.filter_by(currency_id=0).first()
     if price_xmr_usd.price > 0:
         try:
@@ -47,9 +46,7 @@ def xmr_balance_plus_unconfirmed():
     Gets current balance and any unconfirmed transactions
     :return:
     """
-
     userwallet = Xmr_Wallet.query.filter_by(user_id=current_user.id).first()
-    
     try:
         userbalance = str(userwallet.currentbalance)
         unconfirmed = str(userwallet.unconfirmed)
@@ -61,6 +58,7 @@ def xmr_balance_plus_unconfirmed():
         "xmr_balance": userbalance,
         "xmr_unconfirmed": unconfirmed,
     })
+
 
 @wallet_xmr.route('/transactions', methods=['GET'])
 @login_required
@@ -139,6 +137,3 @@ def xmr_send():
             return jsonify({"error": "Unauthorized"}), 409
     else:
         return jsonify({"error": "Account is locked due to dispute"}), 409
-
-
-

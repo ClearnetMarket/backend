@@ -84,7 +84,7 @@ def logout():
 
 @auth.route("/login", methods=["POST"])
 def login():
-
+    print("here")
     if request.method == "POST":
 
         username = request.json["username"]

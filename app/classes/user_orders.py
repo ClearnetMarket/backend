@@ -33,7 +33,7 @@ class User_Orders(db.Model):
     date_shipped = db.Column(db.TIMESTAMP())
     completed_time = db.Column(db.TIMESTAMP())
     released = db.Column(db.INTEGER)
-
+    extended_timer = db.Column(db.INTEGER)
     private_note = db.Column(db.TEXT)
     escrow = db.Column(db.VARCHAR(500))
 
@@ -68,6 +68,7 @@ class User_Orders(db.Model):
     state_or_provence = db.Column(db.VARCHAR(1000))
     zip_code = db.Column(db.VARCHAR(200))
     msg = db.Column(db.VARCHAR(2500))
+
 
 class User_Orders_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:

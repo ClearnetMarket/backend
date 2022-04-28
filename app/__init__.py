@@ -22,6 +22,7 @@ app = Flask(__name__,
 app.config.from_object(ApplicationConfig)
 session = sessionmaker()
 
+
 class RegexConverter(BaseConverter):
     def __init__(self, url_map, *items):
         super(RegexConverter, self).__init__(url_map)
@@ -72,7 +73,6 @@ server_session = Session(app)
 mail = Mail(app)
 ma = Marshmallow(app)
 #csrf = CSRFProtect(app)
-
 
 login_manager = LoginManager(app)
 login_manager.session_protection = 'strong'
@@ -193,6 +193,10 @@ app.register_blueprint(vendororders_blueprint, url_prefix='/vendororders')
 
 from .vendor import vendor as vendor_blueprint
 app.register_blueprint(vendor_blueprint, url_prefix='/vendor')
+
+from .moderator import moderator as moderator_blueprint
+app.register_blueprint(moderator_blueprint, url_prefix='/mod')
+
 
 # bch wallet
 from app.wallet_bch import wallet_bch as wallet_bch_blueprint

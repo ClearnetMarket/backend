@@ -6,7 +6,7 @@ from decimal import Decimal
 from app.common.functions import\
     floating_decimals,\
     userimagelocation
-from app.notification import notification
+
 from app.wallet_xmr.security import xmr_check_balance
 from app.wallet_xmr.wallet_xmr_transaction import xmr_add_transaction
 from app.classes.wallet_xmr import \
@@ -118,7 +118,7 @@ def xmr_send_coin(user_id, sendto, amount):
     a = xmr_check_balance(user_id=user_id, amount=amount)
     if a == 1:
 
-        timestamp = datetime.utcnow()
+        timestamp = datetime.datetime.utcnow()
         userswallet = db.session.query(
             Xmr_Wallet).filter_by(user_id=user_id).first()
         # turn sting to a decimal
@@ -155,9 +155,7 @@ def xmr_send_coin_to_user_as_admin(amount, comment, user_id):
     :param user_id:
     :return:
     """
-
     type_transaction = 9
-
     userswallet = db.session\
         .query(Xmr_Wallet)\
         .filter_by(user_id=user_id)\
@@ -189,7 +187,6 @@ def xmr_take_coin_to_user_as_admin(amount, comment, user_id):
     """
 
     type_transaction = 10
-
     userswallet = db.session\
         .query(Xmr_Wallet)\
         .filter_by(user_id=user_id)\
@@ -209,13 +206,14 @@ def xmr_take_coin_to_user_as_admin(amount, comment, user_id):
                         order_uuid=None
                         )
 
+
 def xmr_send_coin_to_escrow(amount,  user_id, order_uuid):
     """
     # TO clearnet_webapp Wallet
     # this function will move the coin to clearnets wallet_btc from a user
     :param amount:
-    :param comment:
     :param user_id:
+    :param order_uuid:
     :return:
     """
     passed_balance_check = xmr_check_balance(user_id=user_id, amount=amount)
@@ -230,8 +228,6 @@ def xmr_send_coin_to_escrow(amount,  user_id, order_uuid):
         newbalance = Decimal(curbal) - Decimal(amounttomod)
         userwallet.currentbalance = newbalance
         db.session.add(userwallet)
-
-   
         xmr_add_transaction(category=type_transaction,
                             amount=amount,
                             user_id=user_id,
@@ -248,8 +244,8 @@ def xmr_send_coin_to_user(amount, user_id, order_uuid):
     # TO User
     # this function will move the coin from clearnets wallet xmr to a user
     :param amount:
-    :param comment:
     :param user_id:
+    :param order_uuid:
     :return:
     """
 
@@ -287,14 +283,13 @@ def finalize_order_xmr(order_uuid):
 
     # get total
     total_amount_from_sale = get_order.price_total_xmr
-
     # get vendor fee
-    get_vendor_fee = Auth_UserFees.query\
+    get_vendor_fee = db.session\
+        .query(Auth_UserFees)\
         .filter(Auth_UserFees.user_id == get_order.vendor_id)\
         .first()
     vendor_fee_percent = get_vendor_fee.vendorfee
-    fee_for_freeport = Decimal(total_amount_from_sale) * \
-        Decimal(vendor_fee_percent)
+    fee_for_freeport = Decimal(total_amount_from_sale) * Decimal(vendor_fee_percent)
     fee_for_freeport_exact = floating_decimals(fee_for_freeport, 12)
     amount_for_vendor = total_amount_from_sale - fee_for_freeport
     amount_for_vendor_exact = floating_decimals(amount_for_vendor, 12)
@@ -308,5 +303,3 @@ def finalize_order_xmr(order_uuid):
     xmr_send_coin_to_user(amount=amount_for_vendor_exact,
                           user_id=get_order.vendor_id,
                           order_uuid=get_order.uuid)
-
-

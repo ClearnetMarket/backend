@@ -38,13 +38,12 @@ def get_user_orders():
 
 @orders.route('/<string:uuid>', methods=['GET'])
 @login_required
-def get_order(uuid):
+def get_order_model(uuid):
     """
-    Used on index.  Grabs today's featured items
+    Gets the order for the customer
     :return:
     """
     if request.method == 'GET':
-
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.customer_id == current_user.id) \
@@ -59,7 +58,7 @@ def get_order(uuid):
 @login_required
 def get_order_vendor(uuid):
     """
-    Used on index.  Grabs today's featured items
+    Gets the order for the vendor
     :return:
     """
     if request.method == 'GET':
@@ -72,6 +71,7 @@ def get_order_vendor(uuid):
 
         item_schema = User_Orders_Schema()
         return jsonify(item_schema.dump(get_order))
+
 
 @orders.route('/feedback/<string:uuid>', methods=['POST'])
 @login_required
@@ -211,7 +211,6 @@ def get_order_feedback(uuid):
         else:
             return jsonify({"status": "error"})
 
-            
 
 @orders.route('/mark/disputed/<string:uuid>', methods=['GET'])
 @login_required
@@ -241,6 +240,7 @@ def mark_order_delivered(uuid):
     Used on index.  Grabs today's featured items
     :return:
     """
+
     if request.method == 'GET':
 
         get_order = db.session \
@@ -248,6 +248,7 @@ def mark_order_delivered(uuid):
             .filter(User_Orders.customer_id == current_user.id) \
             .filter(User_Orders.uuid == uuid) \
             .first()
+
         if get_order:
             if get_order.digital_currency == 1:
                 finalize_order_btc(get_order.uuid)
@@ -255,7 +256,7 @@ def mark_order_delivered(uuid):
                 finalize_order_bch(get_order.uuid)
             if get_order.digital_currency == 3:
                 finalize_order_xmr(get_order.uuid)
-                
+            
             get_order.overall_status = 4
             
             db.session.add(get_order)

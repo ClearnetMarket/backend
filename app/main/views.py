@@ -1,9 +1,7 @@
-from flask import  jsonify, Response, request
-from app import app, login_manager, ApplicationConfig
+from flask import jsonify, Response
+from app import app, ApplicationConfig
 from flask_wtf.csrf import generate_csrf
 from flask_login import login_required
-from app.classes.auth import Auth_User
-from flask_cors import cross_origin
 
 
 @app.after_request

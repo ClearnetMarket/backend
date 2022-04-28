@@ -14,7 +14,6 @@ from app.classes.user_orders import User_Orders
 # End Models
 
 
-
 @customerservice.route('/vendor-topbar-get-issues-count', methods=['GET'])
 @login_required
 def vendor_topbar_get_issues_count():

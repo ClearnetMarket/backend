@@ -25,6 +25,7 @@
 def notification(type, username, user_id, salenumber, bitcoin, bitcoincash, monero):
     from app import db
     from app.classes.message import Message_Notifications
+
     from datetime import datetime
     now = datetime.utcnow()
     addnotice = Message_Notifications(
