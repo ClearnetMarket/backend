@@ -68,6 +68,7 @@ class User_Orders(db.Model):
     state_or_provence = db.Column(db.VARCHAR(1000))
     zip_code = db.Column(db.VARCHAR(200))
     msg = db.Column(db.VARCHAR(2500))
+    dispute_post_id = db.Column(db.INTEGER)
 
 
 class User_Orders_Schema(ma.SQLAlchemyAutoSchema):

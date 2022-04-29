@@ -28,6 +28,8 @@ class Feedback_Feedback(db.Model):
     author_uuid = db.Column(db.VARCHAR(40))
 
     review = db.Column(db.TEXT)
+
+    
 class Feedback_Feedback_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Feedback_Feedback

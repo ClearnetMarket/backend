@@ -125,12 +125,14 @@ def vendor_orders_waiting_on_shipment():
 def vendor_orders_mark_as_shipped(orderuuid):
 
     if request.method == 'PUT':
-        vendor_orders = User_Orders.query \
+        vendor_order = User_Orders.query \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(uuid=orderuuid) \
             .first()
-        vendor_orders.overall_status=3
-        db.session.add(vendor_orders)
+        vendor_order.overall_status=3
+        vendor_order.date_shipped = datetime.utcnow()
+        
+        db.session.add(vendor_order)
         db.session.commit()
         return jsonify({'status': 'success'})
 

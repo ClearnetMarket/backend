@@ -5,10 +5,57 @@ from flask_login import login_required, current_user
 from app.moderator import moderator
 from app import db
 
-from app.classes.user_orders import User_Orders
+from app.classes.user_orders import User_Orders, User_Orders_Schema
+from app.classes.feedback import Feedback_Feedback, Feedback_Feedback_Schema
+
 from app.wallet_btc.wallet_btc_moderator import finalize_order_dispute_btc
 from app.wallet_bch.wallet_bch_moderator import finalize_order_dispute_bch
 from app.wallet_xmr.wallet_xmr_moderator import finalize_order_dispute_xmr
+
+
+@moderator.route('/disputes/available', methods=['GET'])
+@login_required
+def get_disputes_main_page_need_mod():
+    """
+    This gets currently open disputes that appears on the moderator home page
+    :return:
+    """
+    if request.method == 'GET':
+        # see if current user is a mod
+     
+        if current_user.admin_role >= 2:
+        # query the disputes
+            get_disputes = db.session \
+                .query(User_Orders) \
+                .filter(User_Orders.overall_status == 8) \
+                .filter(User_Orders.moderator_uuid == None)\
+                .all()
+            disputes_schema = User_Orders_Schema(many=True)
+            return jsonify(disputes_schema.dump(get_disputes))
+        else:
+            return jsonify({"status": "error"})
+
+
+@moderator.route('/disputes/modded', methods=['GET'])
+@login_required
+def get_disputes_main_page_has_mod():
+    """
+    This gets currently open disputes that appears on the moderator home page
+    :return:
+    """
+    if request.method == 'GET':
+        # see if current user is a mod
+        if current_user.admin_role >= 2:
+            # query the disputes
+            get_disputes = db.session \
+                .query(User_Orders) \
+                .filter(User_Orders.overall_status == 8) \
+                .filter(User_Orders.moderator_uuid != None)\
+                .all()
+            disputes_schema = User_Orders_Schema(many=True)
+            return jsonify(disputes_schema.dump(get_disputes))
+        else:
+            return jsonify({"status": "error"})
 
 
 @moderator.route('/dispute/settle/<string:uuid>', methods=['GET'])
@@ -46,7 +93,7 @@ def mark_dispute_finished(uuid):
                 finalize_order_dispute_xmr(order_uuid=get_order,
                                            percent_to_customer=percent_to_customer,
                                            percent_to_vendor=percent_to_vendor)
-            get_order.overall_status = 4
+            get_order.overall_status = 10
 
             db.session.add(get_order)
             db.session.commit()
@@ -96,7 +143,7 @@ def mark_dispute_cancelled_still_closed(uuid):
         if get_order.moderator_uuid != current_user.uuid:
             return jsonify({"status": "error"})
 
-        get_order.overall_status = 4
+        get_order.overall_status = 10
 
         db.session.add(get_order)
         db.session.commit()
@@ -127,3 +174,63 @@ def extend_dispute_time(uuid):
         db.session.commit()
 
         return jsonify({"status": "success"})
+
+
+@moderator.route('/orderinfo/<string:uuid>', methods=['GET'])
+@login_required
+def get_order_model(uuid):
+    """
+    Gets the order for the moderator
+    :return:
+    """
+    if request.method == 'GET':
+        if current_user.admin_role >= 2:
+            get_order = db.session \
+                .query(User_Orders) \
+                .filter(User_Orders.uuid == uuid) \
+                .first()
+
+            item_schema = User_Orders_Schema()
+            return jsonify(item_schema.dump(get_order))
+
+
+@moderator.route('/customer/ratings/<string:uuid>', methods=['GET'])
+@login_required
+def get_customer_ratings(uuid):
+    """
+    Gets the customer ratings.
+     2= customer 
+    :return:
+    """
+    if request.method == 'GET':
+        if current_user.admin_role >= 2:
+            get_user_ratings = db.session\
+                .query(Feedback_Feedback)\
+                .filter(Feedback_Feedback.customer_uuid == uuid)\
+                .filter(Feedback_Feedback.type_of_feedback == 2)\
+                .order_by(Feedback_Feedback.timestamp.desc())\
+                .limit(20)
+
+            feedback_schema = Feedback_Feedback_Schema()
+            return jsonify(feedback_schema.dump(get_user_ratings))
+
+
+@moderator.route('/vendor/ratings/<string:uuid>', methods=['GET'])
+@login_required
+def get_vendor_ratings(uuid):
+    """
+    Gets the vendor ratings
+    1 = vendor
+    :return:
+    """
+    if request.method == 'GET':
+        if current_user.admin_role >= 2:
+            get_user_ratings = db.session\
+                .query(Feedback_Feedback)\
+                .filter(Feedback_Feedback.vendor_uuid == uuid)\
+                .filter(Feedback_Feedback.type_of_feedback == 1)\
+                .order_by(Feedback_Feedback.timestamp.desc())\
+                .limit(20)
+
+            feedback_schema = Feedback_Feedback_Schema()
+            return jsonify(feedback_schema.dump(get_user_ratings))

@@ -226,7 +226,7 @@ def userdata_get_all_feedback(user_uuid):
 @userdata.route('/user-feedback-stats/<string:user_uuid>', methods=['GET'])
 def userdata_get_stats_feedback(user_uuid):
     """
-    Grabs stats of feedback
+    Grabs stats of feedback for customer
     :return:
     """
     if request.method == 'GET':
@@ -369,7 +369,8 @@ def userdata_get_stats_user(user_uuid):
     :return:
     """
     if request.method == 'GET':
-        get_user_stats = Profile_StatisticsUser.query\
+        get_user_stats = db.session\
+        .query(Profile_StatisticsUser)\
         .filter_by(user_uuid=user_uuid)\
         .first()
         user_schema = Profile_StatisticsUser_Schema()

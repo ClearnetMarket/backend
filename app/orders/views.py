@@ -49,7 +49,7 @@ def get_order_model(uuid):
             .filter(User_Orders.customer_id == current_user.id) \
             .filter(User_Orders.uuid == uuid) \
             .first()
-        
+       
         item_schema = User_Orders_Schema()
         return jsonify(item_schema.dump(get_order))
 
@@ -249,6 +249,31 @@ def mark_order_delivered(uuid):
             .filter(User_Orders.uuid == uuid) \
             .first()
 
+
+        get_order.overall_status = 4
+        
+        db.session.add(get_order)
+        db.session.commit()
+        
+        return jsonify({"status": "success"})
+
+
+@orders.route('/mark/finalized/<string:uuid>', methods=['GET'])
+@login_required
+def mark_order_finalized(uuid):
+    """
+    Used on index.  Grabs today's featured items
+    :return:
+    """
+
+    if request.method == 'GET':
+
+        get_order = db.session \
+            .query(User_Orders) \
+            .filter(User_Orders.customer_id == current_user.id) \
+            .filter(User_Orders.uuid == uuid) \
+            .first()
+
         if get_order:
             if get_order.digital_currency == 1:
                 finalize_order_btc(get_order.uuid)
@@ -256,10 +281,10 @@ def mark_order_delivered(uuid):
                 finalize_order_bch(get_order.uuid)
             if get_order.digital_currency == 3:
                 finalize_order_xmr(get_order.uuid)
-            
-            get_order.overall_status = 4
-            
+
+            get_order.overall_status = 10
+
             db.session.add(get_order)
             db.session.commit()
-            
+
             return jsonify({"status": "success"})
