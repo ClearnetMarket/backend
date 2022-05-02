@@ -92,13 +92,16 @@ def message_msg(post_id):
 @login_required
 def message_msg_comments(post_id):
     """
-    Returns the comments of the main post
+    Returns the comments of the main post by the post id
     :return:
     """
     get_msg_post = db.session\
         .query(Message_Chat)\
         .filter(or_(Message_Chat.user_one_uuid == current_user.uuid,
-                 Message_Chat.user_two_uuid == current_user.uuid))\
+                 Message_Chat.user_two_uuid == current_user.uuid,
+                    Message_Chat.mod_uuid == current_user.uuid,
+                 )
+                 )\
         .filter(Message_Chat.post_id == post_id)\
         .first()
     if get_msg_post is not None:
@@ -108,9 +111,39 @@ def message_msg_comments(post_id):
             .filter(Message_Comment.post_id == post_id)\
             .order_by(Message_Comment.timestamp.desc())\
             .all()
+
         comments_schema = Message_Comment_Schema(many=True)
         return jsonify(comments_schema.dump(get_msg_post_comments))
 
+
+@message.route('/main/comment/orderuuid/<string:order_uuid>', methods=['GET'])
+@login_required
+def message_msg_comments_orderuuid(order_uuid):
+    """
+    Returns the comments of the main post by order id
+    :return:
+    """
+    
+    get_msg_post = db.session\
+        .query(Message_Chat)\
+        .filter(or_(Message_Chat.user_one_uuid == current_user.uuid,
+                    Message_Chat.user_two_uuid == current_user.uuid,
+                    Message_Chat.mod_uuid == current_user.uuid,
+                    )
+                )\
+        .filter(Message_Chat.order_uuid == order_uuid)\
+        .first()
+  
+    if get_msg_post is not None:
+
+        get_msg_post_comments = db.session\
+            .query(Message_Comment)\
+            .filter(Message_Comment.post_id == get_msg_post.post_id)\
+            .order_by(Message_Comment.timestamp.desc())\
+            .all()
+  
+        comments_schema = Message_Comment_Schema(many=True)
+        return jsonify(comments_schema.dump(get_msg_post_comments))
 
 @message.route('/create/item', methods=['POST'])
 @login_required

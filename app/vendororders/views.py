@@ -2,6 +2,7 @@
 from datetime import date, datetime
 from flask import request,  jsonify
 from flask_login import current_user
+from app.classes.item import Item_MarketItem
 from app.vendororders import vendororders
 from app import db
 from app.common.decorators import login_required
@@ -272,5 +273,46 @@ def vendor_orders_add_vendor_feedback(order_uuid):
                 author_uuid=current_user.uuid,
             )
         db.session.add(add_new_feedback_for_vendor)
+        db.session.commit()
+        return jsonify({'status': 'success'})
+
+
+@vendororders.route('/online/<string:uuid>', methods=['GET'])
+@login_required
+def vendor_orders_put_online(uuid):
+
+    if request.method == 'GET':
+
+
+        get_item = db.session\
+            .query(Item_MarketItem) \
+            .filter(Item_MarketItem.vendor_uuid == current_user.uuid) \
+            .filter(Item_MarketItem.uuid == uuid) \
+            .first()
+
+        get_item.online = 1
+    
+
+        db.session.add(get_item)
+        db.session.commit()
+        return jsonify({'status': 'success'})
+
+
+@vendororders.route('/offline/<string:uuid>', methods=['GET'])
+@login_required
+def vendor_orders_put_offline(uuid):
+
+    if request.method == 'GET':
+       
+
+        get_item = db.session\
+            .query(Item_MarketItem) \
+            .filter(Item_MarketItem.vendor_uuid == current_user.uuid) \
+            .filter(Item_MarketItem.uuid == uuid) \
+            .first()
+
+        get_item.online = 0
+
+        db.session.add(get_item)
         db.session.commit()
         return jsonify({'status': 'success'})

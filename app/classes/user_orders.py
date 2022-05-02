@@ -83,7 +83,7 @@ class User_Orders_Schema(ma.SQLAlchemyAutoSchema):
                   'fee_btc', 'fee_bch', 'fee_xmr', 'price_total_btc', 'price_total_bch', 'price_total_xmr',
                   'price_per_item_btc', 'price_per_item_bch', 'price_per_item_xmr',
                   'address_name', 'address', 'apt', 'country',
-                  'city', 'state_or_provence', 'zip_code', 'msg'
+                  'city', 'state_or_provence', 'zip_code', 'msg', 'moderator_uuid', 'dispute_post_id'
                   )
 
 

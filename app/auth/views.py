@@ -89,9 +89,10 @@ def login():
 
         username = request.json["username"]
         password = request.json["password"]
-
+        print(username)
+        print(password)
         user = Auth_User.query.filter_by(username=username).first() is not None
-
+        print(user)
         if not user:
 
             return jsonify({"error": "Unauthorized"}), 401
