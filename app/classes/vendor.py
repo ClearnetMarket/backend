@@ -57,3 +57,22 @@ class Vendor_Notification(db.Model):
 class Vendor_Notification_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Vendor_Notification
+
+
+class Vendor_ExactAddress(db.Model):
+    __tablename__ = 'vendor_exact_address'
+    __bind_key__ = 'clearnet'
+    __table_args__ = {"schema": "public"}
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uuid = db.Column(db.VARCHAR(40))
+
+    city = db.Column(db.VARCHAR(1000))
+    country = db.Column(db.INTEGER)
+    state_or_provence = db.Column(db.VARCHAR(1000))
+    zip_code = db.Column(db.VARCHAR(200))
+
+
+
+class Vendor_ExactAddress_Schema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Vendor_ExactAddress

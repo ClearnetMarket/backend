@@ -91,7 +91,6 @@ def load_user_from_request(request):
             return user
     # next, try to login using Basic Auth
     api_key_auth = request.headers.get('Authorization')
-    print(api_key_auth)
     if api_key_auth:
         api_key = api_key_auth.replace('bearer ', '', 1)
         user = Auth_User.query.filter_by(api_key=api_key).first()

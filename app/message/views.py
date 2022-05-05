@@ -155,9 +155,10 @@ def message_create():
     now = datetime.utcnow()
 
     # json request variables
- 
     get_user_two_uuid = request.json["user_two_uuid"]
     get_body = request.json["textbody"]
+    if get_user_two_uuid == current_user.uuid:
+        return jsonify({"error": "Cannot message yourself"}), 409
 
     if "item_uuid" in request.json:
         item_uuid = request.json["item_uuid"]

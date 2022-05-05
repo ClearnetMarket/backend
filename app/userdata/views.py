@@ -62,11 +62,9 @@ def userdata_home(user_uuid):
     """
  
     if request.method == 'GET':
-        print(user_uuid)
         userdata = Auth_User.query\
             .filter(Auth_User.uuid == user_uuid)\
             .first()
-        print(userdata.username)
         user_schema = Auth_User_Schema()
         return jsonify(user_schema.dump(userdata))
 
@@ -180,6 +178,7 @@ def userdata_update_address():
             db.session.add(new_address)
         db.session.commit()
         return jsonify({"status": 'success'})
+
 
 @userdata.route('/getdefaultaddress', methods=['GET'])
 @login_required

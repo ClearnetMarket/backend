@@ -27,7 +27,6 @@ def deleteimg_noredirect(id, img):
                     spacer = '/'
 
                     pathtofile = str(UPLOADED_FILES_DEST_ITEM + spacer + getimagesubfolder + spacer + specific_folder + spacer + img)
-                    print(pathtofile)
                     file_extension = ".jpg"
                     ext1 = '_225x'
                     ext2 = '_500x'

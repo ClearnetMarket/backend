@@ -62,7 +62,7 @@ def check_session():
 @login_required
 def check_confirmed():
 
-    user = Auth_User.query.filter(Auth_User.id == current_user.id).first()
+    user = db.session.query(Auth_User).filter(Auth_User.id == current_user.id).first()
     if user.confirmed == 0:
         confirmed = False
     else:
@@ -73,28 +73,21 @@ def check_confirmed():
 
 @auth.route("/logout", methods=["POST"])
 def logout():
-
     try:
         logout_user()
         return jsonify({'status': 'logged out'}), 200
     except Exception as e:
-        print(str(e))
         return jsonify({"error", 'error'}), 400
 
 
 @auth.route("/login", methods=["POST"])
 def login():
-    print("here")
     if request.method == "POST":
 
         username = request.json["username"]
         password = request.json["password"]
-        print(username)
-        print(password)
         user = Auth_User.query.filter_by(username=username).first() is not None
-        print(user)
         if not user:
-
             return jsonify({"error": "Unauthorized"}), 401
         user = Auth_User.query.filter_by(username=username).first()
         if not bcrypt.check_password_hash(user.password_hash, password):

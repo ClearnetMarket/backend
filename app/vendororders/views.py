@@ -7,7 +7,7 @@ from app.vendororders import vendororders
 from app import db
 from app.common.decorators import login_required
 from app.classes.user_orders import User_Orders, User_Orders_Schema, User_Orders_Tracking
-from app.classes.feedback import Feedback_Feedback, Feedback_Feedback_Schema
+from app.classes.feedback import Feedback_Feedback
 
 
 @vendororders.route('/count', methods=['GET'])
@@ -27,13 +27,13 @@ def vendor_orders_count():
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=3) \
             .count()
-        vendor_orders_finalized = User_Orders.query \
+        vendor_orders_delivered = User_Orders.query \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=4) \
             .count()
-        vendor_orders_finalized_early = User_Orders.query \
+        vendor_orders_finalized = User_Orders.query \
             .filter_by(vendor_id=current_user.id) \
-            .filter_by(overall_status=5) \
+            .filter_by(overall_status=10) \
             .count()
         vendor_orders_request_cancel = User_Orders.query \
             .filter_by(vendor_id=current_user.id) \
@@ -52,7 +52,7 @@ def vendor_orders_count():
             'vendor_orders_accepted': vendor_orders_accepted,
             'vendor_orders_shipped': vendor_orders_shipped,
             'vendor_orders_finalized': vendor_orders_finalized,
-            'vendor_orders_finalized_early': vendor_orders_finalized_early,
+            'vendor_orders_delivered': vendor_orders_delivered,
             'vendor_orders_request_cancel': vendor_orders_request_cancel,
             'vendor_orders_cancelled': vendor_orders_cancelled,
             'vendor_orders_dispute': vendor_orders_dispute,
@@ -161,8 +161,9 @@ def vendor_orders_finalized():
     if request.method == 'GET':
         vendor_orders = User_Orders.query \
             .filter_by(vendor_id=current_user.id) \
-            .filter_by(overall_status=4) \
+            .filter_by(overall_status=10) \
             .all()
+
         vendor_orders_schema = User_Orders_Schema(many=True)
         return jsonify(vendor_orders_schema.dump(vendor_orders))
 
@@ -204,10 +205,10 @@ def vendor_orders_add_tracking():
         carrier_name = request.json["carrier_name"]
         tracking_number = request.json["tracking_number"]
       
-        see_if_order_exists = User_Orders.query\
-        .filter_by(uuid=order_uuid)\
-        .filter_by(vendor_id=current_user.id)\
-        .first()
+        see_if_order_exists = db.session.query(User_Orders)\
+            .filter_by(uuid=order_uuid)\
+            .filter_by(vendor_id=current_user.id)\
+            .first()
         if see_if_order_exists:
             add_new_tracking = User_Orders_Tracking(
                 created=now,
@@ -291,7 +292,6 @@ def vendor_orders_put_online(uuid):
             .first()
 
         get_item.online = 1
-    
 
         db.session.add(get_item)
         db.session.commit()

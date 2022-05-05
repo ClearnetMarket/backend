@@ -514,7 +514,8 @@ def cart_add_to_shopping_cart(itemuuid):
         .query(Item_MarketItem) \
         .filter_by(uuid=itemuuid) \
         .first()
-
+    if get_item_for_sale.vendor_uuid == current_user.uuid:
+        return jsonify({'error': 'Can not buy your own item.'})
     # see if in shopping cart
     see_if_item_in_cart = db.session\
         .query(Checkout_CheckoutShoppingCart)\
@@ -805,20 +806,17 @@ def cart_update_payment_option(cartid):
         .first()
     new_currency = request.json["new_currency"]
     new_currency = int(new_currency)
-    print("new currency")
-    print(new_currency)
+
     if new_currency == 1:
         if getitem.digital_currency_1 is False:
             return jsonify({'status': 'error'})
         else:
-            print("its no 1")
             the_cart_item.selected_digital_currency = new_currency
     if new_currency == 2:
    
         if getitem.digital_currency_2 is False:
             return jsonify({'status': 'error'})
         else:
-            print("its no 2")
             the_cart_item.selected_digital_currency = new_currency
     if new_currency == 3:
         if getitem.digital_currency_3 is False:
@@ -946,6 +944,7 @@ def finalize():
             return jsonify({'status': 'Error with Payment.  Insuffied Funds.'}), 200
     else:
         return jsonify({'status': 'Error Creating Order'}), 200
+
 
 def checkout_make_order():
     """
