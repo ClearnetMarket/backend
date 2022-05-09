@@ -8,6 +8,10 @@ from app import db
 from app.common.decorators import login_required
 from app.classes.user_orders import User_Orders, User_Orders_Schema, User_Orders_Tracking
 from app.classes.feedback import Feedback_Feedback
+from app.wallet_bch.wallet_bch_work import bch_refund_rejected_user
+from app.wallet_btc.wallet_btc_work import btc_refund_rejected_user
+from app.wallet_xmr.wallet_xmr_work import xmr_refund_rejected_user
+
 
 
 @vendororders.route('/count', methods=['GET'])
@@ -92,16 +96,36 @@ def vendor_orders_new_accept(orderuuid):
         return jsonify({'status': 'success'})
 
 
-@vendororders.route('/new/reject/<string:orderuuid>', methods=['DELETE'])
+@vendororders.route('/new/reject/<string:orderuuid>', methods=['POST'])
 @login_required
 def vendor_orders_reject(orderuuid):
 
-    if request.method == 'GET':
+    if request.method == 'POST':
         vendor_order = User_Orders.query \
             .filter_by(uuid=orderuuid) \
-            .filter_by(vendor_id=current_user.id)\
+            .filter_by(vendor_uuid=current_user.uuid)\
             .first()
         db.session.delete(vendor_order)
+
+        # return order amount from escrow back to user
+        if vendor_order.digital_currency == 1:
+            btc_refund_rejected_user(
+                amount=vendor_order.price_total_btc,
+                user_id=vendor_order.customer_id,
+                order_uuid=vendor_order.uuid
+                 )
+        if vendor_order.digital_currency == 2:
+            bch_refund_rejected_user(
+                amount=vendor_order.price_total_bch,
+                user_id=vendor_order.customer_id,
+                  order_uuid=vendor_order.uuid
+                  )
+        if vendor_order.digital_currency == 3:
+            xmr_refund_rejected_user(
+                amount=vendor_order.price_total_xmr,
+                user_id=vendor_order.customer_id,
+                order_uuid=vendor_order.uuid
+                 )
         db.session.commit()
         return jsonify({'status': 'success'})
 
@@ -304,7 +328,6 @@ def vendor_orders_put_offline(uuid):
 
     if request.method == 'GET':
        
-
         get_item = db.session\
             .query(Item_MarketItem) \
             .filter(Item_MarketItem.vendor_uuid == current_user.uuid) \

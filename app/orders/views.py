@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from webbrowser import get
 from flask import request, jsonify
 from flask_login import login_required, current_user
 
@@ -36,6 +37,25 @@ def get_user_orders():
         return jsonify(item_schema.dump(user_orders))
 
 
+@orders.route('/count', methods=['GET'])
+@login_required
+def get_user_orders_count():
+    """
+    Used on index.  Grabs today's featured items
+    :return:
+    """
+    if request.method == 'GET':
+
+        user_orders_count = db.session \
+            .query(User_Orders) \
+            .filter(User_Orders.customer_id == current_user.id) \
+            .count()
+        if user_orders_count:
+            return jsonify({"count": user_orders_count})
+        else:
+            return jsonify({"status": "error"}), 409
+
+
 @orders.route('/<string:uuid>', methods=['GET'])
 @login_required
 def get_order_model(uuid):
@@ -49,10 +69,11 @@ def get_order_model(uuid):
             .filter(User_Orders.customer_id == current_user.id) \
             .filter(User_Orders.uuid == uuid) \
             .first()
-       
-        item_schema = User_Orders_Schema()
-        return jsonify(item_schema.dump(get_order))
-
+        if get_order:
+            item_schema = User_Orders_Schema()
+            return jsonify(item_schema.dump(get_order))
+        else:
+            return jsonify({"status": "error"}), 409
 
 @orders.route('/vendor/<string:uuid>', methods=['GET'])
 @login_required
@@ -68,9 +89,11 @@ def get_order_vendor(uuid):
             .filter(User_Orders.vendor_id == current_user.id) \
             .filter(User_Orders.uuid == uuid) \
             .first()
-
-        item_schema = User_Orders_Schema()
-        return jsonify(item_schema.dump(get_order))
+        if get_order:
+            item_schema = User_Orders_Schema()
+            return jsonify(item_schema.dump(get_order))
+        else:
+            return jsonify({"status": "error"}), 409
 
 
 @orders.route('/feedback/<string:uuid>', methods=['POST'])
@@ -121,7 +144,7 @@ def order_feedback(uuid):
             db.session.commit()
             return jsonify({"status": "success"})
         else:
-            return jsonify({"status": "error"})
+            return jsonify({"status": "error"}), 409
 
 
 @orders.route('/feedback/vendor/<string:order_uuid>', methods=['POST'])
@@ -181,7 +204,7 @@ def order_feedback_vendor(order_uuid):
             db.session.commit()
             return jsonify({"status": "success"})
         else:
-            return jsonify({"status": "error"})
+            return jsonify({"status": "error"}), 409
 
 
 @orders.route('/feedback/get/<string:uuid>', methods=['GET'])
@@ -209,7 +232,8 @@ def get_order_feedback(uuid):
                 "review": get_feedback.review,
             })
         else:
-            return jsonify({"status": "error"})
+            return jsonify({"status": "error"}), 409
+
 
 
 @orders.route('/mark/disputed/<string:uuid>', methods=['GET'])
@@ -231,7 +255,8 @@ def mark_order_disputed(uuid):
             db.session.add(get_order)
             db.session.commit()
             return jsonify({"status": "error"})
-
+        else:
+            return jsonify({"status": "error"}), 409
 
 @orders.route('/mark/delivered/<string:uuid>', methods=['GET'])
 @login_required
@@ -249,13 +274,15 @@ def mark_order_delivered(uuid):
             .filter(User_Orders.uuid == uuid) \
             .first()
 
-
-        get_order.overall_status = 4
-        
-        db.session.add(get_order)
-        db.session.commit()
-        
-        return jsonify({"status": "success"})
+        if get_order:
+            get_order.overall_status = 4
+            
+            db.session.add(get_order)
+            db.session.commit()
+            
+            return jsonify({"status": "success"})
+        else:
+            return jsonify({"status": "error"}), 409
 
 
 @orders.route('/mark/finalized/<string:uuid>', methods=['GET'])
@@ -288,3 +315,33 @@ def mark_order_finalized(uuid):
             db.session.commit()
 
             return jsonify({"status": "success"})
+        else:
+            return jsonify({"status": "error"}), 409
+
+
+@orders.route('/request/cancel/<string:uuid>', methods=['GET'])
+@login_required
+def mark_order_request_cancel(uuid):
+    """
+    Used on index.  Grabs today's featured items
+    :return:
+    """
+
+    if request.method == 'GET':
+ 
+        get_order = db.session \
+            .query(User_Orders) \
+            .filter(User_Orders.customer_id == current_user.id) \
+            .filter(User_Orders.uuid == uuid) \
+            .first()
+
+        if get_order:
+
+            get_order.overall_status = 6
+
+            db.session.add(get_order)
+            db.session.commit()
+
+            return jsonify({"status": "success"})
+        else:
+            return jsonify({"status": "error"}), 409

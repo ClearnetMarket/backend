@@ -241,7 +241,8 @@ def bch_send_coin_to_user_as_admin(amount, comment, user_id, order_uuid):
                         user_id=user_id,
                         comment=comment,
                         balance=newbalance,
-                        order_uuid=order_uuid
+                        order_uuid=order_uuid,
+                        item_uuid=None
                         )
 
 
@@ -273,7 +274,8 @@ def bch_take_coin_to_user_as_admin(amount, user_id, order_uuid):
                         user_id=user_id,
                         comment='Admin moved money',
                         balance=newbalance,
-                        order_uuid=order_uuid
+                        order_uuid=order_uuid,
+                        item_uuid=None
                         )
 
 
@@ -305,7 +307,8 @@ def bch_send_coin_to_escrow(amount, user_id, order_uuid):
                                 user_id=user_id,
                                 comment='Sent Coin To Escrow',
                                 balance=newbalance,
-                                order_uuid=order_uuid
+                                order_uuid=order_uuid,
+                                item_uuid=None
                                 )
         except Exception as e:
             pass
@@ -341,7 +344,8 @@ def bch_send_coin_to_user(amount, user_id, order_uuid):
                         user_id=user_id,
                         comment='Transaction',
                         balance=newbalance,
-                        order_uuid=order_uuid
+                        order_uuid=order_uuid,
+                        item_uuid=None
                         )
 
 
@@ -377,3 +381,37 @@ def finalize_order_bch(order_uuid):
     bch_send_coin_to_user(amount=amount_for_vendor_exact,
                           user_id=get_order.vendor_id,
                           order_uuid=get_order.uuid)
+
+
+def bch_refund_rejected_user(amount, user_id, order_uuid):
+    """
+    # TO User
+    # this function will move the coin from clearnets wallet bch to a user
+    # when a vendor rejects an order uses this function
+    :param amount:
+    :param comment:
+    :param user_id:
+    :return:
+    """
+    
+    type_transaction = 9
+
+    userswallet = db.session\
+        .query(Bch_Wallet)\
+        .filter_by(user_id=user_id)\
+        .first()
+    curbal = Decimal(userswallet.currentbalance)
+    amounttomod = Decimal(amount)
+    newbalance = Decimal(curbal) + Decimal(amounttomod)
+    userswallet.currentbalance = newbalance
+    db.session.add(userswallet)
+    db.session.flush()
+
+    bch_add_transaction(category=type_transaction,
+                        amount=amount,
+                        user_id=user_id,
+                        comment='Order Rejected',
+                        balance=newbalance,
+                        order_uuid=order_uuid,
+                        item_uuid=None
+                        )

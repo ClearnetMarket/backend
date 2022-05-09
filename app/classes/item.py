@@ -121,7 +121,7 @@ class Item_MarketItem_Schema(ma.SQLAlchemyAutoSchema):
                     'image_one_server', 'image_two_server', 'image_three_server', 'image_four_server',
                     'shipping_free','shipping_two', 'shipping_three', 'shipping_info_0', 'shipping_day_0','shipping_info_2', 
                     'shipping_price_2', 'shipping_day_2', 'shipping_info_3', 'shipping_price_3', 'shipping_day_3', 'view_count', 
-                    'item_rating', 'review_count',  'total_sold', 
+                    'item_rating', 'review_count',  'total_sold', 'vendor_display_name'
                     )
                 
 item_schema = Item_MarketItem_Schema()

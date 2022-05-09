@@ -66,7 +66,7 @@ class Xmr_Transactions(db.Model):
     address = db.Column(db.VARCHAR(500))
     note = db.Column(db.VARCHAR(500))
     fee = db.Column(db.DECIMAL(20, 12))
-    orderid = db.Column(db.INTEGER)
+    item_uuid = db.Column(db.VARCHAR(140))
     digital_currency = db.Column(db.INTEGER)
     order_uuid = db.Column(db.VARCHAR(140))
 
@@ -87,7 +87,7 @@ class Xmr_Transactions_Schema(ma.SQLAlchemyAutoSchema):
     address = ma.auto_field()
     note = ma.auto_field()
     fee = ma.auto_field()
-    orderid = ma.auto_field()
+   
     digital_currency = ma.auto_field()
 
 

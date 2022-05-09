@@ -1,11 +1,11 @@
-from flask import url_for, request, session, jsonify
-
+from flask import request,  jsonify
+from flask_login import current_user
 from app.marketitem import marketitem
 from app import db
 
 # models
 from app.classes.item import Item_MarketItem, Item_MarketItem_Schema
-from app.classes.admin import Admin_Flagged, Admin_Flagged_Schema
+from app.classes.admin import Admin_Flagged
 
 @marketitem.route('/<string:item_id>', methods=['GET'])
 def marketitem_item_main(item_id):
@@ -71,6 +71,8 @@ def marketitem_add_view(item_uuid):
             .query(Item_MarketItem)\
             .filter(Item_MarketItem.uuid == item_uuid)\
             .first()
+        if item_for_sale.vendor_uuid == current_user.uuid:
+            return jsonify({"status": "View Count Not Increased"})
         current_count = item_for_sale.view_count
         new_count = current_count + 1
         item_for_sale.view_count = new_count

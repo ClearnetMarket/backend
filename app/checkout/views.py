@@ -446,7 +446,7 @@ def checkoutput_item_offline(itemid):
         .filter_by(uuid=itemid) \
         .first()
         # turn off if item is less than one
-    if getitem.item_count < 1:
+    if getitem.item_count == 0:
 
         getitem.online = 0
         db.session.add(getitem)
@@ -467,23 +467,28 @@ def checkout_update_cart_information():
     """
     updates pricing and quanity of items in shopping cart
     """
+    # get user shopping cart
     get_cart_items = db.session\
         .query(Checkout_CheckoutShoppingCart)\
         .filter(Checkout_CheckoutShoppingCart.customer_id == current_user.id)\
         .all()
+    # set current amount to 0
     new_amount = 0
+    # loop through cart
     for f in get_cart_items:
-
+        # get the market item of the order
         get_market_item = db.session \
             .query(Item_MarketItem)\
             .filter(Item_MarketItem.id==f.item_id)\
             .first()
+        # if order price doesnt equal market price set the price
         if f.price_of_item != get_market_item.price:
             new_amount  += 1
             f.price_of_item = get_market_item.price
-        if f.quantity_of_item != get_market_item.item_count:
-            new_amount += 1
-            f.quantity_of_item = get_market_item.item_count
+        # # if quantity is greater than availability
+        # if f.quantity_of_item > get_market_item.item_count:
+        #     new_amount += 1
+        #     f.quantity_of_item = get_market_item.item_count
         db.session.add(f)
     
     if new_amount > 0:
@@ -739,6 +744,7 @@ def cart_update_shipping_option(cartid):
     db.session.commit()
     return jsonify({'status': 'success'})
 
+
 @checkout.route('/currentquantity/<int:cartid>', methods=['GET'])
 @login_required
 def cart_current_quantity(cartid):
@@ -750,6 +756,7 @@ def cart_current_quantity(cartid):
         .filter(Checkout_CheckoutShoppingCart.id == cartid)\
         .first()
     return jsonify({'amount': the_cart_item.quantity_of_item})
+
 
 @checkout.route('/movecartitem/<int:cartid>', methods=['PUT'])
 @login_required
@@ -773,6 +780,7 @@ def cart_move_cart_item(cartid):
     db.session.commit()
     return jsonify({'status': 'success'})
 
+
 @checkout.route('/saveforlater/<int:cartid>', methods=['PUT'])
 @login_required
 def cart_save_for_later(cartid):
@@ -789,6 +797,7 @@ def cart_save_for_later(cartid):
     db.session.add(cartitem)
     db.session.commit()
     return jsonify({'status': 'success'})
+
 
 @checkout.route('/changepaymentoption/<int:cartid>', methods=['POST'])
 @login_required
@@ -830,6 +839,7 @@ def cart_update_payment_option(cartid):
     db.session.commit()
     return jsonify({'status': 'success'})
 
+
 @checkout.route('/updateamount/<int:cartid>', methods=['PUT'])
 @login_required
 def cart_update_quantity(cartid):
@@ -856,6 +866,7 @@ def cart_update_quantity(cartid):
     db.session.commit()
     return jsonify({'status': 'success'})
 
+
 @checkout.route('/delete/<int:cartid>', methods=['DELETE'])
 @login_required
 def cart_delete_item(cartid):
@@ -873,6 +884,23 @@ def cart_delete_item(cartid):
     db.session.delete(the_cart_item)
     db.session.commit()
     return jsonify({'status': 'success'})
+
+
+@checkout.route('/setamount/one', methods=['POST'])
+@login_required
+def cart_set_quantity_initial_amount():
+    """
+    When User enters shopping cart ..set amounts to 1
+    """
+    the_cart = db.session.query(Checkout_CheckoutShoppingCart)\
+        .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid)\
+        .all()
+    for f in the_cart:
+        f.quantity_of_item = 1
+        db.session.add(f)
+    db.session.commit()
+    return jsonify({'status': 'success'})
+
 
 @checkout.route('/info/delete/<string:itemid>', methods=['POST'])
 @login_required
@@ -905,6 +933,7 @@ def checkout_delete_secret_info(itemid):
             db.session.commit()
             return jsonify({'status': 'success'})
 
+
 @checkout.route('/info/add/<string:itemid>', methods=['POST'])
 @login_required
 def checkout_add_secret_info(itemid):
@@ -928,6 +957,7 @@ def checkout_add_secret_info(itemid):
         db.session.commit()
     
         return jsonify({'status': 'success'})
+
 
 ##PAYMENT STUFF
 @checkout.route('/payment', methods=['POST'])
@@ -1147,6 +1177,7 @@ def checkout_make_payment():
         order.vendor_uuid = get_item.vendor_uuid
 
         # add total sold to item
+        # calculate how many items are left
         newsold = int(get_item.total_sold) + int(order.quantity)
         newquantleft = int(get_item.item_count) - int(order.quantity)
         get_item.total_sold = newsold
@@ -1159,9 +1190,7 @@ def checkout_make_payment():
             timestamp=datetime.utcnow(),
             orderid=order.id
         )
-        # notify vendor
-        pass
-
+        
         if order.digital_currency == 1:
             price_of_item_order = floating_decimals((order.price_total_btc + order.shipping_price_btc), 8)
             if current_cart_total_btc > 0:

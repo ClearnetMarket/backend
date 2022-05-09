@@ -141,7 +141,7 @@ class Btc_TransactionsBtc(db.Model):
     fee = db.Column(db.DECIMAL(20, 8))
     created = db.Column(db.TIMESTAMP(), default=datetime.utcnow())
     balance = db.Column(db.DECIMAL(20, 8))
-    orderid = db.Column(db.INTEGER)
+    item_uuid = db.Column(db.VARCHAR(140))
     confirmed = db.Column(db.INTEGER)
     confirmed_fee = db.Column(db.DECIMAL(20, 8))
     digital_currency = db.Column(db.INTEGER)
@@ -166,7 +166,7 @@ class Btc_TransactionsBtc_Schema(ma.SQLAlchemyAutoSchema):
     fee = ma.auto_field()
     created = ma.auto_field()
     balance = ma.auto_field()
-    orderid = ma.auto_field()
+
     confirmed = ma.auto_field()
     confirmed_fee = ma.auto_field()
     digital_currency = ma.auto_field()

@@ -3,14 +3,14 @@ from datetime import datetime
 from app.classes.wallet_bch import Bch_WalletTransactions
 
 
-def bch_add_transaction(category, amount, user_id, comment, balance, order_uuid):
+def bch_add_transaction(category, amount, user_id, comment, balance, order_uuid, item_uuid):
     """
     # this function will move the coin from holdings back to vendor.  This is for vendor verification
     :param category:
     :param amount:
     :param user_id:
     :param comment:
-    :param orderid:
+ 
     :param balance:
     :return:
     """
@@ -37,6 +37,7 @@ def bch_add_transaction(category, amount, user_id, comment, balance, order_uuid)
             balance=balance,
             digital_currency=2,
             order_uuid=order_uuid,
+            item_uuid=item_uuid,
         )
         db.session.add(trans)
 

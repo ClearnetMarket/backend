@@ -11,7 +11,7 @@ from app.classes.wallet_btc import Btc_TransactionsBtc
 # type 8: send coin from holdings
 
 
-def btc_add_transaction(category, amount, user_id, comment, balance, order_uuid):
+def btc_add_transaction(category, amount, user_id, comment, balance, order_uuid, item_uuid):
     """
 
     :param category:
@@ -43,7 +43,8 @@ def btc_add_transaction(category, amount, user_id, comment, balance, order_uuid)
             balance=balance,
             digital_currency=1,
             confirmed_fee=0,
-            order_uuid=order_uuid
+            order_uuid=order_uuid,
+            item_uuid=item_uuid
         )
         db.session.add(trans)
 

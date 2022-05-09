@@ -14,8 +14,8 @@ from app.classes.feedback import \
     Feedback_Feedback_Schema
 from app.classes.vendor import \
     Vendor_Notification, \
-    Vendor_ExactAddress, \
-    Vendor_ExactAddress_Schema
+    Vendor_ExactAddress
+from app.classes.item import Item_MarketItem, Item_MarketItem_Schema
 from app.classes.auth import Auth_User
 from app.classes.profile import Profile_StatisticsVendor
 
@@ -34,6 +34,7 @@ def vendor_signup():
     current_user.admin = 1
     current_user.admin_role = 1
 
+    # create vendor stats
     stats = Profile_StatisticsVendor(
         username=current_user.username,
         vendorid=current_user.id,
@@ -55,7 +56,15 @@ def vendor_signup():
         totalusdmade=0,
         vendor_uuid=current_user.uuid
     )
-
+    # create vendor exact address
+    new_address = Vendor_ExactAddress(
+                        uuid=current_user.uuid,
+                        city='',
+                        country=current_user.country,
+                        state_or_provence='',
+                        zip_code='',
+                    )
+    db.session.add(new_address)
     db.session.add(stats)
     db.session.add(current_user)
     db.session.commit()
@@ -342,49 +351,19 @@ def vendor_get_address():
             .filter(Vendor_ExactAddress.uuid == current_user.uuid)\
             .first()
         if vendor_address:
-            return jsonify({"status": 'success'})
+            city = vendor_address.city
+            stateorprovence = vendor_address.state_or_provence
+            zipcode = vendor_address.zip_code
+        
+            return jsonify({
+                "city": city,
+                "stateorprovence": stateorprovence,
+                "zipcode": zipcode,
+            })
         else:
             return jsonify({"status": 'error'}), 409
 
             
-@vendor.route('/create/defaultaddress', methods=['POST'])
-@login_required
-def vendor_create_address():
-    """
-    Returns all info about a user
-    :return:
-    """
-
-    if request.method == 'POST':
-        if current_user.admin_role > 1:
-            if "country" in request.json:
-                country = request.json["country"]
-            else:
-                country = None
-            if "city" in request.json:
-                city = request.json["city"]
-            else:
-                city = None
-            if "stateorprovence" in request.json:
-                state_or_provence = request.json["stateorprovence"]
-            else:
-                state_or_provence = None
-            if "zip" in request.json:
-                zipcode = request.json["zip"]
-            else:
-                zipcode = None
-
-            new_address = Vendor_ExactAddress(
-                uuid=current_user.uuid,
-                city=city,
-                state_or_provence=state_or_provence,
-                country=country,
-                zip_code=zipcode,
-            )
-            db.session.add(new_address)
-            db.session.commit()
-            return jsonify({"status": 'success'})
-        return jsonify({"status": 'error'}), 409
 
 
 @vendor.route('/update/defaultaddress', methods=['PUT'])
@@ -394,17 +373,14 @@ def vendor_update_address():
     Returns all info about a user
     :return:
     """
-
     if request.method == 'PUT':
-        if current_user.admin_role > 1:
+        if current_user.admin_role >= 1:
             vendor_address = Vendor_ExactAddress.query\
                 .filter(Vendor_ExactAddress.uuid == current_user.uuid)\
                 .first()
+         
             if vendor_address:
-                if "country" in request.json:
-                    country = request.json["country"]
-                else:
-                    country = None
+     
                 if "city" in request.json:
                     city = request.json["city"]
                 else:
@@ -417,7 +393,7 @@ def vendor_update_address():
                     zipcode = request.json["zip"]
                 else:
                     zipcode = None        
-                vendor_address.country = int(country)
+                vendor_address.country = current_user.country
                 vendor_address.city = city
                 vendor_address.state_or_provence = state_or_provence
                 vendor_address.zip_code = zipcode
@@ -428,3 +404,20 @@ def vendor_update_address():
                 return jsonify({"status": 'error'}), 409
         else:
             return jsonify({"status": 'error'}), 409
+
+
+@vendor.route('/itemsforsale/<string:vendor_uuid>', methods=['GET'])
+def vendor_profile_itemsforsale(vendor_uuid):
+    """
+    Grabs feedback of the vendor
+    :return:
+    """
+    if request.method == 'GET':
+        vendor_itemsforsale = db.session\
+            .query(Item_MarketItem)\
+            .filter(Item_MarketItem.vendor_uuid == vendor_uuid)\
+            .limit(25)
+        for f in vendor_itemsforsale:
+            print(f.id)
+        item_schema = Item_MarketItem_Schema(many=True)
+        return jsonify(item_schema.dump(vendor_itemsforsale))
