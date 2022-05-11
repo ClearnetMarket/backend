@@ -119,8 +119,10 @@ def xmr_send_coin(user_id, sendto, amount):
     if a == 1:
 
         timestamp = datetime.datetime.utcnow()
-        userswallet = db.session.query(
-            Xmr_Wallet).filter_by(user_id=user_id).first()
+        userswallet = db.session\
+            .query(Xmr_Wallet)\
+            .filter_by(user_id=user_id)\
+            .first()
         # turn sting to a decimal
         amountdecimal = Decimal(amount)
         # make decimal 8th power
@@ -258,7 +260,7 @@ def xmr_send_coin_to_user(amount, user_id, order_uuid):
         .query(Xmr_Wallet)\
         .filter_by(user_id=user_id)\
         .first()
-
+    
     curbal = Decimal(userswallet.currentbalance)
     amounttomod = Decimal(amount)
     newbalance = Decimal(curbal) + Decimal(amounttomod)
@@ -287,17 +289,23 @@ def finalize_order_xmr(order_uuid):
 
     # get total
     total_amount_from_sale = get_order.price_total_xmr
+
     # get vendor fee
     get_vendor_fee = db.session\
         .query(Auth_UserFees)\
         .filter(Auth_UserFees.user_id == get_order.vendor_id)\
         .first()
+    # percent of vendor fee from database
     vendor_fee_percent = get_vendor_fee.vendorfee
-    fee_for_freeport = Decimal(total_amount_from_sale) * Decimal(vendor_fee_percent)
+
+    # get fee for website
+    fee_for_freeport = (Decimal(total_amount_from_sale) * Decimal(vendor_fee_percent))/100
     fee_for_freeport_exact = floating_decimals(fee_for_freeport, 12)
+    print(fee_for_freeport_exact)
+    # get amount to vendor
     amount_for_vendor = total_amount_from_sale - fee_for_freeport
     amount_for_vendor_exact = floating_decimals(amount_for_vendor, 12)
-
+    print(amount_for_vendor_exact)
     # send fee to freeport
     xmr_send_coin_to_user(amount=fee_for_freeport_exact,
                           user_id=1,
@@ -307,6 +315,7 @@ def finalize_order_xmr(order_uuid):
     xmr_send_coin_to_user(amount=amount_for_vendor_exact,
                           user_id=get_order.vendor_id,
                           order_uuid=get_order.uuid)
+
 
 
 def xmr_refund_rejected_user(amount, user_id, order_uuid):

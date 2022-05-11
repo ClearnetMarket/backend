@@ -365,11 +365,16 @@ def finalize_order_bch(order_uuid):
     get_vendor_fee = Auth_UserFees.query\
         .filter(Auth_UserFees.user_id == get_order.vendor_id)\
         .first()
+        
+    # vendor free from database
     vendor_fee_percent = get_vendor_fee.vendorfee
-    fee_for_freeport = Decimal(total_amount_from_sale) * \
-        Decimal(vendor_fee_percent)
+    # fee from freeport = total sale amount times vendor fee divided by 100
+    fee_for_freeport = (Decimal(total_amount_from_sale) * Decimal(vendor_fee_percent))/100
+    # get decimal amount
     fee_for_freeport_exact = floating_decimals(fee_for_freeport, 8)
+    # get amount for vendor
     amount_for_vendor = total_amount_from_sale - fee_for_freeport
+    # get exact amount
     amount_for_vendor_exact = floating_decimals(amount_for_vendor, 8)
 
     # send fee to freeport

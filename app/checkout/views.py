@@ -485,10 +485,7 @@ def checkout_update_cart_information():
         if f.price_of_item != get_market_item.price:
             new_amount  += 1
             f.price_of_item = get_market_item.price
-        # # if quantity is greater than availability
-        # if f.quantity_of_item > get_market_item.item_count:
-        #     new_amount += 1
-        #     f.quantity_of_item = get_market_item.item_count
+
         db.session.add(f)
     
     if new_amount > 0:
@@ -1067,7 +1064,7 @@ def checkout_make_order():
             customer_uuid=k.customer_uuid,
             customer_id=k.customer_id,
             currency=k.currency,
-            overall_status=1,
+            overall_status=None,
             disputed_timer=None,
             moderator_uuid=None,
             date_shipped=None,
@@ -1159,6 +1156,7 @@ def checkout_make_payment():
     orders = db.session\
         .query(User_Orders)\
         .filter(User_Orders.customer_uuid == current_user.uuid)\
+        .filter(User_Orders.overall_status == None)\
         .all()
 
     # loop through ORDERS. send coin and doing transactions 1 by 1..
@@ -1175,11 +1173,13 @@ def checkout_make_payment():
         order.vendor_user_name = get_item.vendor_name
         order.vendor_id = get_item.vendor_id
         order.vendor_uuid = get_item.vendor_uuid
-
+        order.overall_status = 1
         # add total sold to item
         # calculate how many items are left
         newsold = int(get_item.total_sold) + int(order.quantity)
+        print("current quantity:", get_item.item_count)
         newquantleft = int(get_item.item_count) - int(order.quantity)
+        print("New item quantity", newquantleft)
         get_item.total_sold = newsold
         get_item.item_count = newquantleft
 

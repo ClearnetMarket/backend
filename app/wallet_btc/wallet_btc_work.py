@@ -370,8 +370,7 @@ def finalize_order_btc(order_uuid):
         .filter(Auth_UserFees.user_id == get_order.vendor_id)\
         .first()
     vendor_fee_percent = get_vendor_fee.vendorfee
-    fee_for_freeport = Decimal(total_amount_from_sale) * \
-        Decimal(vendor_fee_percent)
+    fee_for_freeport = (Decimal(total_amount_from_sale) * Decimal(vendor_fee_percent))/100
     fee_for_freeport_exact = floating_decimals(fee_for_freeport, 8)
     amount_for_vendor = total_amount_from_sale - fee_for_freeport
     amount_for_vendor_exact = floating_decimals(amount_for_vendor, 8)
