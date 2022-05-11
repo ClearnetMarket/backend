@@ -14,12 +14,6 @@ from app.classes.wallet_btc import Btc_TransactionsBtc
 def btc_add_transaction(category, amount, user_id, comment, balance, order_uuid, item_uuid):
     """
 
-    :param category:
-    :param amount:
-    :param user_id:
-    :param comment:
-    :param balance:
-    :return:
     """
     try:
         now = datetime.utcnow()

@@ -324,12 +324,17 @@ def vendor_topbar_get_vendor_info(vendor_id):
     Gets the vendor name, ratings count and sales count
     :return:
     """
-    vendor = Auth_User.query.filter(Auth_User.uuid == vendor_id).first()
+    vendor = db.session\
+        .query(Auth_User)\
+        .filter(Auth_User.uuid == vendor_id)\
+        .first()
 
     vendor_name = vendor.username
-    vendor_stats = Profile_StatisticsVendor.query\
+    vendor_stats = db.session\
+        .query(Profile_StatisticsVendor)\
         .filter(Profile_StatisticsVendor.vendor_uuid == vendor.uuid)\
         .first()
+
     vendor_rating = vendor_stats.avg_item_rating
     vendor_total_sales = vendor_stats.total_sales
     vendor_uuid = vendor_stats.vendor_uuid
@@ -347,7 +352,8 @@ def vendor_get_address():
 
 
     if request.method == 'GET':
-        vendor_address = Vendor_ExactAddress.query\
+        vendor_address = db.session\
+            .query(Vendor_ExactAddress)\
             .filter(Vendor_ExactAddress.uuid == current_user.uuid)\
             .first()
         if vendor_address:

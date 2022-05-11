@@ -357,6 +357,7 @@ def finalize_order_btc(order_uuid):
     """
     Finalizes btc order
     """
+    
     get_order = db.session \
         .query(User_Orders) \
         .filter(User_Orders.uuid == order_uuid) \
@@ -364,7 +365,7 @@ def finalize_order_btc(order_uuid):
 
     # get total
     total_amount_from_sale = get_order.price_total_btc
-
+   
     # get vendor fee
     get_vendor_fee = Auth_UserFees.query\
         .filter(Auth_UserFees.user_id == get_order.vendor_id)\
@@ -372,9 +373,14 @@ def finalize_order_btc(order_uuid):
     vendor_fee_percent = get_vendor_fee.vendorfee
     fee_for_freeport = (Decimal(total_amount_from_sale) * Decimal(vendor_fee_percent))/100
     fee_for_freeport_exact = floating_decimals(fee_for_freeport, 8)
+
     amount_for_vendor = total_amount_from_sale - fee_for_freeport
     amount_for_vendor_exact = floating_decimals(amount_for_vendor, 8)
 
+    print("finalizing order btc")
+    print(total_amount_from_sale)
+    print(fee_for_freeport_exact)
+    print(amount_for_vendor_exact)
     # send fee to freeport
     btc_send_coin_to_user(amount=fee_for_freeport_exact,
                           user_id=1,

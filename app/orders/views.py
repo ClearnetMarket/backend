@@ -1,9 +1,10 @@
 from datetime import datetime
 from decimal import Decimal
+from operator import or_
 from webbrowser import get
 from flask import request, jsonify
 from flask_login import login_required, current_user
-
+from sqlalchemy import or_
 
 from app.orders import orders
 from app import db
@@ -64,12 +65,17 @@ def get_order_model(uuid):
     :return:
     """
     if request.method == 'GET':
+        # get order
+        # user must be customer or vendor
         get_order = db.session \
             .query(User_Orders) \
-            .filter(User_Orders.customer_id == current_user.id) \
+            .filter(or_(User_Orders.customer_id == current_user.id,
+             User_Orders.vendor_id == current_user.id)) \
             .filter(User_Orders.uuid == uuid) \
             .first()
+        # if order exists
         if get_order:
+            # return schema
             item_schema = User_Orders_Schema()
             return jsonify(item_schema.dump(get_order))
         else:
@@ -96,11 +102,12 @@ def get_order_vendor(uuid):
             return jsonify({"status": "error"}), 409
 
 
-@orders.route('/feedback/<string:uuid>', methods=['POST'])
+@orders.route('/feedback/score/<string:uuid>', methods=['POST'])
 @login_required
-def order_feedback(uuid):
+def order_feedback_score(uuid):
     """
-    Used on index.  Grabs today's featured items
+    Post  feedback
+    feedback given by customer
     :return:
     """
     if request.method == 'POST':
@@ -110,48 +117,129 @@ def order_feedback(uuid):
             .filter(User_Orders.customer_id == current_user.id) \
             .filter(User_Orders.uuid == uuid) \
             .first()
+        # get feedback (might not be any)
+        get_feedback = db.session\
+            .query(Feedback_Feedback)\
+            .filter(Feedback_Feedback.author_uuid == current_user.uuid)\
+            .first()
+        # if order exists else 409
         if get_order:
-            # vendor rating
-            vendor_rating = request.json["vendorrating"]
+            # get the request json
+            if request.json["rating"]:
+                vendor_rating = request.json["rating"]
+            else:
+                return jsonify({"status": "error"}), 409
+            # set feedback to nearest integer
             if 0 <= Decimal(vendor_rating) <= 10:
                 vendorrating = int(vendor_rating)
-            # item rating
-            item_rating = request.json["itemrating"]
-            if 0 <= Decimal(item_rating) <= 10:
-                itemrating = int(item_rating)
-            review_by_user = request.json["review"]
+            # if there is no feedback already create it
+            if get_feedback is None:
+                create_new_feedback = Feedback_Feedback(
+                    timestamp=now,
+                    order_uuid=get_order.uuid,
+                    item_uuid=get_order.item_uuid,
+                    customer_name=get_order.customer_user_name,
+                    customer_uuid=get_order.customer_uuid,
+                    vendor_name=get_order.vendor_user_name,
+                    vendor_uuid=get_order.vendor_uuid,
+                    vendor_comment=None,
+                    type_of_feedback=1,
+                    author_uuid=current_user.uuid,
+                    item_rating=None,
+                    vendor_rating=vendorrating,
+                    customer_rating=None,
+                    review=None
+                )
+                db.session.add(create_new_feedback)
+                db.session.flush()
+                get_feedback = create_new_feedback
+            else:
+                # feedback exists just add the review
+                get_feedback.vendor_rating = vendorrating
+                db.session.add(get_feedback)
+            # if both conditions are met set it as review added
+            # this ensure proper review is added not just hhalf
+            if get_feedback.review is not None and get_feedback.vendor_rating is not None:
+                get_order.vendor_feedback = 1
+                db.session.add(get_order)
+            db.session.commit()
+         
+            return jsonify({"status": "success"})
+        else:
+            return jsonify({"status": "error"}), 409
 
-            create_new_feedback = Feedback_Feedback(
-                timestamp=now,
-                order_uuid=get_order.uuid,
-                item_uuid=get_order.item_uuid,
-                customer_name=get_order.customer_user_name,
-                customer_uuid=get_order.customer_uuid,
-                vendor_name=get_order.vendor_user_name,
-                vendor_uuid=get_order.vendor_uuid,
-                vendor_comment=None,
-                type_of_feedback=1,
-                author_uuid=current_user.uuid,
-                item_rating=itemrating,
-                vendor_rating=vendorrating,
-                customer_rating=None,
-                review=review_by_user
-            )
 
-            get_order.vendor_feedback = 1
-            db.session.add(get_order)
-            db.session.add(create_new_feedback)
+@orders.route('/feedback/review/<string:uuid>', methods=['POST'])
+@login_required
+def order_feedback_review(uuid):
+    """
+    Post  feedback written review
+    feedback given by customer
+    :return:
+    """
+    if request.method == 'POST':
+        now = datetime.utcnow()
+        # get the order by current customer
+        get_order = db.session \
+            .query(User_Orders) \
+            .filter(User_Orders.customer_id == current_user.id) \
+            .filter(User_Orders.uuid == uuid) \
+            .first()
+        # get feedback (might not be any)
+        get_feedback = db.session\
+            .query(Feedback_Feedback)\
+            .filter(Feedback_Feedback.author_uuid == current_user.uuid)\
+            .first()
+        # if order exists else 409
+        if get_order:
+            if request.json["review"]:
+                review_by_user = request.json["review"]
+            else:
+                return jsonify({"status": "error"}), 409
+            # if no feedback exists
+            # Note... vendor rating is none
+            if get_feedback is None:
+                create_new_feedback = Feedback_Feedback(
+                    timestamp=now,
+                    order_uuid=get_order.uuid,
+                    item_uuid=get_order.item_uuid,
+                    customer_name=get_order.customer_user_name,
+                    customer_uuid=get_order.customer_uuid,
+                    vendor_name=get_order.vendor_user_name,
+                    vendor_uuid=get_order.vendor_uuid,
+                    vendor_comment=None,
+                    type_of_feedback=1,
+                    author_uuid=current_user.uuid,
+                    item_rating=None,
+                    vendor_rating=None,
+                    customer_rating=None,
+                    review=review_by_user
+                )
+                db.session.add(create_new_feedback)
+                db.session.flush()
+            else:
+                # feedback exists just add the review
+                get_feedback.review = review_by_user
+                db.session.add(get_feedback)
+            # if both conditions are met set it as review added
+            # this ensure proper review is added not just hhalf
+            if get_feedback.review is not None and get_feedback.vendor_rating is not None:
+                get_order.vendor_feedback = 1
+                db.session.add(get_order)
             db.session.commit()
             return jsonify({"status": "success"})
         else:
             return jsonify({"status": "error"}), 409
 
 
+
 @orders.route('/feedback/vendor/<string:order_uuid>', methods=['POST'])
 @login_required
 def order_feedback_vendor(order_uuid):
     """
-    Used on index.  Grabs today's featured items
+    Leaves a review.
+
+    Review is given from vendor
     :return:
     """
     if request.method == 'POST':
@@ -215,14 +303,16 @@ def get_order_feedback(uuid):
     :return:
     """
     if request.method == 'GET':
-
+        print(uuid)
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.customer_id == current_user.id) \
             .filter(User_Orders.uuid == uuid) \
             .first()
+        print(get_order.id)
         if get_order:
-            get_feedback = Feedback_Feedback.query\
+            get_feedback = db.session\
+                .query(Feedback_Feedback)\
                 .filter(Feedback_Feedback.order_uuid==uuid)\
                 .first()
 
@@ -303,6 +393,7 @@ def mark_order_finalized(uuid):
 
         if get_order:
             if get_order.digital_currency == 1:
+                print("going to finalize")
                 finalize_order_btc(get_order.uuid)
             if get_order.digital_currency == 2:
                 finalize_order_bch(get_order.uuid)
