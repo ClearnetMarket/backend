@@ -84,7 +84,7 @@ def vendor_orders_waiting_on_accepted():
 def vendor_orders_new_accept(orderuuid):
 
     if request.method == 'PUT':
-        print(orderuuid)
+    
         vendor_order = User_Orders.query \
             .filter_by(uuid=orderuuid) \
             .filter_by(vendor_id=current_user.id)\
@@ -270,6 +270,10 @@ def vendor_orders_get_tracking(order_uuid):
 @vendororders.route('/feedback/add/vendor/<string:order_uuid>', methods=['POST'])
 @login_required
 def vendor_orders_add_vendor_feedback(order_uuid):
+    """
+      this function adds feedback for customer
+    - vendor gives a review for the customer
+    """
     if request.method == 'POST':
         now = datetime.utcnow()
         see_if_feedback_exists = User_Orders.query\
@@ -305,7 +309,9 @@ def vendor_orders_add_vendor_feedback(order_uuid):
 @vendororders.route('/online/<string:uuid>', methods=['GET'])
 @login_required
 def vendor_orders_put_online(uuid):
-
+    """
+    This function puts items online in the itemsforsale page
+    """
     if request.method == 'GET':
 
 
@@ -325,7 +331,9 @@ def vendor_orders_put_online(uuid):
 @vendororders.route('/offline/<string:uuid>', methods=['GET'])
 @login_required
 def vendor_orders_put_offline(uuid):
-
+    """
+    This function puts items offline in the itemsforsale page
+    """
     if request.method == 'GET':
        
         get_item = db.session\

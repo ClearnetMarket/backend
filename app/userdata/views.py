@@ -3,6 +3,7 @@ from flask_login import current_user
 from app.userdata import userdata
 from app import db
 from app.common.decorators import login_required
+from app.common.functions import floating_decimals
 # models
 from app.classes.auth import Auth_User, Auth_User_Schema
 from app.classes.models import Query_Country, Query_Currency
@@ -233,6 +234,7 @@ def userdata_get_stats_feedback(user_uuid):
             .filter_by(customer_uuid=user_uuid)\
             .filter_by(type_of_feedback=2)\
             .count()
+
         if user_feedback == 0:
             return jsonify({"total_feedback": 0,
                             'feedback_one': 0,
@@ -347,17 +349,17 @@ def userdata_get_stats_feedback(user_uuid):
                     (int(user_feedback_ten) / int(user_feedback))*100)
             else:
                 user_feedback_ten_percent = 0
-            return jsonify({"total_feedback": user_feedback,
-                            'feedback_one': user_feedback_one_percent,
-                            'feedback_two': user_feedback_two_percent,
-                            'feedback_three': user_feedback_three_percent,
-                            'feedback_four': user_feedback_four_percent,
-                            'feedback_five': user_feedback_five_percent,
-                            'feedback_six': user_feedback_six_percent,
-                            'feedback_seven': user_feedback_seven_percent,
-                            'feedback_eight': user_feedback_eight_percent,
-                            'feedback_nine': user_feedback_nine_percent,
-                            'feedback_ten': user_feedback_ten_percent,
+            return jsonify({"total_feedback": floating_decimals(user_feedback, 2),
+                            'feedback_one': floating_decimals(user_feedback_one_percent, 2),
+                            'feedback_two': floating_decimals(user_feedback_two_percent, 2),
+                            'feedback_three': floating_decimals(user_feedback_three_percent, 2),
+                            'feedback_four': floating_decimals(user_feedback_four_percent, 2),
+                            'feedback_five': floating_decimals(user_feedback_five_percent, 2),
+                            'feedback_six': floating_decimals(user_feedback_six_percent, 2),
+                            'feedback_seven': floating_decimals(user_feedback_seven_percent, 2),
+                            'feedback_eight': floating_decimals(user_feedback_eight_percent, 2),
+                            'feedback_nine': floating_decimals(user_feedback_nine_percent, 2),
+                            'feedback_ten': floating_decimals(user_feedback_ten_percent, 2),
                             })
 
 

@@ -106,6 +106,7 @@ def vendor_vendor_feedback(vendor_uuid):
             .filter_by(type_of_feedback=1)\
             .order_by(Feedback_Feedback.timestamp.desc())\
             .limit(25)
+
         vendor_schema = Feedback_Feedback_Schema(many=True)
         return jsonify(vendor_schema.dump(vendor_feedback))
 
@@ -346,15 +347,15 @@ def vendor_topbar_get_vendor_info(vendor_id):
     })
 
 
-@vendor.route('/get/defaultaddress', methods=['GET'])
+@vendor.route('/get/defaultaddress/<string:vendoruuid>', methods=['GET'])
 @login_required
-def vendor_get_address():
+def vendor_get_address(vendoruuid):
 
 
     if request.method == 'GET':
         vendor_address = db.session\
             .query(Vendor_ExactAddress)\
-            .filter(Vendor_ExactAddress.uuid == current_user.uuid)\
+            .filter(Vendor_ExactAddress.uuid == vendoruuid)\
             .first()
         if vendor_address:
             city = vendor_address.city
@@ -423,7 +424,6 @@ def vendor_profile_itemsforsale(vendor_uuid):
             .query(Item_MarketItem)\
             .filter(Item_MarketItem.vendor_uuid == vendor_uuid)\
             .limit(25)
-        for f in vendor_itemsforsale:
-            print(f.id)
+
         item_schema = Item_MarketItem_Schema(many=True)
         return jsonify(item_schema.dump(vendor_itemsforsale))
