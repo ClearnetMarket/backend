@@ -71,8 +71,9 @@ def marketitem_add_view(item_uuid):
             .query(Item_MarketItem)\
             .filter(Item_MarketItem.uuid == item_uuid)\
             .first()
-        if item_for_sale.vendor_uuid == current_user.uuid:
-            return jsonify({"status": "View Count Not Increased"})
+        if current_user.is_authenticated:
+            if item_for_sale.vendor_uuid == current_user.uuid:
+                return jsonify({"status": "View Count Not Increased"})
         current_count = item_for_sale.view_count
         new_count = current_count + 1
         item_for_sale.view_count = new_count

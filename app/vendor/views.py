@@ -348,7 +348,6 @@ def vendor_topbar_get_vendor_info(vendor_id):
 
 
 @vendor.route('/get/defaultaddress/<string:vendoruuid>', methods=['GET'])
-@login_required
 def vendor_get_address(vendoruuid):
 
 
