@@ -1,5 +1,5 @@
 
-from datetime import date, datetime
+from datetime import datetime
 from flask import request,  jsonify
 from flask_login import current_user
 from app.classes.item import Item_MarketItem
@@ -11,7 +11,6 @@ from app.classes.feedback import Feedback_Feedback
 from app.wallet_bch.wallet_bch_work import bch_refund_rejected_user
 from app.wallet_btc.wallet_btc_work import btc_refund_rejected_user
 from app.wallet_xmr.wallet_xmr_work import xmr_refund_rejected_user
-
 
 
 @vendororders.route('/count', methods=['GET'])
@@ -61,7 +60,6 @@ def vendor_orders_count():
             'vendor_orders_cancelled': vendor_orders_cancelled,
             'vendor_orders_dispute': vendor_orders_dispute,
         })
-
 
 
 @vendororders.route('/new', methods=['GET'])
@@ -144,7 +142,6 @@ def vendor_orders_waiting_on_shipment():
         return jsonify(vendor_orders_schema.dump(vendor_orders))
 
 
-
 @vendororders.route('/waiting/markasshipped/<string:orderuuid>', methods=['PUT'])
 @login_required
 def vendor_orders_mark_as_shipped(orderuuid):
@@ -176,8 +173,6 @@ def vendor_orders_shipped():
         return jsonify(user_order_info.dump(vendor_orders))
 
 
-
-
 @vendororders.route('/finalized', methods=['GET'])
 @login_required
 def vendor_orders_finalized():
@@ -203,7 +198,6 @@ def vendor_orders_waiting_on_cancel():
             .all()
         vendor_orders_schema = User_Orders_Schema(many=True)
         return jsonify(vendor_orders_schema.dump(vendor_orders))
-
 
 
 @vendororders.route('/disputed', methods=['GET'])
@@ -303,6 +297,7 @@ def vendor_orders_add_vendor_feedback(order_uuid):
             )
         db.session.add(add_new_feedback_for_vendor)
         db.session.commit()
+
         return jsonify({'status': 'success'})
 
 
@@ -313,7 +308,6 @@ def vendor_orders_put_online(uuid):
     This function puts items online in the itemsforsale page
     """
     if request.method == 'GET':
-
 
         get_item = db.session\
             .query(Item_MarketItem) \

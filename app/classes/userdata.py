@@ -18,10 +18,10 @@ class UserData_History(db.Model):
     recent_cat_5 = db.Column(db.INTEGER)
     recent_cat_5_date = db.Column(db.TIMESTAMP())
 
+
 class UserData_History_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = UserData_History
-
 
 
 class UserData_DefaultAddress(db.Model):

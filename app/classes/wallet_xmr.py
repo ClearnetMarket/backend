@@ -2,7 +2,6 @@ from app import db, ma
 from datetime import datetime
 
 
-
 class Xmr_Prices(db.Model):
     __tablename__ = 'xmr_price'
     __bind_key__ = 'clearnet'
@@ -11,6 +10,7 @@ class Xmr_Prices(db.Model):
     price = db.Column(db.DECIMAL(50, 2))
     currency_id = db.Column(db.INTEGER)
     percent_change_twentyfour = db.Column(db.DECIMAL(50, 2))
+
 
 class Xmr_Prices_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -35,11 +35,12 @@ class Xmr_Wallet(db.Model):
     transactioncount = db.Column(db.INTEGER)
     unconfirmed = db.Column(db.DECIMAL(20, 12))
 
+
 class Xmr_Wallet_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Xmr_Wallet
     id = ma.auto_field()
-    user_id =ma.auto_field()
+    user_id = ma.auto_field()
     currentbalance = ma.auto_field()
     address1 = ma.auto_field()
     address1status = ma.auto_field()
@@ -101,7 +102,6 @@ class Xmr_TransOrphan(db.Model):
     txid = db.Column(db.VARCHAR(500))
 
 
-
 class Xmr_Unconfirmed(db.Model):
     __tablename__ = 'xmr_wallet_unconfirmed'
     __bind_key__ = 'clearnet'
@@ -119,6 +119,7 @@ class Xmr_Unconfirmed(db.Model):
     txid3 = db.Column(db.VARCHAR(500))
     txid4 = db.Column(db.VARCHAR(500))
     txid5 = db.Column(db.VARCHAR(500))
+
 
 class Xmr_Unconfirmed_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -177,5 +178,3 @@ class Xmr_BlockHeight(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     blockheight = db.Column(db.INTEGER)
-
-

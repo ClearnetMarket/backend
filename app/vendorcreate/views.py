@@ -31,7 +31,7 @@ def vendorcreate_items_for_sale():
 def vendorcreate_clone_item(uuid):
     """
     given an item id, this will create a new folder on storage, and recopy the data with a new id
-    :param id:
+    :param uuid:
     :return:
     """
 
@@ -60,44 +60,44 @@ def vendorcreate_clone_item(uuid):
                     category_name_0=vendoritem.category_name_0,
                     category_id_0=vendoritem.category_id_0,
                     origin_country =vendoritem.origin_country,
-                    destination_country_one = vendoritem.destination_country_one,
-                    destination_country_two = vendoritem.destination_country_two,
-                    destination_country_three = vendoritem.destination_country_three,
-                    destination_country_four = vendoritem.destination_country_four,
-                    destination_country_five = vendoritem.destination_country_five,
-                    item_title = vendoritem.item_title,
-                    item_count = vendoritem.item_count,
-                    item_description = vendoritem.item_description,
-                    item_condition = vendoritem.item_condition,
-                    keywords = vendoritem.keywords,
-                    price = vendoritem.price,
-                    currency = vendoritem.currency,
-                    digital_currency_1 = vendoritem.digital_currency_1,
-                    digital_currency_2 = vendoritem.digital_currency_2,
-                    digital_currency_3 = vendoritem.digital_currency_3,
-                    shipping_free = vendoritem.shipping_free,
-                    shipping_two = vendoritem.shipping_two,
-                    shipping_three = vendoritem.shipping_three,
-                    image_one_server = vendoritem.image_one_server,
-                    image_two_server = vendoritem.image_two_server,
-                    image_three_server = vendoritem.image_three_server,
-                    image_four_server = vendoritem.image_four_server,
-                    image_one_url = vendoritem.image_one_url,
-                    image_two_url = vendoritem.image_two_url,
-                    image_three_url = vendoritem.image_three_url,
-                    image_four_url = vendoritem.image_four_url,
-                    shipping_info_0 = vendoritem.shipping_info_0,
-                    shipping_day_0 = vendoritem.shipping_day_0,
-                    shipping_info_2 = vendoritem.shipping_info_2,
-                    shipping_price_2 = vendoritem.shipping_price_2,
-                    shipping_day_2 = vendoritem.shipping_day_2,
-                    shipping_info_3 = vendoritem.shipping_info_3,
-                    shipping_price_3 = vendoritem.shipping_price_3,
-                    shipping_day_3 = vendoritem.shipping_day_3,
-                    view_count = vendoritem.view_count,
-                    item_rating = vendoritem.item_rating,
-                    review_count = vendoritem.review_count,
-                    total_sold = vendoritem.total_sold,
+                    destination_country_one=vendoritem.destination_country_one,
+                    destination_country_two=vendoritem.destination_country_two,
+                    destination_country_three=vendoritem.destination_country_three,
+                    destination_country_four=vendoritem.destination_country_four,
+                    destination_country_five=vendoritem.destination_country_five,
+                    item_title=vendoritem.item_title,
+                    item_count=vendoritem.item_count,
+                    item_description=vendoritem.item_description,
+                    item_condition=vendoritem.item_condition,
+                    keywords=vendoritem.keywords,
+                    price=vendoritem.price,
+                    currency=vendoritem.currency,
+                    digital_currency_1=vendoritem.digital_currency_1,
+                    digital_currency_2=vendoritem.digital_currency_2,
+                    digital_currency_3=vendoritem.digital_currency_3,
+                    shipping_free=vendoritem.shipping_free,
+                    shipping_two=vendoritem.shipping_two,
+                    shipping_three=vendoritem.shipping_three,
+                    image_one_server=vendoritem.image_one_server,
+                    image_two_server=vendoritem.image_two_server,
+                    image_three_server=vendoritem.image_three_server,
+                    image_four_server=vendoritem.image_four_server,
+                    image_one_url=vendoritem.image_one_url,
+                    image_two_url=vendoritem.image_two_url,
+                    image_three_url=vendoritem.image_three_url,
+                    image_four_url=vendoritem.image_four_url,
+                    shipping_info_0=vendoritem.shipping_info_0,
+                    shipping_day_0=vendoritem.shipping_day_0,
+                    shipping_info_2=vendoritem.shipping_info_2,
+                    shipping_price_2=vendoritem.shipping_price_2,
+                    shipping_day_2=vendoritem.shipping_day_2,
+                    shipping_info_3=vendoritem.shipping_info_3,
+                    shipping_price_3=vendoritem.shipping_price_3,
+                    shipping_day_3=vendoritem.shipping_day_3,
+                    view_count=vendoritem.view_count,
+                    item_rating=vendoritem.item_rating,
+                    review_count=vendoritem.review_count,
+                    total_sold=vendoritem.total_sold,
                 )
                 # image item to dabase but dont commit yet ..
                 db.session.add(item)
@@ -137,7 +137,7 @@ def vendorcreate_clone_item(uuid):
 def vendorcreate_delete_item(uuid):
     """
     Delete all images and the item data from database
-    :param id:
+    :param uuid:
     :return:
     """
     ext_1 = '_225x.jpg'

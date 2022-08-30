@@ -36,9 +36,12 @@ class Message_Comment(db.Model):
     mod_name = db.Column(db.VARCHAR(140))
     mod_uuid = db.Column(db.VARCHAR(40))
 
+
 class Message_Comment_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Message_Comment
+
+
 comment_schema = Message_Comment_Schema()
 comments_schema = Message_Comment_Schema(many=True)
 
@@ -51,6 +54,7 @@ class Message_Post(db.Model):
     timestamp = db.Column(db.TIMESTAMP(),
                           index=True,
                           default=datetime.utcnow())
+
 
 class Message_Chat(db.Model):
     __tablename__ = 'message_chat'
@@ -73,8 +77,11 @@ class Message_Chat(db.Model):
     post_id = db.Column(db.Integer)
     read = db.Column(db.Integer)
 
+
 class Message_Chat_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Message_Chat
+
+
 msg_schema = Message_Chat_Schema()
 msgs_schema = Message_Chat_Schema(many=True)

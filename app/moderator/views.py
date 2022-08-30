@@ -24,7 +24,7 @@ def get_disputes_main_page_need_mod():
         # see if current user is a mod
      
         if current_user.admin_role >= 2:
-        # query the disputes
+            # query the disputes
             get_disputes = db.session \
                 .query(User_Orders) \
                 .filter(User_Orders.overall_status == 8) \

@@ -10,7 +10,8 @@ def bch_add_transaction(category, amount, user_id, comment, balance, order_uuid,
     :param amount:
     :param user_id:
     :param comment:
- 
+    :param order_uuid:
+    :param item_uuid:
     :param balance:
     :return:
     """

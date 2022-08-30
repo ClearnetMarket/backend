@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from operator import or_
-from webbrowser import get
+
 from flask import request, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import or_
@@ -12,8 +12,6 @@ from app import db
 # models
 from app.classes.user_orders import User_Orders, User_Orders_Schema
 from app.classes.feedback import Feedback_Feedback
-from app.classes.vendor import Vendor_Notification
-
 from app.wallet_btc.wallet_btc_work import finalize_order_btc
 from app.wallet_bch.wallet_bch_work import finalize_order_bch
 from app.wallet_xmr.wallet_xmr_work import finalize_order_xmr
@@ -27,13 +25,12 @@ def get_user_orders():
     :return:
     """
     if request.method == 'GET':
-
         user_orders = db.session \
             .query(User_Orders) \
             .filter(User_Orders.customer_id == current_user.id) \
             .order_by(User_Orders.created.desc()) \
             .limit(10)
-       
+
         item_schema = User_Orders_Schema(many=True)
         return jsonify(item_schema.dump(user_orders))
 
@@ -70,7 +67,7 @@ def get_order_model(uuid):
         get_order = db.session \
             .query(User_Orders) \
             .filter(or_(User_Orders.customer_id == current_user.id,
-             User_Orders.vendor_id == current_user.id)) \
+                        User_Orders.vendor_id == current_user.id)) \
             .filter(User_Orders.uuid == uuid) \
             .first()
         # if order exists
@@ -80,6 +77,7 @@ def get_order_model(uuid):
             return jsonify(item_schema.dump(get_order))
         else:
             return jsonify({"status": "error"}), 409
+
 
 @orders.route('/vendor/<string:uuid>', methods=['GET'])
 @login_required
@@ -120,10 +118,10 @@ def order_feedback_score(uuid):
             .filter(User_Orders.uuid == uuid) \
             .first()
         # get feedback (might not be any)
-        get_feedback = db.session\
-            .query(Feedback_Feedback)\
-            .filter(Feedback_Feedback.author_uuid == current_user.uuid)\
-            .filter(Feedback_Feedback.order_uuid == uuid)\
+        get_feedback = db.session \
+            .query(Feedback_Feedback) \
+            .filter(Feedback_Feedback.author_uuid == current_user.uuid) \
+            .filter(Feedback_Feedback.order_uuid == uuid) \
             .first()
         # if order exists else 409
         if get_order:
@@ -135,6 +133,8 @@ def order_feedback_score(uuid):
             # set feedback to nearest integer
             if 0 <= Decimal(vendor_rating) <= 10:
                 vendorrating = int(vendor_rating)
+            else:
+                vendorrating = 0
             # if there is no feedback already create it
             if get_feedback is None:
                 create_new_feedback = Feedback_Feedback(
@@ -166,7 +166,7 @@ def order_feedback_score(uuid):
                 get_order.vendor_feedback = 1
                 db.session.add(get_order)
             db.session.commit()
-         
+
             return jsonify({"status": "success"})
         else:
             return jsonify({"status": "error"}), 409
@@ -191,10 +191,10 @@ def order_feedback_review(uuid):
             .filter(User_Orders.uuid == uuid) \
             .first()
         # get feedback (might not be any)
-        get_feedback = db.session\
-            .query(Feedback_Feedback)\
-            .filter(Feedback_Feedback.author_uuid == current_user.uuid)\
-            .filter(Feedback_Feedback.order_uuid == uuid)\
+        get_feedback = db.session \
+            .query(Feedback_Feedback) \
+            .filter(Feedback_Feedback.author_uuid == current_user.uuid) \
+            .filter(Feedback_Feedback.order_uuid == uuid) \
             .first()
         # if order exists else 409
         if get_order:
@@ -238,17 +238,17 @@ def order_feedback_review(uuid):
             return jsonify({"status": "error"}), 409
 
 
-
 @orders.route('/vendor/feedback/score/<string:uuid>', methods=['POST'])
 @login_required
 def order_vendor_feedback_score(uuid):
     """
     VENDOR
-    Post  feedback
+    Post feedback
     feedback given by vendor
         # type of feedback = 2
     :return:
     """
+
     if request.method == 'POST':
         now = datetime.utcnow()
         get_order = db.session \
@@ -257,10 +257,10 @@ def order_vendor_feedback_score(uuid):
             .filter(User_Orders.uuid == uuid) \
             .first()
         # get feedback (might not be any)
-        get_feedback = db.session\
-            .query(Feedback_Feedback)\
-            .filter(Feedback_Feedback.author_uuid == current_user.uuid)\
-            .filter(Feedback_Feedback.order_uuid == uuid)\
+        get_feedback = db.session \
+            .query(Feedback_Feedback) \
+            .filter(Feedback_Feedback.author_uuid == current_user.uuid) \
+            .filter(Feedback_Feedback.order_uuid == uuid) \
             .first()
         # if order exists else 409
         if get_order:
@@ -296,11 +296,12 @@ def order_vendor_feedback_score(uuid):
                 db.session.flush()
                 get_feedback = create_new_feedback
             else:
+                create_new_feedback = None
                 # feedback exists just add the review
                 get_feedback.customer_rating = customerrating
                 db.session.add(get_feedback)
             # if both conditions are met set it as review added
-            # this ensure proper review is added not just half
+            # this ensures proper review is added not just half
             if get_feedback:
                 if get_feedback.review is not None and get_feedback.customer_rating is not None:
                     get_order.user_feedback = 1
@@ -314,7 +315,6 @@ def order_vendor_feedback_score(uuid):
             return jsonify({"status": "success"})
         else:
             return jsonify({"status": "error"}), 409
-
 
 
 @orders.route('/vendor/feedback/review/<string:uuid>', methods=['POST'])
@@ -336,14 +336,13 @@ def order_vendor_feedback_review(uuid):
             .filter(User_Orders.vendor_id == current_user.id) \
             .filter(User_Orders.uuid == uuid) \
             .first()
-        
+
         # get feedback (might not be any)
-        get_feedback = db.session\
-            .query(Feedback_Feedback)\
-            .filter(Feedback_Feedback.author_uuid == current_user.uuid)\
-            .filter(Feedback_Feedback.order_uuid == uuid)\
+        get_feedback = db.session \
+            .query(Feedback_Feedback) \
+            .filter(Feedback_Feedback.author_uuid == current_user.uuid) \
+            .filter(Feedback_Feedback.order_uuid == uuid) \
             .first()
-     
 
         # if order exists else 409
         if get_order:
@@ -373,6 +372,7 @@ def order_vendor_feedback_review(uuid):
                 db.session.add(create_new_feedback)
                 db.session.flush()
             else:
+                create_new_feedback = None
                 # feedback exists just add the review
                 get_feedback.review = review_by_user
                 db.session.add(get_feedback)
@@ -382,17 +382,16 @@ def order_vendor_feedback_review(uuid):
                 if get_feedback.review is not None and get_feedback.customer_rating is not None:
                     get_order.user_feedback = 1
                     db.session.add(get_order)
-                  
+
             else:
                 if create_new_feedback.review is not None and create_new_feedback.customer_rating is not None:
                     get_order.user_feedback = 1
                     db.session.add(get_order)
-                   
+
             db.session.commit()
             return jsonify({"status": "success"})
         else:
             return jsonify({"status": "error"}), 409
-
 
 
 @orders.route('/feedback/get/<string:uuid>', methods=['GET'])
@@ -403,17 +402,17 @@ def get_order_feedback(uuid):
     :return:
     """
     if request.method == 'GET':
-    
+
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.customer_id == current_user.id) \
             .filter(User_Orders.uuid == uuid) \
             .first()
- 
+
         if get_order:
-            get_feedback = db.session\
-                .query(Feedback_Feedback)\
-                .filter(Feedback_Feedback.order_uuid==uuid)\
+            get_feedback = db.session \
+                .query(Feedback_Feedback) \
+                .filter(Feedback_Feedback.order_uuid == uuid) \
                 .first()
 
             return jsonify({
@@ -423,7 +422,6 @@ def get_order_feedback(uuid):
             })
         else:
             return jsonify({"status": "error"}), 409
-
 
 
 @orders.route('/mark/disputed/<string:uuid>', methods=['GET'])
@@ -448,6 +446,7 @@ def mark_order_disputed(uuid):
         else:
             return jsonify({"status": "error"}), 409
 
+
 @orders.route('/mark/delivered/<string:uuid>', methods=['GET'])
 @login_required
 def mark_order_delivered(uuid):
@@ -466,10 +465,10 @@ def mark_order_delivered(uuid):
 
         if get_order:
             get_order.overall_status = 4
-            
+
             db.session.add(get_order)
             db.session.commit()
-            
+
             return jsonify({"status": "success"})
         else:
             return jsonify({"status": "error"}), 409
@@ -519,7 +518,7 @@ def mark_order_request_cancel(uuid):
     """
 
     if request.method == 'GET':
- 
+
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.customer_id == current_user.id) \

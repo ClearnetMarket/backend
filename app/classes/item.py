@@ -1,6 +1,7 @@
 from app import db, ma
 from uuid import uuid4
 
+
 def get_uuid_item():
     return uuid4().hex
 
@@ -16,9 +17,11 @@ class Item_ItemtoDelete(db.Model):
                    nullable=False)
     itemid = db.Column(db.Integer)
 
+
 class Item_ItemtoDelete_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Item_ItemtoDelete
+
     id = ma.auto_field()
     itemid = ma.auto_field()
 
@@ -83,7 +86,7 @@ class Item_MarketItem(db.Model):
     image_two_url = db.Column(db.VARCHAR(3000))
     image_three_url = db.Column(db.VARCHAR(3000))
     image_four_url = db.Column(db.VARCHAR(3000))
-  
+
     shipping_info_0 = db.Column(db.VARCHAR(500))
     shipping_day_0 = db.Column(db.INTEGER)
 
@@ -106,23 +109,27 @@ class Item_MarketItem(db.Model):
     def __repr__(self):
         return '<Auth_User %r>' % self.username
 
+
 class Item_MarketItem_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Item_MarketItem
-            
+
         fields = ('uuid', 'online', 'created', 'price', 'vendor_name', 'node_id', 'vendor_uuid',
-                    'origin_country_name', 'currency_symbol', 'destination_country_one_name',
-                    'destination_country_two_name', 'destination_country_three_name',
-                    'destination_country_four_name', 'destination_country_five_name',
-                        'item_title', 'item_count', 'item_description', 'currency',
-                    'item_condition', 'keywords', 'price',  
-                    'digital_currency_1', 'digital_currency_2', 'digital_currency_3',
-                    'image_one_url', 'image_two_url', 'image_three_url', 'image_four_url',
-                    'image_one_server', 'image_two_server', 'image_three_server', 'image_four_server',
-                    'shipping_free','shipping_two', 'shipping_three', 'shipping_info_0', 'shipping_day_0','shipping_info_2', 
-                    'shipping_price_2', 'shipping_day_2', 'shipping_info_3', 'shipping_price_3', 'shipping_day_3', 'view_count', 
-                    'item_rating', 'review_count',  'total_sold', 'vendor_display_name'
-                    )
-                
+                  'origin_country_name', 'currency_symbol', 'destination_country_one_name',
+                  'destination_country_two_name', 'destination_country_three_name',
+                  'destination_country_four_name', 'destination_country_five_name',
+                  'item_title', 'item_count', 'item_description', 'currency',
+                  'item_condition', 'keywords', 'price',
+                  'digital_currency_1', 'digital_currency_2', 'digital_currency_3',
+                  'image_one_url', 'image_two_url', 'image_three_url', 'image_four_url',
+                  'image_one_server', 'image_two_server', 'image_three_server', 'image_four_server',
+                  'shipping_free', 'shipping_two', 'shipping_three', 'shipping_info_0', 'shipping_day_0',
+                  'shipping_info_2',
+                  'shipping_price_2', 'shipping_day_2', 'shipping_info_3', 'shipping_price_3', 'shipping_day_3',
+                  'view_count',
+                  'item_rating', 'review_count', 'total_sold', 'vendor_display_name'
+                  )
+
+
 item_schema = Item_MarketItem_Schema()
 items_schema = Item_MarketItem_Schema(many=True)

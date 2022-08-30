@@ -1,4 +1,4 @@
-from flask import request, session, jsonify
+from flask import request, jsonify
 from flask_login import current_user, logout_user, login_user, login_required
 from app.auth import auth
 from app import db, bcrypt, UPLOADED_FILES_DEST_USER
@@ -77,6 +77,7 @@ def logout():
         logout_user()
         return jsonify({'status': 'logged out'}), 200
     except Exception as e:
+        print(e)
         return jsonify({"error", 'error'}), 400
 
 
@@ -277,7 +278,7 @@ def register_user():
     xmr_create_wallet(user_id=new_user.id)
 
     db.session.commit()
-    # log user in as active not sure if needed with api
+    # log user in as active not sure if needed with frontend
     login_user(new_user)
     current_user.is_authenticated()
     current_user.is_active()
@@ -370,18 +371,17 @@ def confirm_seed():
                 word3 = str(request.json["word3"])
                 word4 = str(request.json["word4"])
                 word5 = str(request.json["word5"])
-                if (word0 != userseed.word00):
-
+                if word0 != userseed.word00:
                     return jsonify({"error 1": "Seed does not match"}), 409
-                if (word1 != userseed.word01):
+                if word1 != userseed.word01:
                     return jsonify({"error 2": "Seed does not match"}), 409
-                if (word2 != userseed.word02):
+                if word2 != userseed.word02:
                     return jsonify({"error 3": "Seed does not match"}), 409
-                if (word3 != userseed.word03):
+                if word3 != userseed.word03:
                     return jsonify({"error": "Seed does not match 4"}), 409
-                if (word4 != userseed.word04):
+                if word4 != userseed.word04:
                     return jsonify({"error": "Seed does not match 5"}), 409
-                if (word5 != userseed.word05):
+                if word5 != userseed.word05:
                     return jsonify({"error": "Seed does not match 6"}), 409
 
                 user.confirmed = 1

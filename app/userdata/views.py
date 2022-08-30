@@ -25,9 +25,11 @@ def userdata_get_shopping_cart_count():
         shopping_cart_count = Checkout_CheckoutShoppingCart.query\
             .filter(Checkout_CheckoutShoppingCart.customer_id == current_user.id)\
             .count()
- 
-        return jsonify({'status': shopping_cart_count})
+        if shopping_cart_count:
 
+            return jsonify({'status': shopping_cart_count})
+        else:
+            return jsonify({'status': 0})
 
 @userdata.route('/country-currency', methods=['GET'])
 def userdata_country_currency():
@@ -36,10 +38,6 @@ def userdata_country_currency():
     :return:
     """
     if request.method == 'GET':
-        userdata = db.session\
-            .query(Auth_User)\
-            .filter(Auth_User.id == current_user.id)\
-            .first()
 
         currency = Query_Currency.query\
             .filter(userdata.currency == Query_Currency.value)\
@@ -63,11 +61,11 @@ def userdata_home(user_uuid):
     """
  
     if request.method == 'GET':
-        userdata = Auth_User.query\
+        userdata_user = Auth_User.query\
             .filter(Auth_User.uuid == user_uuid)\
             .first()
         user_schema = Auth_User_Schema()
-        return jsonify(user_schema.dump(userdata))
+        return jsonify(user_schema.dump(userdata_user))
 
 
 @userdata.route('/user-info-update', methods=['PUT'])
@@ -78,16 +76,16 @@ def userdata_update():
     :return:
     """
     if request.method == 'PUT':
-        userdata = Auth_User.query\
-            .filter(Auth_User.id == current_user.id)\
-            .first()
+
         try:
             new_currency_id = request.json["currency"]['value']
-        except:
+        except Exception as e:
+            print(str(e))
             new_currency_id = None
         try:
             new_country_id = request.json["country"]['value']
-        except:
+        except Exception as e:
+            print(str(e))
             new_country_id = None
 
         if new_currency_id is not None:
@@ -168,7 +166,7 @@ def userdata_update_address():
         else:
             new_address = UserData_DefaultAddress(
                 uuid=current_user.uuid,
-                address_name = address_name,
+                address_name=address_name,
                 apt=apt,
                 city=city,
                 state_or_provence=state_or_provence,
@@ -204,7 +202,8 @@ def userdata_get_address():
                 'message': user_address.msg,
             })
         else:
-            return jsonify(({'status': "Address not found" }))
+            return jsonify(({'status': "Address not found"}))
+
 
 @userdata.route('/user-feedback/<string:user_uuid>', methods=['GET'])
 def userdata_get_all_feedback(user_uuid):
@@ -249,7 +248,6 @@ def userdata_get_stats_feedback(user_uuid):
                             'feedback_ten': 0,
                             })
         else:
-
             user_feedback_one = Feedback_Feedback.query\
                 .filter_by(customer_uuid=user_uuid)\
                 .filter_by(customer_rating=1)\
@@ -371,8 +369,8 @@ def userdata_get_stats_user(user_uuid):
     """
     if request.method == 'GET':
         get_user_stats = db.session\
-        .query(Profile_StatisticsUser)\
-        .filter_by(user_uuid=user_uuid)\
-        .first()
+                        .query(Profile_StatisticsUser)\
+                        .filter_by(user_uuid=user_uuid)\
+                        .first()
         user_schema = Profile_StatisticsUser_Schema()
         return jsonify(user_schema.dump(get_user_stats))

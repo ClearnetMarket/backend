@@ -11,6 +11,7 @@ class Service_ShippingSecret(db.Model):
     txtmsg = db.Column(db.TEXT)
     orderid = db.Column(db.INTEGER)
 
+
 class Service_ShippingSecret_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Service_ShippingSecret
@@ -34,6 +35,7 @@ class Service_Returns(db.Model):
     country = db.Column(db.VARCHAR(400))
     zip = db.Column(db.VARCHAR(140))
     message = db.Column(db.TEXT)
+
 
 class Service_Returns_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -64,6 +66,7 @@ class Service_DefaultReturns(db.Model):
     username = db.Column(db.VARCHAR(40))
     user_id = db.Column(db.INTEGER)
 
+
 class Service_DefaultReturns_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Service_DefaultReturns
@@ -93,6 +96,7 @@ class Service_ReturnsTracking(db.Model):
     carrier = db.Column(db.INTEGER)
     trackingnumber = db.Column(db.VARCHAR(500))
     othercarrier = db.Column(db.VARCHAR(500))
+
 
 class Service_ReturnsTracking_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -125,6 +129,7 @@ class Service_Tracking(db.Model):
     carrier3 = db.Column(db.VARCHAR(500))
     othercarrier3 = db.Column(db.VARCHAR(500))
 
+
 class Service_Tracking_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Service_Tracking
@@ -150,6 +155,7 @@ class Service_UpdateLog(db.Model):
     body = db.Column(db.INTEGER)
     dateofupdate = db.Column(db.TIMESTAMP())
 
+
 class Service_UpdateLog_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Service_UpdateLog
@@ -165,6 +171,7 @@ class Service_CustomerServiceItem(db.Model):
     __table_args__ = {"schema": "public"}
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     issue = db.Column(db.VARCHAR(400))
+
 
 class Service_CustomerServiceItem_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -184,6 +191,7 @@ class Service_WebsiteFeedback(db.Model):
     comment = db.Column(db.TEXT)
     email = db.Column(db.VARCHAR(350))
     timestamp = db.Column(db.TIMESTAMP())
+
 
 class Service_WebsiteFeedback_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -207,6 +215,7 @@ class Service_Issue(db.Model):
     timestamp = db.Column(db.TIMESTAMP())
     admin = db.Column(db.INTEGER)
     status = db.Column(db.INTEGER)
+
 
 class Service_Issue_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:

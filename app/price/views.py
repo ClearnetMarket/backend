@@ -2,13 +2,12 @@ from flask import jsonify
 from flask_login import login_required, current_user
 from app.price import price
 from app import db
-import datetime
-# models
-from app.classes.wallet_btc import Btc_Prices, Btc_Wallet
-from app.classes.wallet_bch import Bch_Prices, Bch_Wallet
-from app.classes.wallet_xmr import Xmr_Prices, Xmr_Wallet
-from app.common.convert_prices import *
 
+# models
+from app.classes.wallet_btc import Btc_Wallet
+from app.classes.wallet_bch import Bch_Wallet
+from app.classes.wallet_xmr import Xmr_Wallet
+from app.common.convert_prices import *
 
 
 # LOCAL TO CRYPTOCURRENCY PRICE
@@ -86,9 +85,6 @@ def local_price_from_xmr(currency, price):
     current_local_price_from_xmr = convert_to_local_xmr(
         amount=price, currency=currency)
     return jsonify({"coin": current_local_price_from_xmr})
-
-
-
 
 
 @price.route('/wallets/total/<string:currency>', methods=['GET'])

@@ -5,7 +5,6 @@ from app.vendorcreateitem import vendorcreateitem
 from app import UPLOADED_FILES_DEST_ITEM
 import os
 from datetime import datetime
-import shutil
 from app.common.decorators import login_required
 from app.common.functions import mkdir_p, itemlocation
 # models
@@ -14,7 +13,6 @@ from app.classes.auth import Auth_User
 from app.classes.models import *
 from app.classes.category import Category_Categories, Category_Categories_Schema
 from app.vendor.images.image_forms import image1, image2, image3, image4
-
 
 
 @vendorcreateitem.route('/create-item', methods=['POST'])
@@ -110,9 +108,6 @@ def create_item_main(uuid):
     """
    
     now = datetime.utcnow()
-    item = Item_MarketItem.query\
-        .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id) \
-        .first()
 
     get_currency_symbol = Query_Currency.query\
         .filter(Query_Currency.value == current_user.currency)\
@@ -162,7 +157,6 @@ def create_item_main(uuid):
     else:
         return jsonify({"status": 'error'})
 
-    print("here")
     # Pric  e
     price = request.json["price"]
 
@@ -253,16 +247,16 @@ def create_item_main(uuid):
         return jsonify({"status": 'error', })
     else:
         category = request.json["category_id_0"]
-        get_category_query = Category_Categories.query\
+        get_category_query = db.session\
+            .query(Category_Categories)\
             .filter(Category_Categories.value == category)\
             .first()
         category_value = get_category_query.value
         category_name = get_category_query.name
 
     # create image of item in database
-    item = Item_MarketItem.query\
-        .filter(Item_MarketItem.uuid == uuid,
-         Item_MarketItem.vendor_id == current_user.id)\
+    item = db.session.query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id)\
         .first()
 
     item.created = now
@@ -323,13 +317,13 @@ def create_item_images(uuid):
     api_key_auth = request.headers.get('Authorization')
     if api_key_auth:
         api_key = api_key_auth.replace('bearer ', '', 1)
-        current_user = Auth_User.query.filter_by(api_key=api_key).first()
+        get_user = db.session.query(Auth_User).filter_by(api_key=api_key).first()
         see_if_user_allowed = Item_MarketItem.query.filter(
-            Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id).first() is not None
+            Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == get_user.id).first() is not None
         if see_if_user_allowed:
 
             item = Item_MarketItem.query\
-                .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id) \
+                .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == get_user.id) \
                 .first()
             # node location
             getimagesubfolder = itemlocation(x=item.id)
@@ -384,8 +378,8 @@ def create_item_images(uuid):
 def delete_item_images(uuid, imagename):
     """
     gets specific id and image, it will delete on the server accordingly
-    :param id:
-    :param img:
+    :param uuid:
+    :param imagename:
     :return:
     """
     item = db.session.query(Item_MarketItem).filter_by(uuid=uuid).first()
@@ -453,13 +447,14 @@ def delete_item_images(uuid, imagename):
 def get_item_fields(uuid):
     """
     gets form data for editing or creating an item
-    :param id:
-    :param img:
+    :param uuid:
     :return:
     """
     if request.method == 'GET':
-        item = db.session.query(Item_MarketItem).filter_by(uuid=uuid).first()
-
+        item = db.session\
+            .query(Item_MarketItem)\
+            .filter_by(uuid=uuid)\
+            .first()
 
         return jsonify({
             'item_title': item.item_title,
@@ -494,7 +489,6 @@ def get_item_fields(uuid):
             'destination_country_three_name': item.destination_country_three_name,
             'destination_country_four': item.destination_country_four,
             'destination_country_four_name': item.destination_country_four_name,
-     
         })
 
 

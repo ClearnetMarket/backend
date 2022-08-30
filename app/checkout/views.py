@@ -1,4 +1,3 @@
-
 from flask import jsonify, request
 from flask_login import current_user, login_required
 from app.checkout import checkout
@@ -8,13 +7,13 @@ from datetime import datetime
 from decimal import Decimal
 
 # models
-from app.classes.checkout import\
-    Checkout_CheckoutShoppingCart,\
-    Checkout_ShoppingCartTotal,\
+from app.classes.checkout import \
+    Checkout_CheckoutShoppingCart, \
+    Checkout_ShoppingCartTotal, \
     carts_schema
 
-from app.classes.auth import\
-    Auth_User,\
+from app.classes.auth import \
+    Auth_User, \
     Auth_UserFees
 from app.classes.item import \
     Item_MarketItem
@@ -32,14 +31,13 @@ from app.classes.userdata import UserData_DefaultAddress
 from app.wallet_bch.wallet_bch_work import bch_send_coin_to_escrow
 from app.wallet_btc.wallet_btc_work import btc_send_coin_to_escrow
 from app.wallet_xmr.wallet_xmr_work import xmr_send_coin_to_escrow
-from app.common.functions import floating_decimals,\
-    convert_local_to_bch,\
-    convert_local_to_btc,\
+from app.common.functions import floating_decimals, \
+    convert_local_to_bch, \
+    convert_local_to_btc, \
     convert_local_to_xmr
 
 
 def cart_calculate_total_price(user_id):
-
     """
     # Calculates cart total table
     First it gets the total cart, all cart items, and wallets of each user
@@ -49,14 +47,14 @@ def cart_calculate_total_price(user_id):
 
     """
 
-    total_cart = db.session\
-        .query(Checkout_ShoppingCartTotal)\
-        .filter(Checkout_ShoppingCartTotal.customer_id == user_id)\
+    total_cart = db.session \
+        .query(Checkout_ShoppingCartTotal) \
+        .filter(Checkout_ShoppingCartTotal.customer_id == user_id) \
         .first()
-    shopping_cart = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
+    shopping_cart = db.session \
+        .query(Checkout_CheckoutShoppingCart) \
         .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
-                Checkout_CheckoutShoppingCart.saved_for_later == 0)\
+                Checkout_CheckoutShoppingCart.saved_for_later == 0) \
         .all()
 
     # Bitcoin
@@ -104,20 +102,19 @@ def cart_calculate_total_price(user_id):
             return jsonify({'status': 'error'})
 
     # get sum of prices in list 
-    if len(btc_pricelist) > 0 :
+    if len(btc_pricelist) > 0:
         btc_sum_of_item = sum(btc_items_quan)
- 
+
         total_cart.btc_sum_of_item = btc_sum_of_item
         # get sum of prices in list
         btc_formatted_total_price = ("{0:.8f}".format(sum(btc_pricelist)))
         # get sum of shipping prices
-        btc_formatted_total_shipping_price=( "{0:.8f}".format(sum(btc_shipping_pricelist)))
-        total_cart.btc_price = btc_formatted_total_price 
+        btc_formatted_total_shipping_price = ("{0:.8f}".format(sum(btc_shipping_pricelist)))
+        total_cart.btc_price = btc_formatted_total_price
         total_cart.btc_shipping_price = btc_formatted_total_shipping_price
         # get total price
         btc_add_total = Decimal(btc_formatted_total_price) + Decimal(btc_formatted_total_shipping_price)
         total_cart.btc_total_price = btc_add_total
-     
 
     if len(bch_pricelist) > 0:
         # get sum of prices in list
@@ -126,21 +123,21 @@ def cart_calculate_total_price(user_id):
         bch_formatted_total_price = ("{0:.8f}".format(sum(bch_pricelist)))
         # get sum of shipping prices
         bch_formatted_total_shipping_price = ("{0:.8f}".format(sum(bch_shipping_pricelist)))
-        total_cart.bch_price = bch_formatted_total_price 
+        total_cart.bch_price = bch_formatted_total_price
         total_cart.bch_shipping_price = bch_formatted_total_shipping_price
         # get total price
         bch_add_total = Decimal(bch_formatted_total_price) + Decimal(bch_formatted_total_shipping_price)
         total_cart.bch_total_price = bch_add_total
 
     # get sum of prices in list
-    if len(xmr_pricelist) > 0 :
+    if len(xmr_pricelist) > 0:
         xmr_sum_of_item = sum(xmr_items_quan)
         total_cart.xmr_sum_of_item = xmr_sum_of_item
         # get sum of prices in list
         xmr_formatted_total_price = ("{0:.12f}".format(sum(xmr_pricelist)))
         # get sum of shipping prices
         xmr_formatted_total_shipping_price = ("{0:.12f}".format(sum(xmr_shipping_pricelist)))
-        total_cart.xmr_price = xmr_formatted_total_price 
+        total_cart.xmr_price = xmr_formatted_total_price
         total_cart.xmr_shipping_price = xmr_formatted_total_shipping_price
         # get total price
         xmr_add_total = Decimal(xmr_formatted_total_price) + Decimal(xmr_formatted_total_shipping_price)
@@ -149,8 +146,8 @@ def cart_calculate_total_price(user_id):
     db.session.add(total_cart)
     db.session.flush()
 
-def cart_calculate_item_shipping_and_price_cart(cartitemid):
 
+def cart_calculate_item_shipping_and_price_cart(cartitemid):
     """
     # calculates shopping cart table
     Function takes cart if of item in shopping cart
@@ -158,31 +155,31 @@ def cart_calculate_item_shipping_and_price_cart(cartitemid):
     Converts the local price to cryptocurrency prices
     determines quantity and calculates price
     """
-    
-    cartitem = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.id == cartitemid)\
+
+    cartitem = db.session \
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.id == cartitemid) \
         .first()
-    getitem = db.session\
+    getitem = db.session \
         .query(Item_MarketItem) \
-        .filter(Item_MarketItem.id==cartitem.item_id) \
+        .filter(Item_MarketItem.id == cartitem.item_id) \
         .first()
 
-    cartitem_exists = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.id == cartitemid)\
-        .first() is not None
-    getitem_exists = db.session\
-        .query(Item_MarketItem) \
-        .filter(Item_MarketItem.id==cartitem.item_id) \
-        .first() is not None
-  
+    cartitem_exists = db.session \
+                          .query(Checkout_CheckoutShoppingCart) \
+                          .filter(Checkout_CheckoutShoppingCart.id == cartitemid) \
+                          .first() is not None
+    getitem_exists = db.session \
+                         .query(Item_MarketItem) \
+                         .filter(Item_MarketItem.id == cartitem.item_id) \
+                         .first() is not None
+
     if cartitem_exists and getitem_exists:
         # BITCOIN
 
         if cartitem.selected_digital_currency == 1:
-            
-            ## SHIPPING
+
+            # SHIPPING
             # free shipping
             if cartitem.selected_shipping == 1:
                 shipprice = 0
@@ -201,18 +198,18 @@ def cart_calculate_item_shipping_and_price_cart(cartitemid):
             # set variable in database
             cartitem.final_shipping_price_btc = btc_ship_price_final
 
-            ## PRICING
+            # PRICING
             btc_itemprice = Decimal(getitem.price)
             btc_price_per_item = Decimal(convert_local_to_btc(amount=btc_itemprice, currency=getitem.currency))
             btc_price_formatted = (floating_decimals(btc_price_per_item, 8))
             btc_pricing_multiply = Decimal(cartitem.quantity_of_item) * Decimal(btc_price_formatted)
             btc_price_final = (floating_decimals(btc_pricing_multiply, 8))
             cartitem.final_price_btc = btc_price_final
-       
+
         # BITCOIN CASH
         if cartitem.selected_digital_currency == 2:
 
-            ## SHIPPING
+            # SHIPPING
             # free shipping
             if cartitem.selected_shipping == 1:
                 shipprice = 0
@@ -225,13 +222,13 @@ def cart_calculate_item_shipping_and_price_cart(cartitemid):
             # get it formatted correctly
             bch_shipprice_formatted = (floating_decimals(bch_ship_price, 8))
             # times the shipping price times quantity
-            bch_shippingtotal = Decimal(cartitem.quantity_of_item) *  Decimal(bch_shipprice_formatted)
+            bch_shippingtotal = Decimal(cartitem.quantity_of_item) * Decimal(bch_shipprice_formatted)
             # return shipping price
             bch_ship_price_final = (floating_decimals(bch_shippingtotal, 8))
             # set variable in database
             cartitem.final_shipping_price_bch = bch_ship_price_final
-            
-            ## PRICING
+
+            # PRICING
             bch_itemprice = Decimal(getitem.price)
             bch_price_per_item = Decimal(convert_local_to_bch(amount=bch_itemprice, currency=getitem.currency))
             bch_price_formatted = (floating_decimals(bch_price_per_item, 8))
@@ -259,7 +256,7 @@ def cart_calculate_item_shipping_and_price_cart(cartitemid):
             # set variable in database
             cartitem.final_shipping_price_xmr = xmr_ship_price_final
 
-            ## PRICING
+            # PRICING
             xmr_itemprice = Decimal(getitem.price)
             xmr_price_per_item = Decimal(convert_local_to_xmr(amount=xmr_itemprice, currency=getitem.currency))
             xmr_price_formatted = (floating_decimals(xmr_price_per_item, 12))
@@ -270,8 +267,8 @@ def cart_calculate_item_shipping_and_price_cart(cartitemid):
         db.session.add(cartitem)
         db.session.flush()
 
-def cart_calculate_item_shipping_and_price_all(userid):
 
+def cart_calculate_item_shipping_and_price_all(userid):
     """
     # calculates shopping cart table
     Function takes cart if of item in shopping cart
@@ -279,23 +276,22 @@ def cart_calculate_item_shipping_and_price_all(userid):
     Converts the local price to cryptocurrency prices
     determines quantity and calculates price
     """
-    
-    cart_items = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.customer_id == userid)\
-        .all()
 
+    cart_items = db.session \
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.customer_id == userid) \
+        .all()
 
     # BITCOIN
     for f in cart_items:
-     
-        getitem = db.session\
+
+        getitem = db.session \
             .query(Item_MarketItem) \
-            .filter(Item_MarketItem.id==f.item_id) \
+            .filter(Item_MarketItem.id == f.item_id) \
             .first()
         if f.selected_digital_currency == 1:
-            
-            ## SHIPPING
+
+            # SHIPPING
             # free shipping
             if f.selected_shipping == 1:
                 shipprice = 0
@@ -314,7 +310,7 @@ def cart_calculate_item_shipping_and_price_all(userid):
             # set variable in database
             f.final_shipping_price_btc = btc_ship_price_final
 
-            ## PRICING
+            # PRICING
             btc_itemprice = Decimal(getitem.price)
             btc_price_per_item = Decimal(convert_local_to_btc(amount=btc_itemprice, currency=getitem.currency))
             btc_price_formatted = (floating_decimals(btc_price_per_item, 8))
@@ -325,7 +321,7 @@ def cart_calculate_item_shipping_and_price_all(userid):
         # BITCOIN CASH
         if f.selected_digital_currency == 2:
 
-            ## SHIPPING
+            # SHIPPING
             # free shipping
             if f.selected_shipping == 1:
                 shipprice = 0
@@ -338,13 +334,13 @@ def cart_calculate_item_shipping_and_price_all(userid):
             # get it formatted correctly
             bch_shipprice_formatted = (floating_decimals(bch_ship_price, 8))
             # times the shipping price times quantity
-            bch_shippingtotal = Decimal(f.quantity_of_item) *  Decimal(bch_shipprice_formatted)
+            bch_shippingtotal = Decimal(f.quantity_of_item) * Decimal(bch_shipprice_formatted)
             # return shipping price
             bch_ship_price_final = (floating_decimals(bch_shippingtotal, 8))
             # set variable in database
             f.final_shipping_price_bch = bch_ship_price_final
-            
-            ## PRICING
+
+            # PRICING
             bch_itemprice = Decimal(getitem.price)
             bch_price_per_item = Decimal(convert_local_to_bch(amount=bch_itemprice, currency=getitem.currency))
             bch_price_formatted = (floating_decimals(bch_price_per_item, 8))
@@ -372,7 +368,7 @@ def cart_calculate_item_shipping_and_price_all(userid):
             # set variable in database
             f.final_shipping_price_xmr = xmr_ship_price_final
 
-            ## PRICING
+            # PRICING
             xmr_itemprice = Decimal(getitem.price)
             xmr_price_per_item = Decimal(convert_local_to_xmr(amount=xmr_itemprice, currency=getitem.currency))
             xmr_price_formatted = (floating_decimals(xmr_price_per_item, 12))
@@ -390,9 +386,9 @@ def checkout_clear_shopping_cart(userid):
     Then deletes all items in the regular cat
     """
     # clear user shoppingcarttotal
-    user = db.session\
-        .query(Auth_User)\
-        .filter_by(username=current_user.username)\
+    user = db.session \
+        .query(Auth_User) \
+        .filter_by(username=current_user.username) \
         .first()
     get_total_cart_for_user = db.session \
         .query(Checkout_ShoppingCartTotal) \
@@ -400,8 +396,8 @@ def checkout_clear_shopping_cart(userid):
         .first()
 
     get_shopping_cart = db.session \
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.customer_id == userid)\
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.customer_id == userid) \
         .all()
     get_total_cart_for_user.btc_sum_of_item = 0
     get_total_cart_for_user.btc_price = 0
@@ -422,43 +418,46 @@ def checkout_clear_shopping_cart(userid):
         db.session.delete(cart)
     db.session.flush()
 
+
 def checkout_delete_private_msg(userid):
     """
     Deletes the private message
     """
-    user = db.session\
-        .query(Auth_User)\
-        .filter(Auth_User.id == userid)\
+    user = db.session \
+        .query(Auth_User) \
+        .filter(Auth_User.id == userid) \
         .first()
-    oldmsg = db.session\
-        .query(Service_ShippingSecret)\
-        .filter_by(user_id=user.id, orderid=0)\
+    oldmsg = db.session \
+        .query(Service_ShippingSecret) \
+        .filter_by(user_id=user.id, orderid=0) \
         .first()
     db.session.delete(oldmsg)
     db.session.flush()
+
 
 def checkoutput_item_offline(itemid):
     """
     If user bought last or only item..take vendors item offline
     """
-    getitem = db.session\
+    getitem = db.session \
         .query(Item_MarketItem) \
         .filter_by(uuid=itemid) \
         .first()
-        # turn off if item is less than one
-    if getitem.item_count == 0:
 
+    # turn off if item is less than one
+    if getitem.item_count == 0:
         getitem.online = 0
         db.session.add(getitem)
 
         # send notification to vendor saying its all sold out
         notification(type=9,
-                        username=getitem.vendor_name,
-                        user_id=getitem.vendor_id,
-                        salenumber=getitem.id,
-                        bitcoin=0,
-                        bitcoincash=0,
-                        monero=0)
+                     username=getitem.vendor_name,
+                     user_id=getitem.vendor_id,
+                     salenumber=getitem.id,
+                     bitcoin=0,
+                     bitcoincash=0,
+                     monero=0)
+
 
 # updates pricing and quanity of items in shopping cart
 @checkout.route('/update/price', methods=['GET'])
@@ -468,9 +467,9 @@ def checkout_update_cart_information():
     updates pricing and quanity of items in shopping cart
     """
     # get user shopping cart
-    get_cart_items = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.customer_id == current_user.id)\
+    get_cart_items = db.session \
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.customer_id == current_user.id) \
         .all()
     # set current amount to 0
     new_amount = 0
@@ -478,16 +477,16 @@ def checkout_update_cart_information():
     for f in get_cart_items:
         # get the market item of the order
         get_market_item = db.session \
-            .query(Item_MarketItem)\
-            .filter(Item_MarketItem.id==f.item_id)\
+            .query(Item_MarketItem) \
+            .filter(Item_MarketItem.id == f.item_id) \
             .first()
         # if order price doesnt equal market price set the price
         if f.price_of_item != get_market_item.price:
-            new_amount  += 1
+            new_amount += 1
             f.price_of_item = get_market_item.price
 
         db.session.add(f)
-    
+
     if new_amount > 0:
         db.session.commit()
     return jsonify({'status': 'success'})
@@ -505,6 +504,7 @@ def checkout_update_payment_information():
     db.session.commit()
     return jsonify({'status': 'success'})
 
+
 @checkout.route('/add/<string:itemuuid>', methods=['POST'])
 @login_required
 def cart_add_to_shopping_cart(itemuuid):
@@ -512,27 +512,29 @@ def cart_add_to_shopping_cart(itemuuid):
     Adds item to shopping cart
     """
 
-    get_item_for_sale = db.session\
+    get_item_for_sale = db.session \
         .query(Item_MarketItem) \
         .filter_by(uuid=itemuuid) \
         .first()
     if get_item_for_sale.vendor_uuid == current_user.uuid:
         return jsonify({'error': 'Can not buy your own item.'}), 409
     # see if in shopping cart
-    see_if_item_in_cart = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.item_uuid == itemuuid)\
-        .first() is not None
+    see_if_item_in_cart = db.session \
+                              .query(Checkout_CheckoutShoppingCart) \
+                              .filter(Checkout_CheckoutShoppingCart.item_uuid == itemuuid) \
+                              .first() is not None
     if see_if_item_in_cart is False:
         if get_item_for_sale.shipping_free is True:
             shipping_selected = 1
             shipinfodesc = f'Takes {get_item_for_sale.shipping_day_0} days for Free'
         elif get_item_for_sale.free_shipping is True:
             shipping_selected = 2
-            shipinfodesc = f'Takes {get_item_for_sale.shipping_day_2} days for {get_item_for_sale.shipping_price_2}{get_item_for_sale.currency_symbol}'
+            shipinfodesc = f'Takes {get_item_for_sale.shipping_day_2} days for ' \
+                           f'{get_item_for_sale.shipping_price_2}{get_item_for_sale.currency_symbol}'
         else:
             shipping_selected = 3
-            shipinfodesc = f'Takes {get_item_for_sale.shipping_day_3} days for {get_item_for_sale.shipping_price_3}{get_item_for_sale.currency_symbol}'
+            shipinfodesc = f'Takes {get_item_for_sale.shipping_day_3} days for ' \
+                           f'{get_item_for_sale.shipping_price_3}{get_item_for_sale.currency_symbol}'
 
         new_shopping_cart_item = Checkout_CheckoutShoppingCart(
             item_id=get_item_for_sale.id,
@@ -580,7 +582,8 @@ def cart_add_to_shopping_cart(itemuuid):
 
         return jsonify({'status': 'success'})
     else:
-       return jsonify({'error': 'Item is in cart already.'}), 409
+        return jsonify({'error': 'Item is in cart already.'}), 409
+
 
 @checkout.route('/data/incart', methods=['GET'])
 @login_required
@@ -589,21 +592,22 @@ def data_shopping_cart_in_cart():
     Returns items in the shopping cart
     """
     if request.method == 'GET':
-        cart = db.session\
-            .query(Checkout_CheckoutShoppingCart)\
-            .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
-                    Checkout_CheckoutShoppingCart.saved_for_later == 0)\
-            .first() is not None
+        cart = db.session \
+                   .query(Checkout_CheckoutShoppingCart) \
+                   .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
+                           Checkout_CheckoutShoppingCart.saved_for_later == 0) \
+                   .first() is not None
         if cart:
-            cart_items = db.session\
-                .query(Checkout_CheckoutShoppingCart)\
+            cart_items = db.session \
+                .query(Checkout_CheckoutShoppingCart) \
                 .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
-                        Checkout_CheckoutShoppingCart.saved_for_later == 0)\
+                        Checkout_CheckoutShoppingCart.saved_for_later == 0) \
                 .all()
-           
+
             return carts_schema.jsonify(cart_items)
         else:
             return jsonify({"status": None}), 409
+
 
 @checkout.route('/data/saved', methods=['GET'])
 @login_required
@@ -612,20 +616,21 @@ def data_shopping_cart_in_saved():
     Returns items in the shopping cart
     """
     if request.method == 'GET':
-        cart = db.session\
-            .query(Checkout_CheckoutShoppingCart)\
-            .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
-                    Checkout_CheckoutShoppingCart.saved_for_later == 1)\
-            .first() is not None
+        cart = db.session \
+                   .query(Checkout_CheckoutShoppingCart) \
+                   .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
+                           Checkout_CheckoutShoppingCart.saved_for_later == 1) \
+                   .first() is not None
         if cart:
-            cart_items = db.session\
-                .query(Checkout_CheckoutShoppingCart)\
+            cart_items = db.session \
+                .query(Checkout_CheckoutShoppingCart) \
                 .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
-                        Checkout_CheckoutShoppingCart.saved_for_later == 1)\
+                        Checkout_CheckoutShoppingCart.saved_for_later == 1) \
                 .all()
             return carts_schema.jsonify(cart_items)
         else:
             return jsonify({"status": "none"}), 200
+
 
 @checkout.route('/data/total', methods=['GET'])
 @login_required
@@ -634,19 +639,19 @@ def data_shopping_cart_total():
     Returns total costs of items for first shopping cart page
     """
     if request.method == 'GET':
-    
+
         total_in_cart = []
         total_shipping_cart = []
         total_items = []
-        all_cart_items = db.session\
-            .query(Checkout_CheckoutShoppingCart)\
-            .filter(Checkout_CheckoutShoppingCart.customer_id == current_user.id)\
-            .filter(Checkout_CheckoutShoppingCart.saved_for_later == 0)\
+        all_cart_items = db.session \
+            .query(Checkout_CheckoutShoppingCart) \
+            .filter(Checkout_CheckoutShoppingCart.customer_id == current_user.id) \
+            .filter(Checkout_CheckoutShoppingCart.saved_for_later == 0) \
             .all()
         for f in all_cart_items:
             total_in_cart.append(f.price_of_item * f.quantity_of_item)
             total_items.append(f.quantity_of_item)
-            if f.selected_shipping == None:
+            if f.selected_shipping is None:
                 total_shipping_cart.append(0)
             if f.selected_shipping == 1:
                 total_shipping_cart.append(0)
@@ -654,11 +659,11 @@ def data_shopping_cart_total():
                 total_shipping_cart.append(f.shipping_price_2 * f.quantity_of_item)
             if f.selected_shipping == 3:
                 total_shipping_cart.append(f.shipping_price_3 * f.quantity_of_item)
-       
+
         total_items_in_cart = sum(total_items)
         total_price_of_items_with_quantity = sum(total_in_cart)
         total_shipping_price_of_items_with_quantity = sum(total_shipping_cart)
-   
+
         total = (total_shipping_price_of_items_with_quantity + total_price_of_items_with_quantity)
         return jsonify({
             'total_items': total_items_in_cart,
@@ -668,6 +673,7 @@ def data_shopping_cart_total():
 
         })
 
+
 @checkout.route('/data/cart/total', methods=['GET'])
 @login_required
 def data_checkout_total():
@@ -675,9 +681,9 @@ def data_checkout_total():
     Returns items in the shopping cart second page total
     """
     if request.method == 'GET':
-        total_cart = db.session\
-            .query(Checkout_ShoppingCartTotal)\
-            .filter(Checkout_ShoppingCartTotal.customer_id == current_user.id)\
+        total_cart = db.session \
+            .query(Checkout_ShoppingCartTotal) \
+            .filter(Checkout_ShoppingCartTotal.customer_id == current_user.id) \
             .first()
 
         return jsonify({
@@ -697,6 +703,7 @@ def data_checkout_total():
             'xmr_total_price': total_cart.xmr_total_price,
         })
 
+
 @checkout.route('/changeshippingoption/<int:cartid>', methods=['PUT'])
 @login_required
 def cart_update_shipping_option(cartid):
@@ -705,11 +712,11 @@ def cart_update_shipping_option(cartid):
     Triggers function to update shipping 
     """
 
-    cartitem = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.id == cartid)\
+    cartitem = db.session \
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.id == cartid) \
         .first()
-    getitem = db.session\
+    getitem = db.session \
         .query(Item_MarketItem) \
         .filter_by(id=cartitem.item_id) \
         .first()
@@ -734,7 +741,7 @@ def cart_update_shipping_option(cartid):
         else:
             cartitem.selected_shipping = new_shipping
             cartitem.selected_shipping_description = getitem.shipping_info_3
-           
+
     db.session.flush()
     cart_calculate_item_shipping_and_price_cart(cartitem.id)
     cart_calculate_total_price(cartitem.customer_id)
@@ -748,9 +755,9 @@ def cart_current_quantity(cartid):
     """
     gets current quantity
     """
-    the_cart_item = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.id == cartid)\
+    the_cart_item = db.session \
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.id == cartid) \
         .first()
     return jsonify({'amount': the_cart_item.quantity_of_item})
 
@@ -761,11 +768,11 @@ def cart_move_cart_item(cartid):
     """
     Moves the item from saved to cart
     """
-    the_cart_item = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.id == cartid)\
+    the_cart_item = db.session \
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.id == cartid) \
         .first()
-  
+
     if the_cart_item.customer_id != current_user.id:
         return jsonify({'status': 'error'})
     the_cart_item.saved_for_later = 0
@@ -773,7 +780,7 @@ def cart_move_cart_item(cartid):
 
     cart_calculate_item_shipping_and_price_cart(the_cart_item.id)
     cart_calculate_total_price(the_cart_item.customer_id)
-  
+
     db.session.commit()
     return jsonify({'status': 'success'})
 
@@ -784,9 +791,9 @@ def cart_save_for_later(cartid):
     """
     Save the item fopr later
     """
-    cartitem = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.id==cartid)\
+    cartitem = db.session \
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.id == cartid) \
         .first()
     if cartitem.customer_id != current_user.id:
         return jsonify({'status': 'error'})
@@ -802,11 +809,11 @@ def cart_update_payment_option(cartid):
     """
     Updates the quanity of the item in the shopping cart
     """
-    the_cart_item = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.id==cartid)\
+    the_cart_item = db.session \
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.id == cartid) \
         .first()
-    getitem = db.session\
+    getitem = db.session \
         .query(Item_MarketItem) \
         .filter_by(id=the_cart_item.item_id) \
         .first()
@@ -819,7 +826,7 @@ def cart_update_payment_option(cartid):
         else:
             the_cart_item.selected_digital_currency = new_currency
     if new_currency == 2:
-   
+
         if getitem.digital_currency_2 is False:
             return jsonify({'status': 'error'})
         else:
@@ -843,11 +850,11 @@ def cart_update_quantity(cartid):
     """
     Updates the quanity of the item in the shopping cart
     """
-    the_cart_item = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.id==cartid)\
+    the_cart_item = db.session \
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.id == cartid) \
         .first()
-    getitem = db.session\
+    getitem = db.session \
         .query(Item_MarketItem) \
         .filter_by(id=the_cart_item.item_id) \
         .first()
@@ -870,14 +877,14 @@ def cart_delete_item(cartid):
     """
     Updates the quanity of the item in the shopping cart
     """
-    the_cart_item = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.id == cartid)\
+    the_cart_item = db.session \
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.id == cartid) \
         .first()
 
     if the_cart_item.customer_id != current_user.id:
         return jsonify({'status': 'error'})
-   
+
     db.session.delete(the_cart_item)
     db.session.commit()
     return jsonify({'status': 'success'})
@@ -889,8 +896,8 @@ def cart_set_quantity_initial_amount():
     """
     When User enters shopping cart ..set amounts to 1
     """
-    the_cart = db.session.query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid)\
+    the_cart = db.session.query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid) \
         .all()
     for f in the_cart:
         f.quantity_of_item = 1
@@ -905,17 +912,17 @@ def checkout_delete_secret_info(itemid):
     """
     Delete the message sent to the user
     # """
-    user = db.session\
-        .query(Auth_User)\
-        .filter_by(username=current_user.username)\
+    user = db.session \
+        .query(Auth_User) \
+        .filter_by(username=current_user.username) \
         .first()
-    get_cart =  db.session\
-        .query(Checkout_ShoppingCartTotal)\
-        .filter_by(customer=user.id)\
+    get_cart = db.session \
+        .query(Checkout_ShoppingCartTotal) \
+        .filter_by(customer=user.id) \
         .first()
-    the_item = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.uuid == itemid)\
+    the_item = db.session \
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.uuid == itemid) \
         .first()
     if the_item:
         if get_cart.btc_price == 0 and get_cart.bch_price == 0:
@@ -923,8 +930,8 @@ def checkout_delete_secret_info(itemid):
         else:
             # get the message
             msg = db.session \
-                .query(Service_ShippingSecret)\
-                .filter_by(user_id=user.id, orderid=0)\
+                .query(Service_ShippingSecret) \
+                .filter_by(user_id=user.id, orderid=0) \
                 .first()
             db.session.delete(msg)
             db.session.commit()
@@ -938,8 +945,8 @@ def checkout_add_secret_info(itemid):
     Delete the message sent to the user
     """
     the_item = db.session \
-        .query(Checkout_CheckoutShoppingCart)\
-        .filter(Checkout_CheckoutShoppingCart.uuid == itemid)\
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.uuid == itemid) \
         .first()
     if the_item:
         # get the message
@@ -952,14 +959,16 @@ def checkout_add_secret_info(itemid):
         )
         db.session.add(addmsg)
         db.session.commit()
-    
+
         return jsonify({'status': 'success'})
 
 
-##PAYMENT STUFF
 @checkout.route('/payment', methods=['POST'])
 @login_required
 def finalize():
+    """
+    # PAYMENT STUFF
+    """
     x = checkout_make_order()
     if x is True:
         y = checkout_make_payment()
@@ -980,23 +989,23 @@ def checkout_make_order():
     # Total cart
     now = datetime.utcnow()
 
-    cart = db.session\
-        .query(Checkout_CheckoutShoppingCart)\
+    cart = db.session \
+        .query(Checkout_CheckoutShoppingCart) \
         .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
-                Checkout_CheckoutShoppingCart.saved_for_later == 0)\
+                Checkout_CheckoutShoppingCart.saved_for_later == 0) \
         .all()
-    get_customer_shipping = db.session\
-        .query(UserData_DefaultAddress)\
-        .filter(UserData_DefaultAddress.uuid == Checkout_CheckoutShoppingCart.customer_uuid)\
+    get_customer_shipping = db.session \
+        .query(UserData_DefaultAddress) \
+        .filter(UserData_DefaultAddress.uuid == Checkout_CheckoutShoppingCart.customer_uuid) \
         .first()
     for k in cart:
-        sellerfee = db.session\
-            .query(Auth_UserFees)\
-            .filter(Auth_UserFees.user_id == k.vendor_id)\
+        sellerfee = db.session \
+            .query(Auth_UserFees) \
+            .filter(Auth_UserFees.user_id == k.vendor_id) \
             .first()
         physicalitemfee = sellerfee.vendorfee
         if k.selected_digital_currency == 1:
-            dbfeetopercent = (floating_decimals((physicalitemfee/100), 8))
+            dbfeetopercent = (floating_decimals((physicalitemfee / 100), 8))
             fee_btc = (floating_decimals(
                 (dbfeetopercent * k.final_price_btc), 8))
             fee_xmr = 0
@@ -1012,7 +1021,7 @@ def checkout_make_order():
             shipping_price_btc = k.final_shipping_price_btc
 
         elif k.selected_digital_currency == 2:
-            dbfeetopercent = (floating_decimals((physicalitemfee/100), 8))
+            dbfeetopercent = (floating_decimals((physicalitemfee / 100), 8))
             fee_bch = (floating_decimals(
                 (dbfeetopercent * k.final_price_bch), 8))
             fee_btc = 0
@@ -1028,7 +1037,7 @@ def checkout_make_order():
             shipping_price_bch = k.final_shipping_price_bch
 
         elif k.selected_digital_currency == 3:
-            dbfeetopercent = (floating_decimals((physicalitemfee/100), 12))
+            dbfeetopercent = (floating_decimals((physicalitemfee / 100), 12))
             fee_xmr = (floating_decimals(
                 (dbfeetopercent * k.final_price_xmr), 12))
             fee_btc = 0
@@ -1046,9 +1055,9 @@ def checkout_make_order():
         else:
             return False
 
-        get_customer_country = db.session\
-            .query(Query_Country)\
-            .filter(Query_Country.value ==get_customer_shipping.country)\
+        get_customer_country = db.session \
+            .query(Query_Country) \
+            .filter(Query_Country.value == get_customer_shipping.country) \
             .first()
         user_country = get_customer_country.name
         order = User_Orders(
@@ -1090,20 +1099,20 @@ def checkout_make_order():
             price_per_item_btc=price_per_item_btc,
             price_per_item_bch=price_per_item_bch,
             price_per_item_xmr=price_per_item_xmr,
-            address_name = get_customer_shipping.address_name,
-            address = get_customer_shipping.address,
-            apt = get_customer_shipping.apt,
-            city = get_customer_shipping.city,
-            country = user_country,
-            state_or_provence = get_customer_shipping.state_or_provence,
-            zip_code = get_customer_shipping.zip_code,
-            msg = get_customer_shipping.msg
+            address_name=get_customer_shipping.address_name,
+            address=get_customer_shipping.address,
+            apt=get_customer_shipping.apt,
+            city=get_customer_shipping.city,
+            country=user_country,
+            state_or_provence=get_customer_shipping.state_or_provence,
+            zip_code=get_customer_shipping.zip_code,
+            msg=get_customer_shipping.msg
         )
-        new_notice_vendor = Vendor_Notification( 
+        new_notice_vendor = Vendor_Notification(
             dateadded=now,
             user_id=k.vendor_id,
             new_feedback=0,
-            new_disputes=0 ,
+            new_disputes=0,
             new_orders=1,
             new_returns=0,
         )
@@ -1117,54 +1126,54 @@ def checkout_make_payment():
     """
     Sends the Payments for the cryptocurrencies
     """
-    cart_total = db.session\
-        .query(Checkout_ShoppingCartTotal)\
-        .filter_by(customer_id=current_user.id)\
+    cart_total = db.session \
+        .query(Checkout_ShoppingCartTotal) \
+        .filter_by(customer_id=current_user.id) \
         .first()
 
     # add security here before proceeding
-    userwallet_bch = db.session\
-        .query(Bch_Wallet)\
-        .filter_by(user_id=current_user.id)\
+    userwallet_bch = db.session \
+        .query(Bch_Wallet) \
+        .filter_by(user_id=current_user.id) \
         .first()
-    userwallet_btc = db.session\
-        .query(Btc_Wallet)\
-        .filter_by(user_id=current_user.id)\
+    userwallet_btc = db.session \
+        .query(Btc_Wallet) \
+        .filter_by(user_id=current_user.id) \
         .first()
-    userwallet_xmr = db.session\
-        .query(Xmr_Wallet)\
-        .filter_by(user_id=current_user.id)\
+    userwallet_xmr = db.session \
+        .query(Xmr_Wallet) \
+        .filter_by(user_id=current_user.id) \
         .first()
 
     # See if customer has the coin
     current_cart_total_bch = Decimal(cart_total.bch_total_price)
     if current_cart_total_bch > 0:
         if Decimal(userwallet_bch.currentbalance) <= current_cart_total_bch:
-           return False
+            return False
 
     current_cart_total_btc = Decimal(cart_total.btc_total_price)
     if current_cart_total_btc > 0:
         if Decimal(userwallet_btc.currentbalance) <= current_cart_total_btc:
-           return False
+            return False
 
     current_cart_total_xmr = Decimal(cart_total.xmr_total_price)
     if current_cart_total_xmr > 0:
         if Decimal(userwallet_xmr.currentbalance) <= current_cart_total_xmr:
-           return False
+            return False
 
     # get the orders
-    orders = db.session\
-        .query(User_Orders)\
-        .filter(User_Orders.customer_uuid == current_user.uuid)\
-        .filter(User_Orders.overall_status == None)\
+    orders = db.session \
+        .query(User_Orders) \
+        .filter(User_Orders.customer_uuid == current_user.uuid) \
+        .filter(User_Orders.overall_status == None) \
         .all()
 
     # loop through ORDERS. send coin and doing transactions 1 by 1..
     # this does not loop through the shopping cart
     # modifies orders
     for order in orders:
-        get_item = db.session\
-            .query(Item_MarketItem)\
+        get_item = db.session \
+            .query(Item_MarketItem) \
             .filter(Item_MarketItem.uuid == order.item_uuid) \
             .first()
 
@@ -1190,7 +1199,7 @@ def checkout_make_payment():
             timestamp=datetime.utcnow(),
             orderid=order.id
         )
-        
+
         if order.digital_currency == 1:
             price_of_item_order = floating_decimals((order.price_total_btc + order.shipping_price_btc), 8)
             if current_cart_total_btc > 0:
@@ -1225,4 +1234,3 @@ def checkout_make_payment():
         db.session.add(addmsg)
     db.session.flush()
     return True
-## END PAYMENT STUFF

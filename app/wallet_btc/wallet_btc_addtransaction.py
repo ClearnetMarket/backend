@@ -42,5 +42,5 @@ def btc_add_transaction(category, amount, user_id, comment, balance, order_uuid,
         )
         db.session.add(trans)
 
-    except Exception as e:
+    except:
         pass

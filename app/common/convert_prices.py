@@ -42,6 +42,7 @@ def convert_local_to_bch(amount, currency):
     price_in_floats = floating_decimals(converted_price, 8)
     return price_in_floats
 
+
 # MONERO
 def convert_to_local_xmr(amount, currency):
     getcurrentprice = Xmr_Prices.query.filter_by(currency_id=currency).first()

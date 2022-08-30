@@ -47,6 +47,7 @@ class Bch_Prices(db.Model):
     currency_id = db.Column(db.INTEGER)
     percent_change_twentyfour = db.Column(db.DECIMAL(50, 2))
 
+
 class Bch_Prices_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Bch_Prices
@@ -54,6 +55,7 @@ class Bch_Prices_Schema(ma.SQLAlchemyAutoSchema):
     price = ma.auto_field()
     currency_id = ma.auto_field()
     percent_change_twentyfour = ma.auto_field()
+
 
 class Bch_WalletTransferOrphan(db.Model):
     __tablename__ = 'bch_transaction_orphan'
@@ -82,6 +84,7 @@ class Bch_WalletUnconfirmed(db.Model):
     txid3 = db.Column(db.VARCHAR(500))
     txid4 = db.Column(db.VARCHAR(500))
     txid5 = db.Column(db.VARCHAR(500))
+
 
 class Bch_WalletUnconfirmed_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:

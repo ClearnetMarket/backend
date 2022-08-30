@@ -30,6 +30,7 @@ def xmr_price_usd():
             price_xmr_usd = str(price_xmr_usd.price)
         except:
             price_xmr_usd = 0
+
         return jsonify({
             "price_xmr_usd": price_xmr_usd,
         })

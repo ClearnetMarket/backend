@@ -11,8 +11,10 @@ class Promoted_Item(db.Model):
                    unique=True)
     itemid = db.Column(db.INTEGER)
 
+
 class Promoted_Item_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Promoted_Item
     id = ma.auto_field()
     itemid = ma.auto_field()
+

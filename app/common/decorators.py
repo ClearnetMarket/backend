@@ -4,8 +4,6 @@ from flask_login import current_user
 from flask import abort
 
 from functools import wraps
-from app.classes.auth import Auth_User
-
 
 
 def login_required(f):

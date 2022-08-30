@@ -11,6 +11,7 @@ class Btc_Prices(db.Model):
     currency_id = db.Column(db.INTEGER)
     percent_change_twentyfour = db.Column(db.DECIMAL(50, 2))
 
+
 class Btc_Prices_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Btc_Prices
@@ -18,7 +19,6 @@ class Btc_Prices_Schema(ma.SQLAlchemyAutoSchema):
     price = ma.auto_field()
     currency_id = ma.auto_field()
     percent_change_twentyfour = ma.auto_field()
-
 
 
 class Btc_Wallet(db.Model):
@@ -39,7 +39,6 @@ class Btc_Wallet(db.Model):
     transactioncount = db.Column(db.INTEGER)
     unconfirmed = db.Column(db.DECIMAL(20, 8))
 
-    
 
 class Btc_Wallet_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -76,6 +75,7 @@ class Btc_Unconfirmed(db.Model):
     txid4 = db.Column(db.VARCHAR(500))
     txid5 = db.Column(db.VARCHAR(500))
 
+
 class Btc_Unconfirmed_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Btc_Unconfirmed
@@ -108,8 +108,6 @@ class Btc_WalletWork(db.Model):
     txtcomment = db.Column(db.VARCHAR(500))
 
 
-
-
 class Btc_WalletAddresses(db.Model):
     __tablename__ = 'btc_wallet_addresses'
     __bind_key__ = 'clearnet'
@@ -118,7 +116,6 @@ class Btc_WalletAddresses(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     btcaddress = db.Column(db.VARCHAR(500))
     status = db.Column(db.INTEGER)
-
 
 
 class Btc_TransactionsBtc(db.Model):

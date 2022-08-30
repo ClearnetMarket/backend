@@ -2,6 +2,7 @@ from decimal import Decimal
 from app import db
 from app.classes.wallet_btc import Btc_Wallet
 
+
 def btc_check_balance(user_id, amount):
     # The money requested during the trade
     userwallet = db.session\

@@ -1,6 +1,6 @@
 from app import db, UPLOADED_FILES_DEST_USER
 from app.common.functions import floating_decimals, userimagelocation
-from app.notification import notification
+
 from app.wallet_bch.wallet_bch_transaction import bch_add_transaction
 from app.wallet_bch.wallet_bch_security import bch_check_balance
 from decimal import Decimal
@@ -30,9 +30,9 @@ def bch_create_wallet(user_id):
     """
 
     userswallet = db.session\
-                .query(Bch_Wallet)\
-                .filter(Bch_Wallet.user_id == user_id)\
-                .first()
+                    .query(Bch_Wallet)\
+                    .filter(Bch_Wallet.user_id == user_id)\
+                    .first()
 
     if userswallet:
         # find a new clean address
@@ -53,7 +53,9 @@ def bch_create_wallet(user_id):
 
         # create a qr code
         bch_create_qr_code(
-            user_id=user_id, address=btc_cash_walletcreate.address1)
+            user_id=user_id,
+            address=userswallet.address1
+        )
     else:
 
         # create a new wallet
@@ -102,7 +104,9 @@ def bch_create_wallet(user_id):
 
         # create a qr code
         bch_create_qr_code(
-            user_id=user_id, address=btc_cash_walletcreate.address1)
+            user_id=user_id,
+            address=btc_cash_walletcreate.address1
+        )
 
 
 def bch_create_qr_code(user_id, address):
@@ -147,6 +151,7 @@ def bch_walletstatus(user_id):
                 bch_create_wallet(user_id=user_id)
 
         except Exception as e:
+            print(str(e))
             userswallet.address1 = ''
             userswallet.address1status = 0
             userswallet.address2 = ''
@@ -169,7 +174,7 @@ def bch_send_coin(user_id, sendto, amount, comment):
     :param comment:
     :return:
     """
-    timestamp = datetime.utcnow()
+    timestamp = datetime.datetime.utcnow()
     getwallet = db.session\
         .query(Bch_WalletFee)\
         .filter_by(id=1)\
@@ -212,7 +217,6 @@ def bch_send_coin(user_id, sendto, amount, comment):
         pass
 
 
-##INNER FUNCTIONS
 def bch_send_coin_to_user_as_admin(amount, comment, user_id, order_uuid):
     """
     #to User
@@ -220,6 +224,7 @@ def bch_send_coin_to_user_as_admin(amount, comment, user_id, order_uuid):
     :param amount:
     :param comment:
     :param user_id:
+    :param order_uuid:
     :return:
     """
 
@@ -251,7 +256,7 @@ def bch_take_coin_to_user_as_admin(amount, user_id, order_uuid):
     # TO User
     # this function will move the coin from clearnets wallet_btc to a user as an admin
     :param amount:
-    :param comment:
+    :param order_uuid:
     :param user_id:
     :return:
     """
@@ -284,7 +289,7 @@ def bch_send_coin_to_escrow(amount, user_id, order_uuid):
     # TO clearnet_webapp Wallet
     # this function will move the coin to clearnets wallet_btc from a user
     :param amount:
-    :param comment:
+    :param order_uuid:
     :param user_id:
     :return:
     """
@@ -311,6 +316,7 @@ def bch_send_coin_to_escrow(amount, user_id, order_uuid):
                                 item_uuid=None
                                 )
         except Exception as e:
+            print(str(e))
             pass
     else:
         pass
@@ -321,7 +327,7 @@ def bch_send_coin_to_user(amount, user_id, order_uuid):
     #TO User
     ##this function will move the coin from clearnets wallet bch to a user
     :param amount:
-    :param comment:
+    :param order_uuid:
     :param user_id:
     :return:
     """
@@ -394,7 +400,7 @@ def bch_refund_rejected_user(amount, user_id, order_uuid):
     # this function will move the coin from clearnets wallet bch to a user
     # when a vendor rejects an order uses this function
     :param amount:
-    :param comment:
+    :param order_uuid:
     :param user_id:
     :return:
     """

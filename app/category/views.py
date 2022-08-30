@@ -8,8 +8,6 @@ from app.classes.category import Category_Categories, Category_Categories_Schema
 from app.classes.item import Item_MarketItem, Item_MarketItem_Schema
 
 
-
-
 @category.route('/query/index/todayfeatured', methods=['GET'])
 def get_categories_today_featured():
     """
@@ -44,7 +42,6 @@ def get_categories_sidebar():
             .all()
         cats_schema = Category_Categories_Schema(many=True)
         return jsonify(cats_schema.dump(get_cats))
-
 
 
 # Electronics
@@ -109,6 +106,7 @@ def get_categories_smartphone():
         item_schema = Item_MarketItem_Schema(many=True)
         return jsonify(item_schema.dump(smartphones_full))
 
+
 # Automotive
 @category.route('/query/index/automotive', methods=['GET'])
 def get_categories_automotive():
@@ -128,6 +126,7 @@ def get_categories_automotive():
 
         item_schema = Item_MarketItem_Schema(many=True)
         return jsonify(item_schema.dump(automotive_full))
+
 
 # hobbies
 @category.route('/query/index/hobbies', methods=['GET'])
@@ -149,6 +148,7 @@ def get_categories_hobbies():
         item_schema = Item_MarketItem_Schema(many=True)
         return jsonify(item_schema.dump(hobbies_full))
 
+
 # gold
 @category.route('/query/index/jewelryandgold', methods=['GET'])
 def get_categories_gold():
@@ -169,6 +169,7 @@ def get_categories_gold():
         item_schema = Item_MarketItem_Schema(many=True)
         return jsonify(item_schema.dump(gold_full))
 
+
 # home and garden
 @category.route('/query/index/homegarden', methods=['GET'])
 def get_categories_homegarden():
@@ -188,8 +189,6 @@ def get_categories_homegarden():
 
         item_schema = Item_MarketItem_Schema(many=True)
         return jsonify(item_schema.dump(home_full))
-
-
 
 
 # computers and parts

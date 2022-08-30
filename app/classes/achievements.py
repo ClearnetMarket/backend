@@ -22,6 +22,7 @@ class Achievements_WhichAch(db.Model):
     ach4_cat = db.Column(db.VARCHAR(140))
     ach5_cat = db.Column(db.VARCHAR(140))
 
+
 class Achievements_WhichAch_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Achievements_WhichAch
@@ -54,6 +55,7 @@ class Achievements_UserAchievementsRecent(db.Model):
     ach_id = db.Column(db.INTEGER)
     achievement_date = db.Column(db.TIMESTAMP())
     viewed = db.Column(db.INTEGER)
+
 
 class Achievements_UserAchievementsRecent_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -203,6 +205,7 @@ class Achievements_UserAchievements(db.Model):
     b5 = db.Column(db.INTEGER)
     b5_date = db.Column(db.TIMESTAMP())
 
+
 class Achievements_UserAchievements_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Achievements_UserAchievements
@@ -335,6 +338,7 @@ class Achievements_UserAchievements_Schema(ma.SQLAlchemyAutoSchema):
     b5 = ma.auto_field()
     b5_date = ma.auto_field()
 
+
 class Achievements(db.Model):
     __tablename__ = 'achievements_achievements'
     __bind_key__ = 'clearnet'
@@ -348,6 +352,7 @@ class Achievements(db.Model):
     title = db.Column(db.String(350))
     description = db.Column(db.VARCHAR(350))
     dateadded = db.Column(db.TIMESTAMP())
+
 
 class Achievements_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:

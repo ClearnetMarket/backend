@@ -205,7 +205,17 @@ def vendor_vendor_feedback_count(vendor_uuid):
                 .count()
             vendor_feedback_ten_percent = (
                 (int(vendor_feedback_ten) / int(vendor_feedback))*100)
-
+        else:
+            vendor_feedback_one_percent = None
+            vendor_feedback_two_percent = None
+            vendor_feedback_three_percent = None
+            vendor_feedback_four_percent = None
+            vendor_feedback_five_percent = None
+            vendor_feedback_six_percent = None
+            vendor_feedback_seven_percent = None
+            vendor_feedback_eight_percent = None
+            vendor_feedback_nine_percent = None
+            vendor_feedback_ten_percent = None
         return jsonify({"total_feedback": vendor_feedback,
                         'feedback_one': vendor_feedback_one_percent,
                         'feedback_two': vendor_feedback_two_percent,
@@ -325,15 +335,15 @@ def vendor_topbar_get_vendor_info(vendor_id):
     Gets the vendor name, ratings count and sales count
     :return:
     """
-    vendor = db.session\
+    get_vendor = db.session\
         .query(Auth_User)\
         .filter(Auth_User.uuid == vendor_id)\
         .first()
 
-    vendor_name = vendor.username
+    vendor_name = get_vendor.username
     vendor_stats = db.session\
         .query(Profile_StatisticsVendor)\
-        .filter(Profile_StatisticsVendor.vendor_uuid == vendor.uuid)\
+        .filter(Profile_StatisticsVendor.vendor_uuid == get_vendor.uuid)\
         .first()
 
     vendor_rating = vendor_stats.avg_item_rating
@@ -349,7 +359,6 @@ def vendor_topbar_get_vendor_info(vendor_id):
 
 @vendor.route('/get/defaultaddress/<string:vendoruuid>', methods=['GET'])
 def vendor_get_address(vendoruuid):
-
 
     if request.method == 'GET':
         vendor_address = db.session\
@@ -368,8 +377,6 @@ def vendor_get_address(vendoruuid):
             })
         else:
             return jsonify({"status": 'error'}), 409
-
-            
 
 
 @vendor.route('/update/defaultaddress', methods=['PUT'])

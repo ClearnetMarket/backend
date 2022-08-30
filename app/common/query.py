@@ -1,16 +1,16 @@
 
 
 def itemororder():
-    list = [
+    list_of_order = [
         (0, ''),
         (1, 'Per Item'),
         (2, 'Per Order'),
     ]
-    return list
+    return list_of_order
 
 
 def continents():
-    list = [
+    list_of_cont = [
         (0, ''),
         (1, 'Africa'),
         (2, 'South America'),
@@ -24,11 +24,11 @@ def continents():
         (10, 'PO Boxes'),
 
     ]
-    return list
+    return list_of_cont
 
 
 def achievementvalue():
-    list = [
+    list_of_ach = [
         (1, '1'),
         (5, '5'),
         (10, '10'),
@@ -39,21 +39,21 @@ def achievementvalue():
         (100, '100'),
 
     ]
-    return list
+    return list_of_ach
 
 
 def giftmespeed():
-    list = [
+    list_of_gift = [
         (1, 'Top'),
         (2, 'High'),
         (3, 'Low'),
 
     ]
-    return list
+    return list_of_gift
 
 
 def achievementcategory():
-    list = [
+    list_of_acvhie = [
         (0, 'Experience'),
         (1, 'Sales'),
         (2, 'Bitcoin'),
@@ -62,17 +62,17 @@ def achievementcategory():
         (4, 'Feedback'),
         (5, 'Vendor'),
     ]
-    return list
+    return list_of_acvhie
 
 
 def sorttheresults():
-    list = [
+    list_sort = [
         (0, 'Most Relevant'),
         (1, 'Price: Highest First'),
         (2, 'Price: Lowest First'),
         (3, 'Top Sellers/Trades'),
     ]
-    return list
+    return list_sort
 
 
 def sortbyrating():

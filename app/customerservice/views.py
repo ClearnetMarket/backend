@@ -1,4 +1,3 @@
-
 from flask import jsonify
 from flask_login import current_user
 from app.customerservice import customerservice
@@ -48,5 +47,3 @@ def customer_topbar_get_issues_count():
     return jsonify({
         "serviceissues": service_issues,
     })
-
-

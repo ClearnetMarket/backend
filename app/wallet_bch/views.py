@@ -16,6 +16,7 @@ from app.classes.wallet_bch import\
     Bch_Prices
 # end models
 
+
 @wallet_bch.route('/price', methods=['GET'])
 def bch_price_usd():
     """
@@ -77,7 +78,7 @@ def bch_transactions():
 @login_required
 def bch_receive():
     
-    wallet = Bch_Wallet.query.filter(Bch_Wallet.user_id==current_user.id).first()
+    wallet = Bch_Wallet.query.filter(Bch_Wallet.user_id == current_user.id).first()
     return jsonify({"bch_address": wallet.address1}), 200
 
 

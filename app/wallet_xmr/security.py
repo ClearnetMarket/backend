@@ -2,6 +2,7 @@ from app import db
 from decimal import Decimal
 from app.classes.wallet_xmr import Xmr_Wallet
 
+
 def xmr_check_balance(user_id, amount):
     # The money requested during the trade
     userwallet = db.session\

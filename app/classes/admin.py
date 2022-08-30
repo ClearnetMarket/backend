@@ -12,7 +12,6 @@ class Admin_ClearnetFee(db.Model):
     itempurchase = db.Column(db.DECIMAL(20, 2))
 
 
-
 class Admin_ClearnetProfitBtc(db.Model):
     __tablename__ = 'admin_clearnet_profit_btc'
     __bind_key__ = 'clearnet'
@@ -25,7 +24,6 @@ class Admin_ClearnetProfitBtc(db.Model):
     order = db.Column(db.INTEGER)
     timestamp = db.Column(db.TIMESTAMP(), index=True)
     total = db.Column(db.DECIMAL(20, 8))
-
 
 
 class Admin_ClearnetProfitBCH(db.Model):

@@ -1,6 +1,4 @@
 import os
-from app import db
-from app.classes.models import Query_Margin
 from app.classes.wallet_bch import Bch_Prices
 from app.classes.wallet_btc import Btc_Prices
 from app.classes.wallet_xmr import Xmr_Prices
@@ -225,7 +223,3 @@ def id_generator_picture4(size=30, chars=string.ascii_uppercase + string.digits)
 
 def id_generator_picture5(size=30, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
-
-
-
-

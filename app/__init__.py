@@ -42,10 +42,10 @@ app.jinja_env.autoescape = True
 
 
 # configuration
-UPLOADED_FILES_DEST_USER= ApplicationConfig.UPLOADED_FILES_DEST_USER
+UPLOADED_FILES_DEST_USER = ApplicationConfig.UPLOADED_FILES_DEST_USER
 UPLOADED_FILES_DEST_ITEM = ApplicationConfig.UPLOADED_FILES_DEST_ITEM
-UPLOADED_FILES_DEST =   ApplicationConfig.UPLOADED_FILES_DEST
-UPLOADED_FILES_ALLOW =  ApplicationConfig.UPLOADED_FILES_ALLOW
+UPLOADED_FILES_DEST = ApplicationConfig.UPLOADED_FILES_DEST
+UPLOADED_FILES_ALLOW = ApplicationConfig.UPLOADED_FILES_ALLOW
 
 app.config['UPLOADED_FILES_DEST_USER'] = ApplicationConfig.UPLOADED_FILES_DEST_USER
 app.config['UPLOADED_FILES_DEST_ITEM'] = ApplicationConfig.UPLOADED_FILES_DEST_ITEM
@@ -98,10 +98,11 @@ def load_user_from_request(request):
             return user
     return None
 
+
 api_main = {
     "origins": [ApplicationConfig.ORIGIN_URL],
     "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
-    "allow_headers": ['Authorization', 'application/json','authorization', 'Content-Type', 'Access-Control-Allow-Headers', 'Origin,Accept', 'X-Requested-With', 'Content-Type', 'Access-Control-Request-Method', 'Access-Control-Request-Headers']
+    "allow_headers": ['Authorization', 'application/json', 'authorization', 'Content-Type', 'Access-Control-Allow-Headers', 'Origin,Accept', 'X-Requested-With', 'Content-Type', 'Access-Control-Request-Method', 'Access-Control-Request-Headers']
 }
 cors = CORS(app,  supports_credentials=True, resources={r'/*': api_main})
 
@@ -111,37 +112,46 @@ cors = CORS(app,  supports_credentials=True, resources={r'/*': api_main})
 def teardown_request(response_or_exc):
     db.session.remove()
 
+
 @app.teardown_appcontext
 def teardown_appcontext(response_or_exc):
     db.session.remove()
+
 
 @app.errorhandler(500)
 def internal_error500():
     return jsonify({"error": "Internal Error 500"}), 500
 
+
 @app.errorhandler(502)
 def internal_error502(error):
     return jsonify({"error": "Internal Error 502"}), 502
+
 
 @app.errorhandler(404)
 def internal_error404(error):
     return jsonify({"error": "Internal Error 400"}), 400
 
+
 @app.errorhandler(401)
 def internal_error404(error):
     return jsonify({"error": "Internal Error 401"}), 401
+
 
 @app.errorhandler(400)
 def internal_error400(error):
     return jsonify({"error": "Internal Error 400"}), 400
 
+
 @app.errorhandler(413)
 def to_large_file(error):
     return jsonify({"error": "File is too large.  Use a smaller image/file."}), 413
 
+
 @app.errorhandler(403)
 def internal_error403(error):
     return jsonify({"error": "Internal Error 403"}), 403
+
 
 @app.errorhandler(405)
 def internal_error(error):
@@ -196,13 +206,14 @@ app.register_blueprint(vendor_blueprint, url_prefix='/vendor')
 from .moderator import moderator as moderator_blueprint
 app.register_blueprint(moderator_blueprint, url_prefix='/mod')
 
-
 # bch wallet
 from app.wallet_bch import wallet_bch as wallet_bch_blueprint
 app.register_blueprint(wallet_bch_blueprint, url_prefix='/bch')
+
 # btc wallet
 from app.wallet_btc import wallet_btc as wallet_btc_blueprint
 app.register_blueprint(wallet_btc_blueprint, url_prefix='/btc')
+
 # xmr wallet
 from app.wallet_xmr import wallet_xmr as wallet_xmr_blueprint
 app.register_blueprint(wallet_xmr_blueprint, url_prefix='/xmr')

@@ -6,13 +6,14 @@ from app import db
 from datetime import datetime
 from sqlalchemy import or_
 from app.classes.auth import Auth_User
-from app.classes.message import Message_Chat,\
+from app.classes.message import Message_Chat, \
     Message_Comment, \
     Message_Comment_Schema, \
     Message_Chat_Schema, \
-    Message_Post,\
+    Message_Post, \
     Message_Notifications
 from app.classes.item import Item_MarketItem
+
 
 @message.route('/notification-count', methods=['GET'])
 def message_notitification_count():
@@ -22,10 +23,10 @@ def message_notitification_count():
     """
 
     user_id = current_user.id
-    gnotifications = db.session\
-        .query(Message_Notifications)\
+    gnotifications = db.session \
+        .query(Message_Notifications) \
         .filter(Message_Notifications.user_id == user_id,
-                Message_Notifications.read == 0)\
+                Message_Notifications.read == 0) \
         .count()
 
     return jsonify({
@@ -40,11 +41,11 @@ def message_count():
     Counts the number of messages a user has
     :return:
     """
-    
-    get_count = db.session\
-        .query(Message_Chat)\
-        .filter(or_(Message_Chat.user_one_uuid == current_user.uuid, 
-                Message_Chat.user_two_uuid == current_user.uuid))\
+
+    get_count = db.session \
+        .query(Message_Chat) \
+        .filter(or_(Message_Chat.user_one_uuid == current_user.uuid,
+                    Message_Chat.user_two_uuid == current_user.uuid)) \
         .count()
 
     return jsonify({
@@ -59,14 +60,14 @@ def message_msg_sidebar():
     Returns User Msgs list on the side...aka who you had conversations with
     :return:
     """
-    get_msgs_side = db.session\
-        .query(Message_Chat)\
+    get_msgs_side = db.session \
+        .query(Message_Chat) \
         .filter(or_(Message_Chat.user_one_uuid == current_user.uuid,
-                Message_Chat.user_two_uuid == current_user.uuid))\
-        .distinct(Message_Chat.post_id)\
+                    Message_Chat.user_two_uuid == current_user.uuid)) \
+        .distinct(Message_Chat.post_id) \
         .all()
     msg_schema = Message_Chat_Schema(many=True)
- 
+
     return jsonify(msg_schema.dump(get_msgs_side))
 
 
@@ -77,13 +78,13 @@ def message_msg(post_id):
     Returns the main first question asked to the vendor or party.
     :return:
     """
-    get_msg_post = db.session\
-        .query(Message_Chat)\
-        .filter(or_(Message_Chat.user_one_uuid == current_user.uuid, 
-                Message_Chat.user_two_uuid == current_user.uuid))\
-        .filter(Message_Chat.post_id == post_id)\
+    get_msg_post = db.session \
+        .query(Message_Chat) \
+        .filter(or_(Message_Chat.user_one_uuid == current_user.uuid,
+                    Message_Chat.user_two_uuid == current_user.uuid)) \
+        .filter(Message_Chat.post_id == post_id) \
         .first()
-   
+
     msg_schema = Message_Chat_Schema()
     return jsonify(msg_schema.dump(get_msg_post))
 
@@ -95,21 +96,20 @@ def message_msg_comments(post_id):
     Returns the comments of the main post by the post id
     :return:
     """
-    get_msg_post = db.session\
-        .query(Message_Chat)\
+    get_msg_post = db.session \
+        .query(Message_Chat) \
         .filter(or_(Message_Chat.user_one_uuid == current_user.uuid,
-                 Message_Chat.user_two_uuid == current_user.uuid,
+                    Message_Chat.user_two_uuid == current_user.uuid,
                     Message_Chat.mod_uuid == current_user.uuid,
-                 )
-                 )\
-        .filter(Message_Chat.post_id == post_id)\
+                    )
+                ) \
+        .filter(Message_Chat.post_id == post_id) \
         .first()
     if get_msg_post is not None:
-        
-        get_msg_post_comments = db.session\
-            .query(Message_Comment)\
-            .filter(Message_Comment.post_id == post_id)\
-            .order_by(Message_Comment.timestamp.desc())\
+        get_msg_post_comments = db.session \
+            .query(Message_Comment) \
+            .filter(Message_Comment.post_id == post_id) \
+            .order_by(Message_Comment.timestamp.desc()) \
             .all()
 
         comments_schema = Message_Comment_Schema(many=True)
@@ -123,27 +123,27 @@ def message_msg_comments_orderuuid(order_uuid):
     Returns the comments of the main post by order id
     :return:
     """
-    
-    get_msg_post = db.session\
-        .query(Message_Chat)\
+
+    get_msg_post = db.session \
+        .query(Message_Chat) \
         .filter(or_(Message_Chat.user_one_uuid == current_user.uuid,
                     Message_Chat.user_two_uuid == current_user.uuid,
                     Message_Chat.mod_uuid == current_user.uuid,
                     )
-                )\
-        .filter(Message_Chat.order_uuid == order_uuid)\
+                ) \
+        .filter(Message_Chat.order_uuid == order_uuid) \
         .first()
-  
-    if get_msg_post is not None:
 
-        get_msg_post_comments = db.session\
-            .query(Message_Comment)\
-            .filter(Message_Comment.post_id == get_msg_post.post_id)\
-            .order_by(Message_Comment.timestamp.desc())\
+    if get_msg_post is not None:
+        get_msg_post_comments = db.session \
+            .query(Message_Comment) \
+            .filter(Message_Comment.post_id == get_msg_post.post_id) \
+            .order_by(Message_Comment.timestamp.desc()) \
             .all()
-  
+
         comments_schema = Message_Comment_Schema(many=True)
         return jsonify(comments_schema.dump(get_msg_post_comments))
+
 
 @message.route('/create/item', methods=['POST'])
 @login_required
@@ -173,27 +173,27 @@ def message_create():
         # check to see if mod is greater than 
         # 1
     # get the market item
-    get_market_item = db.session\
-        .query(Item_MarketItem)\
-        .filter(Item_MarketItem.uuid == item_uuid)\
+    get_market_item = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.uuid == item_uuid) \
         .first()
 
-    get_user_two_name = db.session\
-        .query(Auth_User)\
-        .filter(Auth_User.uuid == get_user_two_uuid)\
+    get_user_two_name = db.session \
+        .query(Auth_User) \
+        .filter(Auth_User.uuid == get_user_two_uuid) \
         .first()
 
     get_user_two_name_display = get_user_two_name.display_name
 
     # see if a post exists between two users
-    # if it does create a comment ..
-    get_post = db.session\
-        .query(Message_Chat)\
-        .filter(Message_Chat.user_one_uuid == get_market_item.vendor_uuid)\
-        .filter(Message_Chat.user_two_uuid == current_user.uuid)\
-        .filter(Message_Chat.item_uuid == get_market_item.uuid)\
-        .first() 
-    
+    # if it does create a comment .
+    get_post = db.session \
+        .query(Message_Chat) \
+        .filter(Message_Chat.user_one_uuid == get_market_item.vendor_uuid) \
+        .filter(Message_Chat.user_two_uuid == current_user.uuid) \
+        .filter(Message_Chat.item_uuid == get_market_item.uuid) \
+        .first()
+
     if get_post is None:
         # user one is always the vendor
         if get_market_item.vendor_uuid == get_user_two_uuid:
@@ -229,7 +229,7 @@ def message_create():
                 mod_name=None,
                 mod_uuid=None,
                 body=get_body,
-                post_id=newpost.id,
+                post_id=None,
                 admin=0,
                 read=0
             )
@@ -269,9 +269,9 @@ def message_comment(post_id):
     post_id = int(post_id)
 
     # get ori post
-    get_post = db.session\
-        .query(Message_Chat)\
-        .filter(Message_Chat.post_id == post_id)\
+    get_post = db.session \
+        .query(Message_Chat) \
+        .filter(Message_Chat.post_id == post_id) \
         .first()
 
     # set mod variables
@@ -281,14 +281,14 @@ def message_comment(post_id):
         mod_uuid = None
 
     # see if one of the two users is in the convo or else cant talk in it
-    if get_post.user_one_uuid == current_user.uuid\
-        or get_post.user_two_uuid == current_user.uuid\
-        or get_post.mod_uuid == current_user.uuid:
+    if get_post.user_one_uuid == current_user.uuid \
+            or get_post.user_two_uuid == current_user.uuid \
+            or get_post.mod_uuid == current_user.uuid:
 
         # get user and ensure it exists
-        get_user_name = db.session\
-            .query(Auth_User)\
-            .filter(Auth_User.uuid == current_user.uuid)\
+        get_user_name = db.session \
+            .query(Auth_User) \
+            .filter(Auth_User.uuid == current_user.uuid) \
             .first()
         if current_user.admin_role < 2:
             # if user isnt an admin
@@ -340,27 +340,27 @@ def create_new_post_dispute(order_uuid):
     now = datetime.utcnow()
 
     # see if a post already exists
-    get_post = db.session\
-        .query(Message_Chat)\
-        .filter(Message_Chat.order_uuid == order_uuid)\
+    get_post = db.session \
+        .query(Message_Chat) \
+        .filter(Message_Chat.order_uuid == order_uuid) \
         .first()
 
     # if no post exists
     if get_post is None:
 
         generic_message = "A dispute has been issued."
-        get_order = db.session\
-            .query(User_Orders)\
-            .filter(User_Orders.uuid == order_uuid)\
+        get_order = db.session \
+            .query(User_Orders) \
+            .filter(User_Orders.uuid == order_uuid) \
             .first()
-            
+
         # create a new post
         newpost = Message_Post(timestamp=now)
         db.session.add(newpost)
 
         # pre commit to database
         db.session.flush()
- 
+
         # create a new main message thats generic
         create_new_message = Message_Chat(
             timestamp=now,
@@ -378,7 +378,7 @@ def create_new_post_dispute(order_uuid):
             read=1
         )
 
-        #update order to reflect post id and timer
+        # update order to reflect post id and timer
         get_order.dispute_post_id = newpost.id
 
         # adding the timer so when a user doesnt drag it out

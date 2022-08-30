@@ -16,6 +16,7 @@ from app.classes.wallet_btc import \
     Btc_Prices
 # end models
 
+
 @wallet_btc.route('/price', methods=['GET'])
 def btc_price_usd():
     """
@@ -48,7 +49,7 @@ def btc_balance_plus_unconfirmed():
     try:
         userbalance = str(userwallet.currentbalance)
         unconfirmed = str(userwallet.unconfirmed)
-    except Exception as e:
+    except:
         userbalance = 0
         unconfirmed = 0
 
@@ -56,6 +57,7 @@ def btc_balance_plus_unconfirmed():
         "btc_balance": userbalance,
         "btc_unconfirmed": unconfirmed,
     })
+
 
 @wallet_btc.route('/transactions', methods=['GET'])
 @login_required

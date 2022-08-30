@@ -27,6 +27,7 @@ class Profile_StatisticsVendor(db.Model):
     total_xmr_recieved = db.Column(db.DECIMAL(20, 12))
     total_usd_made = db.Column(db.DECIMAL(20, 2))
 
+
 class Profile_StatisticsVendor_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Profile_StatisticsVendor
@@ -58,6 +59,7 @@ class Profile_StatisticsUser(db.Model):
     total_xmr_spent = db.Column(db.DECIMAL(20, 12))
     total_xmr_recieved = db.Column(db.DECIMAL(20, 12))
     total_usd_spent = db.Column(db.DECIMAL(20, 2))
+
 
 class Profile_StatisticsUser_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:

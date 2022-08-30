@@ -15,7 +15,10 @@ def finalize_order_dispute_bch(order_uuid, percent_to_customer, percent_to_vendo
         .query(User_Orders)\
         .filter(User_Orders.uuid == order_uuid)\
         .first()
-    get_mod = db.session.query(Auth_User).filter(Auth_User.uuid == get_order.moderator_uuid).first()
+    get_mod = db.session\
+        .query(Auth_User)\
+        .filter(Auth_User.uuid == get_order.moderator_uuid)\
+        .first()
     # get moderator fee
     mod_fee_percent = 0.05
     fee_for_freeport = Decimal(get_order.price_total_bch) * Decimal(mod_fee_percent)
@@ -49,4 +52,3 @@ def finalize_order_dispute_bch(order_uuid, percent_to_customer, percent_to_vendo
         bch_send_coin_to_user(amount=get_final_amount_to_customer,
                               user_id=get_order.customer_id,
                               order_uuid=get_order.uuid)
-

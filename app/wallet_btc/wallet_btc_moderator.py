@@ -49,4 +49,3 @@ def finalize_order_dispute_btc(order_uuid, percent_to_customer, percent_to_vendo
         btc_send_coin_to_user(amount=get_final_amount_to_customer,
                               user_id=get_order.customer_id,
                               order_uuid=get_order.uuid)
-

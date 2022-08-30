@@ -317,14 +317,13 @@ def finalize_order_xmr(order_uuid):
                           order_uuid=get_order.uuid)
 
 
-
 def xmr_refund_rejected_user(amount, user_id, order_uuid):
     """
     # TO User
     # this function will move the coin from clearnets wallet bch to a user
     # when a vendor rejects an order uses this function
     :param amount:
-    :param comment:
+    :param order_uuid:
     :param user_id:
     :return:
     """

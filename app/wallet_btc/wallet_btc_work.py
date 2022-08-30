@@ -145,7 +145,7 @@ def btc_wallet_status(user_id):
                     and userswallet.address2status == 0:
                 btc_create_wallet(user_id=user_id)
 
-        except Exception as e:
+        except:
             userswallet.address1 = ''
             userswallet.address1status = 0
             userswallet.address2 = ''
@@ -215,12 +215,12 @@ def btc_send_coin(user_id, sendto, amount, comment):
         pass
 
 
-##INNER FUNCTIONS
 def btc_send_coin_to_user_as_admin(amount, comment, user_id, order_uuid):
     """
     #to User
     # this function will move the coin from clearnets wallet_btc to a user as an admin
     :param amount:
+    :param order_uuid:
     :param comment:
     :param user_id:
     :return:
@@ -254,7 +254,7 @@ def btc_take_coin_to_user_as_admin(amount, user_id, order_uuid):
     # TO User
     # this function will move the coin from clearnets wallet_btc to a user as an admin
     :param amount:
-    :param comment:
+    :param order_uuid:
     :param user_id:
     :return:
     """
@@ -287,7 +287,7 @@ def btc_send_coin_to_escrow(amount, user_id, order_uuid):
     # TO clearnet_webapp Wallet
     # this function will move the coin to clearnets wallet_btc from a user
     :param amount:
-    :param comment:
+    :param order_uuid:
     :param user_id:
     :return:
     """
@@ -314,7 +314,7 @@ def btc_send_coin_to_escrow(amount, user_id, order_uuid):
                                 item_uuid=None
                                 )
 
-        except Exception as e:
+        except:
             pass
     else:
         pass
@@ -325,7 +325,7 @@ def btc_send_coin_to_user(amount, user_id, order_uuid):
     #TO User
     ##this function will move the coin from clearnets wallet btc to a user
     :param amount:
-    :param comment:
+    :param order_uuid:
     :param user_id:
     :return:
     """
@@ -377,10 +377,6 @@ def finalize_order_btc(order_uuid):
     amount_for_vendor = total_amount_from_sale - fee_for_freeport
     amount_for_vendor_exact = floating_decimals(amount_for_vendor, 8)
 
-    print("finalizing order btc")
-    print(total_amount_from_sale)
-    print(fee_for_freeport_exact)
-    print(amount_for_vendor_exact)
     # send fee to freeport
     btc_send_coin_to_user(amount=fee_for_freeport_exact,
                           user_id=1,
@@ -398,7 +394,7 @@ def btc_refund_rejected_user(amount, user_id, order_uuid):
     # this function will move the coin from clearnets wallet bch to a user
     # when a vendor rejects an order uses this function
     :param amount:
-    :param comment:
+    :param order_uuid:
     :param user_id:
     :return:
     """

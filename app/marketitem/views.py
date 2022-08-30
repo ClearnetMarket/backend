@@ -7,6 +7,7 @@ from app import db
 from app.classes.item import Item_MarketItem, Item_MarketItem_Schema
 from app.classes.admin import Admin_Flagged
 
+
 @marketitem.route('/<string:item_id>', methods=['GET'])
 def marketitem_item_main(item_id):
     """
@@ -24,6 +25,7 @@ def marketitem_item_main(item_id):
             return jsonify(result), 200
         else:
             jsonify({"Error": "No Item exists"}), 404
+
 
 @marketitem.route('/item/flagged/<string:item_id>', methods=['GET'])
 def marketitem_item_flagged(item_id):
