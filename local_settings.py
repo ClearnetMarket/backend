@@ -1,7 +1,4 @@
-from passwords import \
-    mailuser, \
-    mailpass
-import os
+
 import redis
 
 
