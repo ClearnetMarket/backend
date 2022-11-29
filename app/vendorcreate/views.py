@@ -18,7 +18,8 @@ def vendorcreate_items_for_sale():
   
     :return:
     """
-    forsale = Item_MarketItem.query \
+    forsale = db.session\
+        .query(Item_MarketItem) \
         .filter(Item_MarketItem.vendor_id == current_user.id)\
         .order_by(Item_MarketItem.id.desc())\
         .all()
@@ -36,14 +37,18 @@ def vendorcreate_clone_item(uuid):
     """
 
     # get item we are cloning
-    vendoritem = Item_MarketItem.query.filter(Item_MarketItem.uuid == uuid).first()
+    vendoritem = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == uuid)\
+        .first()
 
     get_uuid_item = uuid4().hex
 
     if vendoritem:
         if vendoritem.vendor_id == current_user.id:
             # make sure user doesn't have to many listings
-            vendoritem_count = Item_MarketItem.query\
+            vendoritem_count = db.session\
+                .query(Item_MarketItem)\
                 .filter_by(vendor_id=current_user.id)\
                 .count()
             if vendoritem_count < 100:
@@ -59,7 +64,7 @@ def vendorcreate_clone_item(uuid):
                     vendor_id=vendoritem.vendor_id,
                     category_name_0=vendoritem.category_name_0,
                     category_id_0=vendoritem.category_id_0,
-                    origin_country =vendoritem.origin_country,
+                    origin_country=vendoritem.origin_country,
                     destination_country_one=vendoritem.destination_country_one,
                     destination_country_two=vendoritem.destination_country_two,
                     destination_country_three=vendoritem.destination_country_three,
@@ -143,7 +148,10 @@ def vendorcreate_delete_item(uuid):
     ext_1 = '_225x.jpg'
     ext_2 = '_500x.jpg'
     file_extension1 = '.jpg'
-    vendoritem = Item_MarketItem.query.filter(Item_MarketItem.uuid == uuid).first()
+    vendoritem = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == uuid)\
+        .first()
     if vendoritem:
         if vendoritem.vendor_id == current_user.id:
             # gets the node for the folder

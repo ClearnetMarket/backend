@@ -28,7 +28,7 @@ def get_disputes_main_page_need_mod():
             get_disputes = db.session \
                 .query(User_Orders) \
                 .filter(User_Orders.overall_status == 8) \
-                .filter(User_Orders.moderator_uuid == None)\
+                .filter(User_Orders.moderator_uuid is None)\
                 .all()
             disputes_schema = User_Orders_Schema(many=True)
             return jsonify(disputes_schema.dump(get_disputes))
@@ -50,7 +50,7 @@ def get_disputes_main_page_has_mod():
             get_disputes = db.session \
                 .query(User_Orders) \
                 .filter(User_Orders.overall_status == 8) \
-                .filter(User_Orders.moderator_uuid != None)\
+                .filter(User_Orders.moderator_uuid is not None)\
                 .all()
             disputes_schema = User_Orders_Schema(many=True)
             return jsonify(disputes_schema.dump(get_disputes))
@@ -198,7 +198,7 @@ def add_message_after_dispute(uuid):
             if "textbody" in request.json:
                 msg_json = request.json["textbody"]
                 msg = str(msg_json)
-            get_order.msg = msg
+                get_order.msg = msg
 
             db.session.add(get_order)
             db.session.commit()
@@ -283,7 +283,7 @@ def become_mod_of_order(uuid):
             get_order = db.session \
                 .query(User_Orders) \
                 .filter(User_Orders.uuid == uuid) \
-                .filter(User_Orders.moderator_uuid == None)\
+                .filter(User_Orders.moderator_uuid is None)\
                 .first()
             # set current moderator as mod
             get_order.moderator_uuid = current_user.uuid

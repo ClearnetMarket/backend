@@ -55,7 +55,6 @@ def convert_to_local_xmr(amount, currency):
 def convert_local_to_xmr(amount, currency):
     getcurrentprice = Xmr_Prices.query.filter_by(currency_id=currency).first()
     current_price = getcurrentprice.price
-    print(current_price)
     converted_price = Decimal(amount) / Decimal(current_price)
     price_in_floats = floating_decimals(converted_price, 12)
 

@@ -22,7 +22,8 @@ def userdata_get_shopping_cart_count():
     :return:
     """
     if request.method == 'GET':
-        shopping_cart_count = Checkout_CheckoutShoppingCart.query\
+        shopping_cart_count = db.session\
+            .query(Checkout_CheckoutShoppingCart)\
             .filter(Checkout_CheckoutShoppingCart.customer_id == current_user.id)\
             .count()
         if shopping_cart_count:
@@ -31,7 +32,9 @@ def userdata_get_shopping_cart_count():
         else:
             return jsonify({'status': 0})
 
+
 @userdata.route('/country-currency', methods=['GET'])
+@login_required
 def userdata_country_currency():
     """
     Returns all info about a user
@@ -39,12 +42,14 @@ def userdata_country_currency():
     """
     if request.method == 'GET':
 
-        currency = Query_Currency.query\
-            .filter(userdata.currency == Query_Currency.value)\
+        currency = db.session\
+            .query(Query_Currency)\
+            .filter(current_user.currency == Query_Currency.value)\
             .first()
         currency_name = currency.symbol
-        country = Query_Country.query\
-            .filter(userdata.country == Query_Country.value)\
+        country = db.session\
+            .query(Query_Country)\
+            .filter(current_user.country == Query_Country.value)\
             .first()
         countryname = country.name
         return jsonify(
@@ -61,7 +66,8 @@ def userdata_home(user_uuid):
     """
  
     if request.method == 'GET':
-        userdata_user = Auth_User.query\
+        userdata_user = db.session\
+            .query(Auth_User)\
             .filter(Auth_User.uuid == user_uuid)\
             .first()
         user_schema = Auth_User_Schema()
@@ -117,7 +123,8 @@ def userdata_update_address():
     """
 
     if request.method == 'PUT':
-        user_address = UserData_DefaultAddress.query\
+        user_address = db.session\
+            .query(UserData_DefaultAddress)\
             .filter(UserData_DefaultAddress.uuid == current_user.uuid)\
             .first()
         if "address_name" in request.json:
@@ -187,7 +194,8 @@ def userdata_get_address():
     :return:
     """
     if request.method == 'GET':
-        user_address = UserData_DefaultAddress.query\
+        user_address = db.session\
+            .query(UserData_DefaultAddress)\
             .filter(UserData_DefaultAddress.uuid == current_user.uuid)\
             .first()
         if user_address:
@@ -212,7 +220,8 @@ def userdata_get_all_feedback(user_uuid):
     :return:
     """
     if request.method == 'GET':
-        user_feedback = Feedback_Feedback.query\
+        user_feedback = db.session\
+            .query(Feedback_Feedback)\
             .filter_by(customer_uuid=user_uuid)\
             .filter_by(type_of_feedback=2)\
             .order_by(Feedback_Feedback.timestamp.desc())\
@@ -229,7 +238,8 @@ def userdata_get_stats_feedback(user_uuid):
     :return:
     """
     if request.method == 'GET':
-        user_feedback = Feedback_Feedback.query\
+        user_feedback = db.session\
+            .query(Feedback_Feedback)\
             .filter_by(customer_uuid=user_uuid)\
             .filter_by(type_of_feedback=2)\
             .count()
@@ -248,7 +258,8 @@ def userdata_get_stats_feedback(user_uuid):
                             'feedback_ten': 0,
                             })
         else:
-            user_feedback_one = Feedback_Feedback.query\
+            user_feedback_one = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(customer_uuid=user_uuid)\
                 .filter_by(customer_rating=1)\
                 .count()
@@ -258,7 +269,8 @@ def userdata_get_stats_feedback(user_uuid):
                     (int(user_feedback_one) / int(user_feedback))*100)
             else:
                 user_feedback_one_percent = 0
-            user_feedback_two = Feedback_Feedback.query\
+            user_feedback_two = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(customer_uuid=user_uuid)\
                 .filter_by(customer_rating=2)\
                 .count()
@@ -268,7 +280,8 @@ def userdata_get_stats_feedback(user_uuid):
             else:
                 user_feedback_two_percent = 0
 
-            user_feedback_three = Feedback_Feedback.query\
+            user_feedback_three = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(customer_uuid=user_uuid)\
                 .filter_by(customer_rating=3)\
                 .count()
@@ -278,7 +291,8 @@ def userdata_get_stats_feedback(user_uuid):
             else:
                 user_feedback_three_percent = 0
 
-            user_feedback_four = Feedback_Feedback.query\
+            user_feedback_four = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(customer_uuid=user_uuid)\
                 .filter_by(customer_rating=4)\
                 .count()
@@ -288,7 +302,8 @@ def userdata_get_stats_feedback(user_uuid):
             else:
                 user_feedback_four_percent = 0
 
-            user_feedback_five = Feedback_Feedback.query\
+            user_feedback_five = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(customer_uuid=user_uuid)\
                 .filter_by(customer_rating=5)\
                 .count()
@@ -298,7 +313,8 @@ def userdata_get_stats_feedback(user_uuid):
             else:
                 user_feedback_five_percent = 0
 
-            user_feedback_six = Feedback_Feedback.query\
+            user_feedback_six = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(customer_uuid=user_uuid)\
                 .filter_by(customer_rating=6)\
                 .count()
@@ -308,7 +324,8 @@ def userdata_get_stats_feedback(user_uuid):
             else:
                 user_feedback_six_percent = 0
     
-            user_feedback_seven = Feedback_Feedback.query\
+            user_feedback_seven = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(customer_uuid=user_uuid)\
                 .filter_by(customer_rating=7)\
                 .count()
@@ -318,7 +335,8 @@ def userdata_get_stats_feedback(user_uuid):
             else:
                 user_feedback_seven_percent = 0
 
-            user_feedback_eight = Feedback_Feedback.query\
+            user_feedback_eight = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(customer_uuid=user_uuid)\
                 .filter_by(customer_rating=8)\
                 .count()
@@ -328,7 +346,8 @@ def userdata_get_stats_feedback(user_uuid):
             else:
                 user_feedback_eight_percent = 0
 
-            user_feedback_nine = Feedback_Feedback.query\
+            user_feedback_nine = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(customer_uuid=user_uuid)\
                 .filter_by(customer_rating=9)\
                 .count()
@@ -338,7 +357,8 @@ def userdata_get_stats_feedback(user_uuid):
             else:
                 user_feedback_nine_percent = 0
 
-            user_feedback_ten = Feedback_Feedback.query\
+            user_feedback_ten = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(customer_uuid=user_uuid)\
                 .filter_by(customer_rating=10)\
                 .count()

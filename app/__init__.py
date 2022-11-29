@@ -1,18 +1,23 @@
 # coding=utf-8
-from flask import Flask, jsonify, json, request
+from flask import Flask, jsonify, json
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
+from flask_login import LoginManager
 from sqlalchemy.orm import sessionmaker
 from werkzeug.routing import BaseConverter
 import decimal
-from config import ApplicationConfig
-from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 
+try:
+    from instance.config import ApplicationConfig
+except Exception as e:
+    from local_settings import ApplicationConfig
+    
+    
 app = Flask(__name__,
             static_url_path='',
             static_folder='static',
@@ -20,7 +25,11 @@ app = Flask(__name__,
 
 
 app.config.from_object(ApplicationConfig)
+
 session = sessionmaker()
+
+check_enviroment = ApplicationConfig.CURRENT_SETTINGS
+print(f"starting server with {check_enviroment} settings")
 
 
 class RegexConverter(BaseConverter):
@@ -86,14 +95,20 @@ def load_user_from_request(request):
     # first, try to login using the api_key url arg
     api_key = request.args.get('api_key')
     if api_key:
-        user = Auth_User.query.filter_by(api_key=api_key).first()
+        user = db.session\
+            .query(Auth_User)\
+            .filter_by(api_key=api_key)\
+            .first()
         if user:
             return user
     # next, try to login using Basic Auth
     api_key_auth = request.headers.get('Authorization')
     if api_key_auth:
         api_key = api_key_auth.replace('bearer ', '', 1)
-        user = Auth_User.query.filter_by(api_key=api_key).first()
+        user = db.session\
+            .query(Auth_User)\
+            .filter_by(api_key=api_key)\
+            .first()
         if user:
             return user
     return None
@@ -219,6 +234,4 @@ from app.wallet_xmr import wallet_xmr as wallet_xmr_blueprint
 app.register_blueprint(wallet_xmr_blueprint, url_prefix='/xmr')
 
 
-db.configure_mappers()
-db.create_all()
-db.session.commit()
+

@@ -9,7 +9,6 @@ from app.common.functions import \
     id_generator_picture2, \
     id_generator_picture3, \
     id_generator_picture4, \
-    id_generator_picture5, \
     itemlocation
 from app import UPLOADED_FILES_DEST_ITEM
 from app.classes.item import \
@@ -18,7 +17,10 @@ from app.classes.item import \
 
 def deleteimg_noredirect(id, img):
     try:
-        vendoritem = Item_MarketItem.query.get(id)
+        vendoritem = db.session\
+            .query(Item_MarketItem)\
+            .filter_by(id=id)\
+            .first()
         if vendoritem:
             if vendoritem.vendor_id == current_user.id:
                 try:
@@ -32,12 +34,11 @@ def deleteimg_noredirect(id, img):
                     ext2 = '_500x'
                     file0 = str(pathtofile + file_extension)
                     file1 = str(pathtofile + ext1 + file_extension)
-
-
+                    file2 = str(pathtofile + ext2 + file_extension)
                     if len(img) > 20:
 
                         if vendoritem.image_one == img:
-                            vendoritem.image_one = '0'
+                            vendoritem.image_one = None
                             db.session.add(vendoritem)
                             db.session.commit()
                             try:
@@ -46,11 +47,15 @@ def deleteimg_noredirect(id, img):
                                 pass
                             try:
                                 os.remove(file1)
+                            except Exception:
+                                pass
+                            try:
+                                os.remove(file2)
                             except Exception:
                                 pass
 
                         elif vendoritem.image_two == img:
-                            vendoritem.image_two = '0'
+                            vendoritem.image_two = None
                             db.session.add(vendoritem)
                             db.session.commit()
                             try:
@@ -61,9 +66,12 @@ def deleteimg_noredirect(id, img):
                                 os.remove(file1)
                             except Exception:
                                 pass
-
+                            try:
+                                os.remove(file2)
+                            except Exception:
+                                pass
                         elif vendoritem.image_three == img:
-                            vendoritem.image_three = '0'
+                            vendoritem.image_three = None
                             db.session.add(vendoritem)
                             db.session.commit()
                             try:
@@ -74,9 +82,12 @@ def deleteimg_noredirect(id, img):
                                 os.remove(file1)
                             except Exception:
                                 pass
-
+                            try:
+                                os.remove(file2)
+                            except Exception:
+                                pass
                         elif vendoritem.image_four == img:
-                            vendoritem.image_four = '0'
+                            vendoritem.image_four = None
                             db.session.add(vendoritem)
                             db.session.commit()
                             try:
@@ -87,9 +98,12 @@ def deleteimg_noredirect(id, img):
                                 os.remove(file1)
                             except Exception:
                                 pass
-
+                            try:
+                                os.remove(file2)
+                            except Exception:
+                                pass
                         elif vendoritem.image_five == img:
-                            vendoritem.image_five = '0'
+                            vendoritem.image_five = None
                             db.session.add(vendoritem)
                             db.session.commit()
                             try:
@@ -98,6 +112,10 @@ def deleteimg_noredirect(id, img):
                                 pass
                             try:
                                 os.remove(file1)
+                            except Exception:
+                                pass
+                            try:
+                                os.remove(file2)
                             except Exception:
                                 pass
                         else:
@@ -134,7 +152,7 @@ def image1(formdata, item, directoryifitemlisting):
 
         if len(formdata.filename) > 2:
             item.image_one_server = id_pic1
-            item.image_one_url = 'http://www.clearnetmarket.com/item/'+ item.uuid + '/' + id_pic1 + "_250x.jpg"
+            item.image_one_url = 'http://www.clearnetmarket.com/item/' + item.uuid + '/' + id_pic1 + "_250x.jpg"
             db.session.add(item)
             imagespider(base_path=directoryifitemlisting)
         else:
@@ -151,6 +169,7 @@ def image1(formdata, item, directoryifitemlisting):
 def image2(formdata, item, directoryifitemlisting):
     id_pic2 = id_generator_picture2()
     if formdata:
+
         deleteimg_noredirect(id=item.id, img=item.image_two_server)
         filename = secure_filename(formdata.filename)
         # makes directory (generic location + auction number id as folder)
@@ -176,7 +195,7 @@ def image2(formdata, item, directoryifitemlisting):
         else:
             item.image_two_server = None
     else:
-        if item.image_two:
+        if item.image_two_server:
             if len(item.image_two_server) > 5:
                 pass
         else:

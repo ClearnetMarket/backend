@@ -20,7 +20,8 @@ from app.vendor.images.image_forms import image1, image2, image3, image4
 def create_item():
     if request.method == 'POST':
         now = datetime.utcnow()
-        see_if_empty_item = Item_MarketItem.query\
+        see_if_empty_item = db.session\
+            .query(Item_MarketItem)\
             .filter(Item_MarketItem.vendor_id == current_user.id, Item_MarketItem.item_title == '')\
             .first()
 
@@ -109,7 +110,8 @@ def create_item_main(uuid):
    
     now = datetime.utcnow()
 
-    get_currency_symbol = Query_Currency.query\
+    get_currency_symbol = db.session\
+        .query(Query_Currency)\
         .filter(Query_Currency.value == current_user.currency)\
         .first()
     currency_symbol = get_currency_symbol.symbol
@@ -157,11 +159,11 @@ def create_item_main(uuid):
     else:
         return jsonify({"status": 'error'})
 
-    # Pric  e
+    # Price
     price = request.json["price"]
 
     # Keywords
-    keywords = request.json["keywords"]
+    #keywords = request.json["keywords"]
 
     # Free shipping days
     free_shipping_days = request.json["free_shipping_days"]
@@ -193,7 +195,8 @@ def create_item_main(uuid):
     else:
         shipping_to_country_one = request.json["shipping_to_country_one"]
 
-        get_name_country_one = Query_Country.query\
+        get_name_country_one = db.session\
+            .query(Query_Country)\
             .filter(Query_Country.value == shipping_to_country_one)\
             .first()
         shipping_to_country_one_name = get_name_country_one.name
@@ -204,7 +207,8 @@ def create_item_main(uuid):
         shipping_to_country_two_name = ''
     else:
         shipping_to_country_two = request.json["shipping_to_country_two"]
-        get_name_country_two = Query_Country.query\
+        get_name_country_two = db.session\
+            .query(Query_Country)\
             .filter(Query_Country.value == shipping_to_country_two)\
             .first()
         shipping_to_country_two_name = get_name_country_two.name
@@ -215,7 +219,8 @@ def create_item_main(uuid):
         shipping_to_country_three_name = ''
     else:
         shipping_to_country_three = request.json["shipping_to_country_three"]
-        get_name_country_three = Query_Country.query\
+        get_name_country_three = db.session\
+            .query(Query_Country)\
             .filter(Query_Country.value == shipping_to_country_three)\
             .first()
         shipping_to_country_three_name = get_name_country_three.name
@@ -226,7 +231,8 @@ def create_item_main(uuid):
         shipping_to_country_four_name = ''
     else:
         shipping_to_country_four = request.json["shipping_to_country_four"]
-        get_name_country_four = Query_Country.query\
+        get_name_country_four = db.session\
+            .query(Query_Country)\
             .filter(Query_Country.value == shipping_to_country_four)\
             .first()
         shipping_to_country_four_name = get_name_country_four.name
@@ -255,7 +261,8 @@ def create_item_main(uuid):
         category_name = get_category_query.name
 
     # create image of item in database
-    item = db.session.query(Item_MarketItem)\
+    item = db.session\
+        .query(Item_MarketItem)\
         .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id)\
         .first()
 
@@ -268,7 +275,7 @@ def create_item_main(uuid):
     item.item_count = item_count
     item.item_description = item_description
     item.item_condition = item_condition
-    item.keywords = keywords
+    #item.keywords = keywords
     item.category_name_0 = category_name
     item.category_id_0 = category_value
     item.price = price
@@ -311,18 +318,23 @@ def create_item_main(uuid):
 @vendorcreateitem.route('/create-item-images/<string:uuid>', methods=['POST', 'OPTIONS'])
 def create_item_images(uuid):
     """
-    Creates the Vendor Item
+    Creates the Vendor images under form uploads
     """
-    # next, try to login using Basic Auth
     api_key_auth = request.headers.get('Authorization')
     if api_key_auth:
         api_key = api_key_auth.replace('bearer ', '', 1)
-        get_user = db.session.query(Auth_User).filter_by(api_key=api_key).first()
-        see_if_user_allowed = Item_MarketItem.query.filter(
-            Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == get_user.id).first() is not None
+        get_user = db.session\
+            .query(Auth_User)\
+            .filter_by(api_key=api_key)\
+            .first()
+        see_if_user_allowed = db.session\
+                                  .query(Item_MarketItem)\
+                                  .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == get_user.id)\
+                                  .first() is not None
         if see_if_user_allowed:
 
-            item = Item_MarketItem.query\
+            item = db.session\
+                .query(Item_MarketItem)\
                 .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == get_user.id) \
                 .first()
             # node location
@@ -333,36 +345,32 @@ def create_item_images(uuid):
                 UPLOADED_FILES_DEST_ITEM, getimagesubfolder, (str(item.uuid)))
             # create the image
             mkdir_p(directoryifitemlisting)
-
             try:
                 image_main = request.files['image_main']
 
                 image1(formdata=image_main, item=item,
                        directoryifitemlisting=directoryifitemlisting)
-            except Exception as e:
+            except:
                 pass
-
             try:
                 image_two = request.files['image_two']
                 image2(formdata=image_two, item=item,
                        directoryifitemlisting=directoryifitemlisting)
-            except Exception as e:
+            except:
                 pass
-
             try:
                 image_three = request.files['image_three']
                 image3(formdata=image_three, item=item,
                        directoryifitemlisting=directoryifitemlisting)
-            except Exception as e:
+            except:
                 pass
-
             try:
+
                 image_four = request.files['image_four']
                 image4(formdata=image_four,  item=item,
                        directoryifitemlisting=directoryifitemlisting)
-            except Exception as e:
+            except:
                 pass
-
             db.session.add(item)
             db.session.commit()
 
@@ -382,8 +390,12 @@ def delete_item_images(uuid, imagename):
     :param imagename:
     :return:
     """
-    item = db.session.query(Item_MarketItem).filter_by(uuid=uuid).first()
-    if item:
+
+    item = db.session\
+        .query(Item_MarketItem)\
+        .filter_by(uuid=uuid)\
+        .first()
+    if item is not None:
         if item.vendor_id == current_user.id:
             # get folder for item id
             specific_folder = str(item.uuid)
@@ -401,39 +413,51 @@ def delete_item_images(uuid, imagename):
 
             if len(imagename) > 20:
                 if item.image_one_server == imagename:
-                    os.remove(file0)
-                    os.remove(file1)
-                    os.remove(file2)
+                    try:
+                        os.remove(file0)
+                        os.remove(file1)
+                        os.remove(file2)
+                    except:
+                        pass
                     item.image_one_server = None
                     item.image_one_url = None
                     db.session.add(item)
                     db.session.commit()
                 if item.image_two_server == imagename:
-                    os.remove(file0)
-                    os.remove(file1)
-                    os.remove(file2)
+                    try:
+                        os.remove(file0)
+                        os.remove(file1)
+                        os.remove(file2)
+                    except:
+                        pass
                     item.image_two_server = None
                     item.image_two_url = None
                     db.session.add(item)
                     db.session.commit()
                 if item.image_three_server == imagename:
-                    os.remove(file0)
-                    os.remove(file1)
-                    os.remove(file2)
+                    try:
+                        os.remove(file0)
+                        os.remove(file1)
+                        os.remove(file2)
+                    except:
+                        pass
                     item.image_three_server = None
                     item.image_three_url = None
                     db.session.add(item)
                     db.session.commit()
                 if item.image_four_server == imagename:
-                    os.remove(file0)
-                    os.remove(file1)
-                    os.remove(file2)
+                    try:
+                        os.remove(file0)
+                        os.remove(file1)
+                        os.remove(file2)
+                    except:
+                        pass
                     item.image_four_server = None
                     item.image_four_url = None
                     db.session.add(item)
                     db.session.commit()
 
-                return jsonify({"status": 'Image Deleted'})
+                return jsonify({"status": 'Success'})
             else:
                 return jsonify({"error": 'No Images match description'})
         else:
@@ -499,8 +523,10 @@ def vendorcreateitem_get_country_list():
     :return:
     """
     if request.method == 'GET':
-        country_list = Query_Country.query.order_by(
-            Query_Country.name.asc()).all()
+        country_list = db.session\
+            .query(Query_Country)\
+            .order_by(Query_Country.name.asc())\
+            .all()
         country_schema = Query_Country_Schema(many=True)
         return jsonify(country_schema.dump(country_list))
 
@@ -512,8 +538,10 @@ def vendorcreateitem_get_currency_list():
     :return:
     """
     if request.method == 'GET':
-        currency_list = Query_CurrencyList.query.order_by(
-            Query_CurrencyList.value.asc()).all()
+        currency_list = db.session\
+            .query(Query_CurrencyList)\
+            .order_by(Query_CurrencyList.value.asc())\
+            .all()
         currency_schema = Query_CurrencyList_Schema(many=True)
 
         return jsonify(currency_schema.dump(currency_list))
@@ -527,8 +555,10 @@ def vendorcreateitem_get_item_condition_list():
     """
     if request.method == 'GET':
 
-        condition_list = Query_ItemCondition.query.order_by(
-            Query_ItemCondition.value.asc()).all()
+        condition_list = db.session\
+            .query(Query_ItemCondition)\
+            .order_by(Query_ItemCondition.value.asc())\
+            .all()
         condition_schema = Query_ItemCondition_Schema(many=True)
 
         return jsonify(condition_schema.dump(condition_list))
@@ -541,7 +571,8 @@ def vendorcreateitem_get_item_category_list():
     :return:
     """
     if request.method == 'GET':
-        category_list = Category_Categories.query\
+        category_list = db.session\
+            .query(Category_Categories)\
             .order_by(Category_Categories.name.asc())\
             .all()
         category_schema = Category_Categories_Schema(many=True)

@@ -1,4 +1,4 @@
-from datetime import datetime
+
 from decimal import Decimal
 from operator import or_
 
@@ -15,43 +15,6 @@ from app.classes.feedback import Feedback_Feedback
 from app.wallet_btc.wallet_btc_work import finalize_order_btc
 from app.wallet_bch.wallet_bch_work import finalize_order_bch
 from app.wallet_xmr.wallet_xmr_work import finalize_order_xmr
-
-
-@orders.route('', methods=['GET'])
-@login_required
-def get_user_orders():
-    """
-    Used on index.  Grabs today's featured items
-    :return:
-    """
-    if request.method == 'GET':
-        user_orders = db.session \
-            .query(User_Orders) \
-            .filter(User_Orders.customer_id == current_user.id) \
-            .order_by(User_Orders.created.desc()) \
-            .limit(10)
-
-        item_schema = User_Orders_Schema(many=True)
-        return jsonify(item_schema.dump(user_orders))
-
-
-@orders.route('/count', methods=['GET'])
-@login_required
-def get_user_orders_count():
-    """
-    Used on index.  Grabs today's featured items
-    :return:
-    """
-    if request.method == 'GET':
-
-        user_orders_count = db.session \
-            .query(User_Orders) \
-            .filter(User_Orders.customer_id == current_user.id) \
-            .count()
-        if user_orders_count:
-            return jsonify({"count": user_orders_count})
-        else:
-            return jsonify({"status": "error"}), 409
 
 
 @orders.route('/<string:uuid>', methods=['GET'])
@@ -75,6 +38,45 @@ def get_order_model(uuid):
             # return schema
             item_schema = User_Orders_Schema()
             return jsonify(item_schema.dump(get_order))
+        else:
+            return jsonify({"status": "error"}), 409
+
+
+@orders.route('', methods=['GET'])
+@login_required
+def get_user_orders():
+    """
+    Used on index.  Grabs today's featured items
+    :return:
+    """
+    if request.method == 'GET':
+
+        user_orders = db.session \
+            .query(User_Orders) \
+            .filter(User_Orders.customer_id == current_user.id) \
+            .order_by(User_Orders.created.desc()) \
+            .limit(10)
+
+        item_schema = User_Orders_Schema(many=True)
+        return jsonify(item_schema.dump(user_orders))
+
+
+@orders.route('/count', methods=['GET'])
+@login_required
+def get_user_orders_count():
+    """
+    Used on index.  Grabs today's featured items
+    :return:
+    """
+    if request.method == 'GET':
+
+        user_orders_count = db.session \
+            .query(User_Orders) \
+            .filter(User_Orders.customer_id == current_user.id) \
+            .count()
+
+        if user_orders_count is not None:
+            return jsonify({"count": user_orders_count})
         else:
             return jsonify({"status": "error"}), 409
 
@@ -105,13 +107,12 @@ def get_order_vendor(uuid):
 def order_feedback_score(uuid):
     """
     CUSTOMER
-    Post  feedback
-    feedback given by customer
-        # type of feedback = 1
+    Post  feedback     given by customer
+    # type of feedback = 1
     :return:
     """
     if request.method == 'POST':
-        now = datetime.utcnow()
+
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.customer_id == current_user.id) \
@@ -126,45 +127,50 @@ def order_feedback_score(uuid):
         # if order exists else 409
         if get_order:
             # get the request json
-            if request.json["rating"]:
-                vendor_rating = request.json["rating"]
-            else:
+            try:
+                if request.json["vendorrating"]:
+                    vendor_rating = request.json["vendorrating"]
+                else:
+                    return jsonify({"status": "error"}), 409
+            except Exception as e:
+                print(str(e))
                 return jsonify({"status": "error"}), 409
+            try:
+                if request.json["itemrating"]:
+                    item_rating = request.json["itemrating"]
+                else:
+                    return jsonify({"status": "error"}), 409
+            except Exception as e:
+                print(str(e))
+                return jsonify({"status": "error"}), 409
+
             # set feedback to nearest integer
             if 0 <= Decimal(vendor_rating) <= 10:
                 vendorrating = int(vendor_rating)
             else:
                 vendorrating = 0
-            # if there is no feedback already create it
-            if get_feedback is None:
-                create_new_feedback = Feedback_Feedback(
-                    timestamp=now,
-                    order_uuid=get_order.uuid,
-                    item_uuid=get_order.item_uuid,
-                    customer_name=get_order.customer_user_name,
-                    customer_uuid=get_order.customer_uuid,
-                    vendor_name=get_order.vendor_user_name,
-                    vendor_uuid=get_order.vendor_uuid,
-                    vendor_comment=None,
-                    type_of_feedback=1,
-                    author_uuid=current_user.uuid,
-                    item_rating=None,
-                    vendor_rating=vendorrating,
-                    customer_rating=None,
-                    review=None
-                )
-                db.session.add(create_new_feedback)
-                db.session.flush()
-                get_feedback = create_new_feedback
+            # set feedback to nearest integer
+            if 0 <= Decimal(item_rating) <= 10:
+                itemrating = int(vendor_rating)
             else:
-                # feedback exists just add the review
-                get_feedback.vendor_rating = vendorrating
-                db.session.add(get_feedback)
+                itemrating = 0
+
+            # feedback exists just add the review
+            get_order.type_of_feedback = vendor_rating
+            get_order.author_uuid = current_user.uuid
+            db.session.add(get_order)
+
+            get_feedback.vendor_rating = vendorrating
+            get_feedback.item_rating = itemrating
+            db.session.add(get_feedback)
+
             # if both conditions are met set it as review added
-            # this ensure proper review is added not just hhalf
-            if get_feedback.review is not None and get_feedback.vendor_rating is not None:
+            # this ensures proper review is added not just hhalf
+            if get_feedback.review_of_vendor is not None\
+                and get_feedback.vendor_rating is not None:
                 get_order.vendor_feedback = 1
                 db.session.add(get_order)
+
             db.session.commit()
 
             return jsonify({"status": "success"})
@@ -177,13 +183,13 @@ def order_feedback_score(uuid):
 def order_feedback_review(uuid):
     """
     CUSTOMER
-    Post  feedback written review
+    Post feedback written review
     feedback given by customer
-        # type of feedback = 1
+    # type of feedback = 1
     :return:
     """
     if request.method == 'POST':
-        now = datetime.utcnow()
+
         # get the order by current customer
         get_order = db.session \
             .query(User_Orders) \
@@ -204,32 +210,20 @@ def order_feedback_review(uuid):
                 return jsonify({"status": "error"}), 409
             # if no feedback exists
             # Note... vendor rating is none
-            if get_feedback is None:
-                create_new_feedback = Feedback_Feedback(
-                    timestamp=now,
-                    order_uuid=get_order.uuid,
-                    item_uuid=get_order.item_uuid,
-                    customer_name=get_order.customer_user_name,
-                    customer_uuid=get_order.customer_uuid,
-                    vendor_name=get_order.vendor_user_name,
-                    vendor_uuid=get_order.vendor_uuid,
-                    vendor_comment=None,
-                    type_of_feedback=1,
-                    author_uuid=current_user.uuid,
-                    item_rating=None,
-                    vendor_rating=None,
-                    customer_rating=None,
-                    review=review_by_user
-                )
-                db.session.add(create_new_feedback)
-                db.session.flush()
-            else:
-                # feedback exists just add the review
-                get_feedback.review = review_by_user
-                db.session.add(get_feedback)
+
+            # feedback exists just add the review
+            get_order.review_of_vendor = review_by_user
+            get_order.author_uuid = current_user.uuid
+            db.session.add(get_order)
+
+            # update feedback
+            get_feedback.review_of_vendor = review_by_user
+            db.session.add(get_feedback)
+
             # if both conditions are met set it as review added
-            # this ensure proper review is added not just hhalf
-            if get_feedback.review is not None and get_feedback.vendor_rating is not None:
+            # this ensures proper review is added not just hhalf
+            if get_feedback.review_of_vendor is not None\
+                and get_feedback.vendor_rating is not None:
                 get_order.vendor_feedback = 1
                 db.session.add(get_order)
             db.session.commit()
@@ -243,14 +237,13 @@ def order_feedback_review(uuid):
 def order_vendor_feedback_score(uuid):
     """
     VENDOR
-    Post feedback
-    feedback given by vendor
+    Post feedback     given by vendor
         # type of feedback = 2
     :return:
     """
 
     if request.method == 'POST':
-        now = datetime.utcnow()
+
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.vendor_id == current_user.id) \
@@ -269,47 +262,29 @@ def order_vendor_feedback_score(uuid):
                 customer_rating = request.json["rating"]
             else:
                 return jsonify({"status": "error"}), 409
+
             # set feedback to nearest integer
             if 0 <= Decimal(customer_rating) <= 10:
                 customerrating = int(customer_rating)
             else:
                 customerrating = 1
-            # if there is no feedback already create it
-            if get_feedback is None:
-                create_new_feedback = Feedback_Feedback(
-                    timestamp=now,
-                    order_uuid=get_order.uuid,
-                    item_uuid=get_order.item_uuid,
-                    customer_name=get_order.customer_user_name,
-                    customer_uuid=get_order.customer_uuid,
-                    vendor_name=get_order.vendor_user_name,
-                    vendor_uuid=get_order.vendor_uuid,
-                    vendor_comment=None,
-                    type_of_feedback=2,
-                    author_uuid=current_user.uuid,
-                    item_rating=None,
-                    vendor_rating=None,
-                    customer_rating=customerrating,
-                    review=None
-                )
-                db.session.add(create_new_feedback)
-                db.session.flush()
-                get_feedback = create_new_feedback
-            else:
-                create_new_feedback = None
-                # feedback exists just add the review
-                get_feedback.customer_rating = customerrating
-                db.session.add(get_feedback)
+
+            # modify order
+            get_order.author_uuid = current_user.uuid
+            get_order.customer_rating = customerrating
+            db.session.add(get_order)
+
+            # add the review
+            get_feedback.customer_rating = customerrating
+            db.session.add(get_feedback)
+
             # if both conditions are met set it as review added
             # this ensures proper review is added not just half
-            if get_feedback:
-                if get_feedback.review is not None and get_feedback.customer_rating is not None:
-                    get_order.user_feedback = 1
-                    db.session.add(get_order)
-            else:
-                if create_new_feedback.review is not None and create_new_feedback.customer_rating is not None:
-                    get_order.user_feedback = 1
-                    db.session.add(get_order)
+
+            if get_feedback.review_of_customer is not None\
+                and get_feedback.customer_rating is not None:
+                get_order.user_feedback = 1
+                db.session.add(get_order)
             db.session.commit()
 
             return jsonify({"status": "success"})
@@ -329,7 +304,7 @@ def order_vendor_feedback_review(uuid):
     :return:
     """
     if request.method == 'POST':
-        now = datetime.utcnow()
+
         # get the order by current customer
         get_order = db.session \
             .query(User_Orders) \
@@ -352,39 +327,21 @@ def order_vendor_feedback_review(uuid):
                 return jsonify({"status": "error"}), 409
             # if no feedback exists
             # Note... vendor rating is none
-            if get_feedback is None:
-                create_new_feedback = Feedback_Feedback(
-                    timestamp=now,
-                    order_uuid=get_order.uuid,
-                    item_uuid=get_order.item_uuid,
-                    customer_name=get_order.customer_user_name,
-                    customer_uuid=get_order.customer_uuid,
-                    vendor_name=get_order.vendor_user_name,
-                    vendor_uuid=get_order.vendor_uuid,
-                    vendor_comment=None,
-                    type_of_feedback=2,
-                    author_uuid=current_user.uuid,
-                    item_rating=None,
-                    vendor_rating=None,
-                    customer_rating=None,
-                    review=review_by_user
-                )
-                db.session.add(create_new_feedback)
-                db.session.flush()
-            else:
-                create_new_feedback = None
-                # feedback exists just add the review
-                get_feedback.review = review_by_user
-                db.session.add(get_feedback)
-            # if both conditions are met set it as review added
-            # this ensure proper review is added not just hhalf
-            if get_feedback:
-                if get_feedback.review is not None and get_feedback.customer_rating is not None:
-                    get_order.user_feedback = 1
-                    db.session.add(get_order)
 
-            else:
-                if create_new_feedback.review is not None and create_new_feedback.customer_rating is not None:
+            get_order.author_uuid = current_user.uuid
+            get_order.review_of_customer = review_by_user
+
+            db.session.add(get_order)
+
+            # feedback exists just add the review
+            get_feedback.review_of_customer = review_by_user
+            db.session.add(get_feedback)
+
+            # if both conditions are met set it as review added
+            # this ensures proper review is added not just hhalf
+            if get_feedback:
+                if get_feedback.review_of_customeris is not None\
+                    and get_feedback.customer_rating is not None:
                     get_order.user_feedback = 1
                     db.session.add(get_order)
 
@@ -414,12 +371,14 @@ def get_order_feedback(uuid):
                 .query(Feedback_Feedback) \
                 .filter(Feedback_Feedback.order_uuid == uuid) \
                 .first()
-
-            return jsonify({
-                "item_rating": get_feedback.item_rating,
-                "vendor_rating": get_feedback.vendor_rating,
-                "review": get_feedback.review,
-            })
+            if get_feedback:
+                return jsonify({
+                    "item_rating": get_feedback.item_rating,
+                    "vendor_rating": get_feedback.vendor_rating,
+                    "review": get_feedback.review_of_vendor,
+                })
+            else:
+                return jsonify({"order_feedback": 'None'})
         else:
             return jsonify({"status": "error"}), 409
 
@@ -492,7 +451,6 @@ def mark_order_finalized(uuid):
 
         if get_order:
             if get_order.digital_currency == 1:
-                print("going to finalize")
                 finalize_order_btc(get_order.uuid)
             if get_order.digital_currency == 2:
                 finalize_order_bch(get_order.uuid)

@@ -23,7 +23,11 @@ def btc_price_usd():
     Gets current price of bitcoin cash
     :return:
     """
-    price_btc_usd = Btc_Prices.query.filter_by(currency_id=0).first()
+    price_btc_usd = db.session\
+        .query(Btc_Prices)\
+        .filter_by(currency_id=0)\
+        .first()
+    print(price_btc_usd)
     if price_btc_usd.price > 0:
         try:
             price_btc_usd = str(price_btc_usd.price)
@@ -45,7 +49,10 @@ def btc_balance_plus_unconfirmed():
     Gets current balance and any unconirmed transactions
     :return:
     """
-    userwallet = Btc_Wallet.query.filter(Btc_Wallet.user_id == current_user.id).first()
+    userwallet = db.session\
+        .query(Btc_Wallet)\
+        .filter(Btc_Wallet.user_id == current_user.id)\
+        .first()
     try:
         userbalance = str(userwallet.currentbalance)
         unconfirmed = str(userwallet.unconfirmed)
@@ -64,7 +71,8 @@ def btc_balance_plus_unconfirmed():
 def btc_transactions():
 
     # Get Transaction history
-    transactfull = Btc_TransactionsBtc.query\
+    transactfull = db.session\
+        .query(Btc_TransactionsBtc)\
         .filter(Btc_TransactionsBtc.user_id == current_user.id)\
         .order_by(Btc_TransactionsBtc.id.desc())\
         .limit(50)
@@ -76,7 +84,10 @@ def btc_transactions():
 @wallet_btc.route('/receive', methods=['GET'])
 @login_required
 def btc_receive():
-    userwallet = Btc_Wallet.query.filter(Btc_Wallet.user_id == current_user.id).first()
+    userwallet = db.session\
+        .query(Btc_Wallet)\
+        .filter(Btc_Wallet.user_id == current_user.id)\
+        .first()
     return jsonify({"btc_address": userwallet.address1}), 200
 
 
@@ -84,10 +95,19 @@ def btc_receive():
 @login_required
 def btc_send():
     # Get wallet
-    user = Auth_User.query.filter_by(id=current_user.id).first()
-    userwallet = Btc_Wallet.query.filter_by(Btc_Wallet.user_id == current_user.id).first()
+    user = db.session\
+        .query(Auth_User)\
+        .filter_by(id=current_user.id)\
+        .first()
+    userwallet = db.session\
+        .query(Btc_Wallet)\
+        .filter_by(Btc_Wallet.user_id == current_user.id)\
+        .first()
     # get wallet fee
-    walletthefee = Btc_WalletFee.query.filter_by(id=1).first()
+    walletthefee = db.session\
+        .query(Btc_WalletFee)\
+        .filter_by(id=1)\
+        .first()
     wfee = Decimal(walletthefee.btc)
 
     # form variables

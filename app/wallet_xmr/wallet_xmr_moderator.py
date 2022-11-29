@@ -13,7 +13,10 @@ def finalize_order_dispute_xmr(order_uuid, percent_to_customer, percent_to_vendo
         .query(User_Orders)\
         .filter(User_Orders.uuid == order_uuid)\
         .first()
-    get_mod = db.session.query(Auth_User).filter(Auth_User.id == get_order.moderator_uuid).first()
+    get_mod = db.session\
+        .query(Auth_User)\
+        .filter(Auth_User.id == get_order.moderator_uuid)\
+        .first()
     # get moderator fee
     mod_fee_percent = 0.05
     fee_for_freeport = Decimal(get_order.price_total_xmr) * Decimal(mod_fee_percent)

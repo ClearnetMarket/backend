@@ -24,7 +24,10 @@ def xmr_price_usd():
     Gets current price of bitcoin cash
     :return:
     """
-    price_xmr_usd = Xmr_Prices.query.filter_by(currency_id=0).first()
+    price_xmr_usd = db.session\
+        .query(Xmr_Prices)\
+        .filter_by(currency_id=0)\
+        .first()
     if price_xmr_usd.price > 0:
         try:
             price_xmr_usd = str(price_xmr_usd.price)
@@ -47,7 +50,10 @@ def xmr_balance_plus_unconfirmed():
     Gets current balance and any unconfirmed transactions
     :return:
     """
-    userwallet = Xmr_Wallet.query.filter_by(user_id=current_user.id).first()
+    userwallet = db.session\
+        .query(Xmr_Wallet)\
+        .filter_by(user_id=current_user.id)\
+        .first()
     try:
         userbalance = str(userwallet.currentbalance)
         unconfirmed = str(userwallet.unconfirmed)
@@ -66,7 +72,8 @@ def xmr_balance_plus_unconfirmed():
 def xmr_transactions():
 
     # Get Transaction history
-    transactfull = Xmr_Transactions.query\
+    transactfull = db.session\
+        .query(Xmr_Transactions)\
         .filter(Xmr_Transactions.user_id == current_user.id)\
         .order_by(Xmr_Transactions.id.desc())\
         .limit(50)
@@ -79,7 +86,10 @@ def xmr_transactions():
 @login_required
 def xmr_receive():
 
-    wallet = Xmr_Wallet.query.filter_by(user_id=current_user.id).first()
+    wallet = db.session\
+        .query(Xmr_Wallet)\
+        .filter_by(user_id=current_user.id)\
+        .first()
 
     qr = wallet.address1 + '.png'
     wallet_qr_code = os.path.join(UPLOADED_FILES_DEST_USER, str(current_user.uuid), 'qr', qr)
@@ -94,10 +104,19 @@ def xmr_receive():
 @login_required
 def xmr_send():
 
-    user = Auth_User.query.filter_by(id=current_user.id).first()
-    wallet = Xmr_Wallet.query.filter_by(user_id=current_user.id).first()
+    user = db.session\
+        .query(Auth_User)\
+        .filter_by(id=current_user.id)\
+        .first()
+    wallet = db.session\
+        .query(Xmr_Wallet)\
+        .filter_by(user_id=current_user.id)\
+        .first()
     # get walletfee
-    walletthefee = Xmr_WalletFee.query.filter_by(id=1).first()
+    walletthefee = db.session\
+        .query(Xmr_WalletFee)\
+        .filter_by(id=1)\
+        .first()
     wfee = Decimal(walletthefee.xmr)
 
     # form variables

@@ -18,11 +18,12 @@ class Bch_Wallet(db.Model):
     locked = db.Column(db.INTEGER)
     transactioncount = db.Column(db.INTEGER)
     unconfirmed = db.Column(db.DECIMAL(20, 8))
-  
+
 
 class Bch_Wallet_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Bch_Wallet
+
     id = ma.auto_field()
     user_id = ma.auto_field()
     currentbalance = ma.auto_field()
@@ -35,7 +36,6 @@ class Bch_Wallet_Schema(ma.SQLAlchemyAutoSchema):
     locked = ma.auto_field()
     transactioncount = ma.auto_field()
     unconfirmed = ma.auto_field()
-   
 
 
 class Bch_Prices(db.Model):
@@ -51,6 +51,7 @@ class Bch_Prices(db.Model):
 class Bch_Prices_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Bch_Prices
+
     id = ma.auto_field()
     price = ma.auto_field()
     currency_id = ma.auto_field()
@@ -89,6 +90,7 @@ class Bch_WalletUnconfirmed(db.Model):
 class Bch_WalletUnconfirmed_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Bch_WalletUnconfirmed
+
     id = ma.auto_field()
     user_id = ma.auto_field()
     unconfirmed1 = ma.auto_field()
@@ -163,6 +165,7 @@ class Bch_WalletTransactions(db.Model):
 class Bch_WalletTransactions_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Bch_WalletTransactions
+
     id = ma.auto_field()
     category = ma.auto_field()
     user_id = ma.auto_field()

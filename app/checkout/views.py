@@ -26,6 +26,7 @@ from app.classes.wallet_bch import Bch_Wallet
 from app.classes.wallet_xmr import Xmr_Wallet
 from app.classes.vendor import Vendor_Notification
 from app.classes.userdata import UserData_DefaultAddress
+from app.classes.feedback import Feedback_Feedback
 # endmodels
 
 from app.wallet_bch.wallet_bch_work import bch_send_coin_to_escrow
@@ -166,13 +167,13 @@ def cart_calculate_item_shipping_and_price_cart(cartitemid):
         .first()
 
     cartitem_exists = db.session \
-                          .query(Checkout_CheckoutShoppingCart) \
-                          .filter(Checkout_CheckoutShoppingCart.id == cartitemid) \
-                          .first() is not None
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.id == cartitemid) \
+        .first() is not None
     getitem_exists = db.session \
-                         .query(Item_MarketItem) \
-                         .filter(Item_MarketItem.id == cartitem.item_id) \
-                         .first() is not None
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.id == cartitem.item_id) \
+        .first() is not None
 
     if cartitem_exists and getitem_exists:
         # BITCOIN
@@ -437,7 +438,7 @@ def checkout_delete_private_msg(userid):
 
 def checkoutput_item_offline(itemid):
     """
-    If user bought last or only item..take vendors item offline
+    If user bought last or only item. take vendors item offline
     """
     getitem = db.session \
         .query(Item_MarketItem) \
@@ -520,9 +521,9 @@ def cart_add_to_shopping_cart(itemuuid):
         return jsonify({'error': 'Can not buy your own item.'}), 409
     # see if in shopping cart
     see_if_item_in_cart = db.session \
-                              .query(Checkout_CheckoutShoppingCart) \
-                              .filter(Checkout_CheckoutShoppingCart.item_uuid == itemuuid) \
-                              .first() is not None
+        .query(Checkout_CheckoutShoppingCart) \
+        .filter(Checkout_CheckoutShoppingCart.item_uuid == itemuuid) \
+        .first() is not None
     if see_if_item_in_cart is False:
         if get_item_for_sale.shipping_free is True:
             shipping_selected = 1
@@ -536,6 +537,15 @@ def cart_add_to_shopping_cart(itemuuid):
             shipinfodesc = f'Takes {get_item_for_sale.shipping_day_3} days for ' \
                            f'{get_item_for_sale.shipping_price_3}{get_item_for_sale.currency_symbol}'
 
+        # add generic payment type
+        if get_item_for_sale.digital_currency_1 is True:
+            auto_currency = 1
+        elif get_item_for_sale.digital_currency_2 is True:
+            auto_currency = 2
+        elif get_item_for_sale.digital_currency_3 is True:
+            auto_currency = 3
+        else:
+            auto_currency = 5
         new_shopping_cart_item = Checkout_CheckoutShoppingCart(
             item_id=get_item_for_sale.id,
             item_uuid=get_item_for_sale.uuid,
@@ -566,7 +576,7 @@ def cart_add_to_shopping_cart(itemuuid):
             digital_currency_3=get_item_for_sale.digital_currency_3,
             saved_for_later=0,
             quantity_of_item=1,
-            selected_digital_currency=None,
+            selected_digital_currency=auto_currency,
             selected_shipping=shipping_selected,
             selected_shipping_description=shipinfodesc,
             final_shipping_price_btc=None,
@@ -578,11 +588,14 @@ def cart_add_to_shopping_cart(itemuuid):
         )
 
         db.session.add(new_shopping_cart_item)
+        db.session.flush()
+        cart_calculate_item_shipping_and_price_cart(new_shopping_cart_item.id)
+        cart_calculate_total_price(new_shopping_cart_item.customer_id)
         db.session.commit()
-
         return jsonify({'status': 'success'})
     else:
-        return jsonify({'error': 'Item is in cart already.'}), 409
+        print("Item is in cart already")
+        return jsonify({'error': 'Item is in cart already.'}), 200
 
 
 @checkout.route('/data/incart', methods=['GET'])
@@ -894,9 +907,10 @@ def cart_delete_item(cartid):
 @login_required
 def cart_set_quantity_initial_amount():
     """
-    When User enters shopping cart ..set amounts to 1
+    When User enters shopping cart.  set amounts to 1
     """
-    the_cart = db.session.query(Checkout_CheckoutShoppingCart) \
+    the_cart = db.session\
+        .query(Checkout_CheckoutShoppingCart) \
         .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid) \
         .all()
     for f in the_cart:
@@ -1073,7 +1087,7 @@ def checkout_make_order():
             customer_uuid=k.customer_uuid,
             customer_id=k.customer_id,
             currency=k.currency,
-            overall_status=None,
+            overall_status=1,
             disputed_timer=None,
             moderator_uuid=None,
             date_shipped=None,
@@ -1116,6 +1130,7 @@ def checkout_make_order():
             new_orders=1,
             new_returns=0,
         )
+
         db.session.add(new_notice_vendor)
         db.session.add(order)
     db.session.flush()
@@ -1126,6 +1141,7 @@ def checkout_make_payment():
     """
     Sends the Payments for the cryptocurrencies
     """
+
     cart_total = db.session \
         .query(Checkout_ShoppingCartTotal) \
         .filter_by(customer_id=current_user.id) \
@@ -1165,10 +1181,10 @@ def checkout_make_payment():
     orders = db.session \
         .query(User_Orders) \
         .filter(User_Orders.customer_uuid == current_user.uuid) \
-        .filter(User_Orders.overall_status == None) \
+        .filter(User_Orders.overall_status is None) \
         .all()
 
-    # loop through ORDERS. send coin and doing transactions 1 by 1..
+    # loop through ORDERS. send coin and doing transactions 1 by 1.
     # this does not loop through the shopping cart
     # modifies orders
     for order in orders:
@@ -1186,9 +1202,9 @@ def checkout_make_payment():
         # add total sold to item
         # calculate how many items are left
         newsold = int(get_item.total_sold) + int(order.quantity)
-        print("current quantity:", get_item.item_count)
+
         newquantleft = int(get_item.item_count) - int(order.quantity)
-        print("New item quantity", newquantleft)
+
         get_item.total_sold = newsold
         get_item.item_count = newquantleft
 
@@ -1228,6 +1244,26 @@ def checkout_make_payment():
         # check if item is now offline
         checkoutput_item_offline(get_item.uuid)
 
+        # create a review
+        create_new_feedback = Feedback_Feedback(
+            timestamp=datetime.utcnow(),
+            title_of_item=order.title_of_item,
+            order_uuid=order.uuid,
+            item_uuid=order.item_uuid,
+            customer_name=order.customer_user_name,
+            customer_uuid=order.customer_uuid,
+            vendor_name=order.vendor_user_name,
+            vendor_uuid=order.vendor_uuid,
+            vendor_comment=None,
+            type_of_feedback=1,
+            author_uuid=current_user.uuid,
+            item_rating=None,
+            vendor_rating=None,
+            customer_rating=None,
+            review_of_customer=None,
+            review_of_vendor=None,
+        )
+        db.session.add(create_new_feedback)
         # commit to database
         db.session.add(order)
         db.session.add(get_item)

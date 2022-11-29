@@ -75,7 +75,7 @@ def message_msg_sidebar():
 @login_required
 def message_msg(post_id):
     """
-    Returns the main first question asked to the vendor or party.
+    Returns the main first question asked  the vendor or party.
     :return:
     """
     get_msg_post = db.session \
@@ -333,7 +333,7 @@ def create_new_post_dispute(order_uuid):
     """
     This function is called when a dispute is issued.  Its only created
     after the button is placed in orders page.  
-    It creates a generic message and auto fills the post field.
+    It creates a generic message and  fills the post field.
 
     """
 

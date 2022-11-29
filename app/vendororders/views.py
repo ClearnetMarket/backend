@@ -18,35 +18,43 @@ from app.wallet_xmr.wallet_xmr_work import xmr_refund_rejected_user
 def vendor_orders_count():
 
     if request.method == 'GET':
-        vendor_orders_new = User_Orders.query \
+        vendor_orders_new = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=1) \
             .count()
-        vendor_orders_accepted = User_Orders.query \
+        vendor_orders_accepted = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=2) \
             .count()
-        vendor_orders_shipped = User_Orders.query \
+        vendor_orders_shipped = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=3) \
             .count()
-        vendor_orders_delivered = User_Orders.query \
+        vendor_orders_delivered = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=4) \
             .count()
-        vendor_orders_finalized = User_Orders.query \
+        vendor_orders_finalized = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=10) \
             .count()
-        vendor_orders_request_cancel = User_Orders.query \
+        vendor_orders_request_cancel = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=6) \
             .count()
-        vendor_orders_cancelled = User_Orders.query \
+        vendor_orders_cancelled = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=7) \
             .count()
-        vendor_orders_dispute = User_Orders.query \
+        vendor_orders_dispute = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=8) \
             .count()
@@ -68,7 +76,8 @@ def vendor_orders_waiting_on_accepted():
 
     if request.method == 'GET':
        
-        vendor_orders = User_Orders.query \
+        vendor_orders = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=1) \
             .all()
@@ -83,7 +92,8 @@ def vendor_orders_new_accept(orderuuid):
 
     if request.method == 'PUT':
     
-        vendor_order = User_Orders.query \
+        vendor_order = db.session\
+            .query(User_Orders) \
             .filter_by(uuid=orderuuid) \
             .filter_by(vendor_id=current_user.id)\
             .first()
@@ -99,7 +109,8 @@ def vendor_orders_new_accept(orderuuid):
 def vendor_orders_reject(orderuuid):
 
     if request.method == 'POST':
-        vendor_order = User_Orders.query \
+        vendor_order = db.session\
+            .query(User_Orders) \
             .filter_by(uuid=orderuuid) \
             .filter_by(vendor_uuid=current_user.uuid)\
             .first()
@@ -133,7 +144,8 @@ def vendor_orders_reject(orderuuid):
 def vendor_orders_waiting_on_shipment():
 
     if request.method == 'GET':
-        vendor_orders = User_Orders.query \
+        vendor_orders = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=2) \
             .all()
@@ -147,7 +159,8 @@ def vendor_orders_waiting_on_shipment():
 def vendor_orders_mark_as_shipped(orderuuid):
 
     if request.method == 'PUT':
-        vendor_order = User_Orders.query \
+        vendor_order = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(uuid=orderuuid) \
             .first()
@@ -164,7 +177,8 @@ def vendor_orders_mark_as_shipped(orderuuid):
 def vendor_orders_shipped():
 
     if request.method == 'GET':
-        vendor_orders = User_Orders.query \
+        vendor_orders = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=3) \
             .all()
@@ -178,7 +192,8 @@ def vendor_orders_shipped():
 def vendor_orders_finalized():
 
     if request.method == 'GET':
-        vendor_orders = User_Orders.query \
+        vendor_orders = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=10) \
             .all()
@@ -192,7 +207,8 @@ def vendor_orders_finalized():
 def vendor_orders_waiting_on_cancel():
 
     if request.method == 'GET':
-        vendor_orders = User_Orders.query \
+        vendor_orders = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=6) \
             .all()
@@ -205,7 +221,8 @@ def vendor_orders_waiting_on_cancel():
 def vendor_orders_disputed():
 
     if request.method == 'GET':
-        vendor_orders = User_Orders.query \
+        vendor_orders = db.session\
+            .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
             .filter_by(overall_status=8) \
             .all()
@@ -223,20 +240,32 @@ def vendor_orders_add_tracking():
         carrier_name = request.json["carrier_name"]
         tracking_number = request.json["tracking_number"]
       
-        see_if_order_exists = db.session.query(User_Orders)\
+        see_if_order_exists = db.session\
+            .query(User_Orders)\
             .filter_by(uuid=order_uuid)\
             .filter_by(vendor_id=current_user.id)\
             .first()
+        see_if_tracking_exists = db.session\
+            .query(User_Orders_Tracking)\
+            .filter(User_Orders_Tracking.order_uuid == order_uuid, User_Orders_Tracking.vendor_uuid == current_user.uuid)\
+            .first()
         if see_if_order_exists:
-            add_new_tracking = User_Orders_Tracking(
-                created=now,
-                order_uuid=order_uuid,
-                carrier=carrier_name,
-                tracking_number=tracking_number,
-                vendor_uuid=see_if_order_exists.vendor_uuid
-            )
-            db.session.add(add_new_tracking)
-            db.session.commit()
+            if see_if_tracking_exists is None:
+                add_new_tracking = User_Orders_Tracking(
+                    created=now,
+                    order_uuid=order_uuid,
+                    carrier=carrier_name,
+                    tracking_number=tracking_number,
+                    vendor_uuid=see_if_order_exists.vendor_uuid
+                )
+                db.session.add(add_new_tracking)
+                db.session.commit()
+            else:
+                see_if_tracking_exists.tracking_number = tracking_number
+                see_if_tracking_exists.carrier = carrier_name
+                db.session.add(see_if_tracking_exists)
+                db.session.commit()
+
             return jsonify({'status': 'success'})
         else:
             return jsonify({'status': 'success'})
@@ -247,12 +276,14 @@ def vendor_orders_add_tracking():
 def vendor_orders_get_tracking(order_uuid):
 
     if request.method == 'GET':
-        tracking_data = User_Orders_Tracking.query \
+        tracking_data = db.session\
+            .query(User_Orders_Tracking) \
             .filter_by(vendor_uuid=current_user.uuid) \
             .filter_by(order_uuid=order_uuid) \
             .first()
 
         if tracking_data:
+
             return jsonify({
                 'tracking_number': tracking_data.tracking_number,
                 'carrier_name': tracking_data.carrier,
@@ -270,16 +301,20 @@ def vendor_orders_add_vendor_feedback(order_uuid):
     """
     if request.method == 'POST':
         now = datetime.utcnow()
-        see_if_feedback_exists = User_Orders.query\
-            .filter(vendor_feedback=1)\
-            .filter(uuid=order_uuid)\
-            .filter(customer_uuid=current_user.uuid)\
-            .first() is not None
+        see_if_feedback_exists = db.session\
+                                     .query(User_Orders)\
+                                     .filter(vendor_feedback=1)\
+                                     .filter(uuid=order_uuid)\
+                                     .filter(customer_uuid=current_user.uuid)\
+                                     .first() is not None
       
         get_item_rating = request.json["item_rating"]
         get_vendor_rating = request.json["vendor_rating"]
         if see_if_feedback_exists:
-            get_order = User_Orders.query.filter(uuid=order_uuid).first()
+            get_order = db.session\
+                .query(User_Orders)\
+                .filter(uuid=order_uuid)\
+                .first()
             add_new_feedback_for_vendor = Feedback_Feedback(
                 timestamp=now,
                 order_uuid=get_order.uuid,
@@ -295,8 +330,8 @@ def vendor_orders_add_vendor_feedback(order_uuid):
                 customer_rating=None,
                 author_uuid=current_user.uuid,
             )
-        db.session.add(add_new_feedback_for_vendor)
-        db.session.commit()
+            db.session.add(add_new_feedback_for_vendor)
+            db.session.commit()
 
         return jsonify({'status': 'success'})
 

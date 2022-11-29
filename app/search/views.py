@@ -15,9 +15,9 @@ def main_search_results(searchstring):
     search = "%{}%".format(searchstring)
 
     get_market_items = db.session\
-                    .query(Item_MarketItem)\
-                    .filter(Item_MarketItem.item_title.ilike(search))\
-                    .limit(50)
+                        .query(Item_MarketItem)\
+                        .filter(Item_MarketItem.item_title.ilike(search))\
+                        .limit(50)
 
     search_schema = Item_MarketItem_Schema(many=True)
     return jsonify(search_schema.dump(get_market_items))
@@ -30,8 +30,8 @@ def main_search_results_count(searchstring):
 
     search = "%{}%".format(searchstring)
     get_market_items_count = db.session \
-                            .query(Item_MarketItem) \
-                            .filter(Item_MarketItem.item_title.ilike(search))\
-                            .count()
+                                .query(Item_MarketItem) \
+                                .filter(Item_MarketItem.item_title.ilike(search))\
+                                .count()
 
     return jsonify({"count": get_market_items_count})

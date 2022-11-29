@@ -1,6 +1,8 @@
 from app import db, ma
 from uuid import uuid4
 
+from app.classes.feedback import  Feedback_Feedback_Schema
+
 
 def get_uuid_item():
     return uuid4().hex
@@ -40,9 +42,6 @@ class User_Orders(db.Model):
     request_cancel = db.Column(db.INTEGER)
     reason_cancel = db.Column(db.INTEGER)
 
-    vendor_feedback = db.Column(db.INTEGER)
-    user_feedback = db.Column(db.INTEGER)
-
     digital_currency = db.Column(db.INTEGER)
     shipping_price_btc = db.Column(db.DECIMAL(20, 8))
     shipping_price_bch = db.Column(db.DECIMAL(20, 8))
@@ -70,21 +69,24 @@ class User_Orders(db.Model):
     msg = db.Column(db.VARCHAR(2500))
     dispute_post_id = db.Column(db.INTEGER)
 
+    # feedback
+    vendor_feedback = db.Column(db.INTEGER)
+    user_feedback = db.Column(db.INTEGER)
+    vendor_comment = db.Column(db.TEXT)
+    type_of_feedback = db.Column(db.INTEGER)
+    item_rating = db.Column(db.DECIMAL(4, 2))
+    vendor_rating = db.Column(db.DECIMAL(4, 2))
+    customer_rating = db.Column(db.DECIMAL(4, 2))
+    author_uuid = db.Column(db.VARCHAR(40))
+    review_of_customer = db.Column(db.TEXT)
+    review_of_vendor = db.Column(db.TEXT)
+
+
 
 class User_Orders_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = User_Orders
-        fields = ('uuid', 'created', 'quantity', 'title_of_item', 'item_uuid', 'image_one',
-                  'currency', 'vendor_user_name', 'customer_user_name',
-                  'customer_uuid', 'vendor_uuid', 'overall_status', 'date_shipped',
-                  'completed', 'completed_time', 'released',
-                  'shipping_price_btc', 'shipping_price_bch', 'shipping_price_xmr',
-                  'shipping_description', 'vendor_feedback', 'user_feedback', 'digital_currency',
-                  'fee_btc', 'fee_bch', 'fee_xmr', 'price_total_btc', 'price_total_bch', 'price_total_xmr',
-                  'price_per_item_btc', 'price_per_item_bch', 'price_per_item_xmr',
-                  'address_name', 'address', 'apt', 'country',
-                  'city', 'state_or_provence', 'zip_code', 'msg', 'moderator_uuid', 'dispute_post_id'
-                  )
+
 
 
 class User_Orders_Tracking(db.Model):

@@ -6,7 +6,6 @@ import datetime
 from app.common.decorators import login_required
 # models
 from app.classes.profile import \
-    Profile_StatisticsVendor,\
     Profile_StatisticsVendor_Schema
 
 from app.classes.feedback import \
@@ -87,7 +86,8 @@ def vendor_vendor_stats(vendor_id):
     :return:
     """
     if request.method == 'GET':
-        vendor_stats = Profile_StatisticsVendor.query \
+        vendor_stats = db.session\
+            .query(Profile_StatisticsVendor) \
             .filter_by(vendorid=vendor_id) \
             .first()
         vendor_schema = Profile_StatisticsVendor_Schema(many=True)
@@ -101,7 +101,8 @@ def vendor_vendor_feedback(vendor_uuid):
     :return:
     """
     if request.method == 'GET':
-        vendor_feedback = Feedback_Feedback.query\
+        vendor_feedback = db.session\
+            .query(Feedback_Feedback)\
             .filter_by(vendor_uuid=vendor_uuid)\
             .filter_by(type_of_feedback=1)\
             .order_by(Feedback_Feedback.timestamp.desc())\
@@ -118,7 +119,8 @@ def vendor_vendor_feedback_count(vendor_uuid):
     :return:
     """
     if request.method == 'GET':
-        vendor_feedback = Feedback_Feedback.query\
+        vendor_feedback = db.session\
+            .query(Feedback_Feedback)\
             .filter_by(vendor_uuid=vendor_uuid)\
             .count()
         if vendor_feedback == 0:
@@ -136,70 +138,80 @@ def vendor_vendor_feedback_count(vendor_uuid):
                             })
 
         if vendor_feedback > 0:
-            vendor_feedback_one = Feedback_Feedback.query\
+            vendor_feedback_one = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(vendor_uuid=vendor_uuid)\
                 .filter_by(vendor_rating=1)\
                 .count()
             vendor_feedback_one_percent = (
                 (int(vendor_feedback_one) / int(vendor_feedback))*100)
 
-            vendor_feedback_two = Feedback_Feedback.query\
+            vendor_feedback_two = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(vendor_uuid=vendor_uuid)\
                 .filter_by(vendor_rating=2)\
                 .count()
             vendor_feedback_two_percent = (
                 (int(vendor_feedback_two) / int(vendor_feedback))*100)
 
-            vendor_feedback_three = Feedback_Feedback.query\
+            vendor_feedback_three = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(vendor_uuid=vendor_uuid)\
                 .filter_by(vendor_rating=3)\
                 .count()
             vendor_feedback_three_percent = (
                 (int(vendor_feedback_three) / int(vendor_feedback))*100)
 
-            vendor_feedback_four = Feedback_Feedback.query\
+            vendor_feedback_four = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(vendor_uuid=vendor_uuid)\
                 .filter_by(vendor_rating=4)\
                 .count()
             vendor_feedback_four_percent = (
                 (int(vendor_feedback_four) / int(vendor_feedback))*100)
 
-            vendor_feedback_five = Feedback_Feedback.query\
+            vendor_feedback_five = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(vendor_uuid=vendor_uuid)\
                 .filter_by(vendor_rating=5)\
                 .count()
             vendor_feedback_five_percent = (
                 (int(vendor_feedback_five) / int(vendor_feedback))*100)
 
-            vendor_feedback_six = Feedback_Feedback.query\
+            vendor_feedback_six = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(vendor_uuid=vendor_uuid)\
                 .filter_by(vendor_rating=6)\
                 .count()
             vendor_feedback_six_percent = (
                 (int(vendor_feedback_six) / int(vendor_feedback))*100)
 
-            vendor_feedback_seven = Feedback_Feedback.query\
+            vendor_feedback_seven = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(vendor_uuid=vendor_uuid)\
                 .filter_by(vendor_rating=7)\
                 .count()
             vendor_feedback_seven_percent = (
                 (int(vendor_feedback_seven) / int(vendor_feedback))*100)
 
-            vendor_feedback_eight = Feedback_Feedback.query\
+            vendor_feedback_eight = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(vendor_uuid=vendor_uuid)\
                 .filter_by(vendor_rating=8)\
                 .count()
             vendor_feedback_eight_percent = (
                 (int(vendor_feedback_eight) / int(vendor_feedback))*100)
 
-            vendor_feedback_nine = Feedback_Feedback.query\
+            vendor_feedback_nine = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(vendor_uuid=vendor_uuid)\
                 .filter_by(vendor_rating=9)\
                 .count()
             vendor_feedback_nine_percent = (
                 (int(vendor_feedback_nine) / int(vendor_feedback))*100)
 
-            vendor_feedback_ten = Feedback_Feedback.query\
+            vendor_feedback_ten = db.session\
+                .query(Feedback_Feedback)\
                 .filter_by(vendor_uuid=vendor_uuid)\
                 .filter_by(vendor_rating=10)\
                 .count()
@@ -329,12 +341,13 @@ def vendor_topbar_get_feedback_markasread():
     return jsonify({"status": 'success'})
 
 
-@vendor.route('/vendoriteminfo/<string:vendor_id>', methods=['GET'])
+@vendor.route('/vendor-info/<string:vendor_id>', methods=['GET'])
 def vendor_topbar_get_vendor_info(vendor_id):
     """
     Gets the vendor name, ratings count and sales count
     :return:
     """
+
     get_vendor = db.session\
         .query(Auth_User)\
         .filter(Auth_User.uuid == vendor_id)\
@@ -388,7 +401,8 @@ def vendor_update_address():
     """
     if request.method == 'PUT':
         if current_user.admin_role >= 1:
-            vendor_address = Vendor_ExactAddress.query\
+            vendor_address = db.session\
+                .query(Vendor_ExactAddress)\
                 .filter(Vendor_ExactAddress.uuid == current_user.uuid)\
                 .first()
          

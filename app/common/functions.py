@@ -67,11 +67,8 @@ def genericprofile(path):
 def mkdir_p(path):
     try:
         os.makedirs(path, 0o755)
-    except OSError:  # Python >2.7
-        if os.path.isdir(path):
-            pass
-        else:
-            raise
+    except:
+        pass
 
 
 def itemlocation(x):

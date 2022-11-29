@@ -1,7 +1,6 @@
 from flask import jsonify, Response
-from app import app, ApplicationConfig
+from app import app
 from flask_wtf.csrf import generate_csrf
-from flask_login import login_required
 
 
 @app.after_request
@@ -28,6 +27,7 @@ def static_from_root():
         disallow('/wallet_bch'),
         disallow('/wallet_xmr'),
         disallow('/admin'),
+        
     ])))
 
 

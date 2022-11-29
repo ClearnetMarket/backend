@@ -6,6 +6,7 @@ from app.wallet_bch import wallet_bch
 from app.wallet_bch.wallet_bch_work import bch_send_coin
 from app.common.functions import floating_decimals
 from decimal import Decimal
+
 # models
 from app.classes.auth import Auth_User
 from app.classes.wallet_bch import\
@@ -23,7 +24,10 @@ def bch_price_usd():
     Gets current price of bitcoin cash
     :return:
     """
-    price_bch_usd = Bch_Prices.query.filter_by(currency_id=0).first()
+    price_bch_usd = db.session\
+            .query(Bch_Prices)\
+            .filter_by(currency_id=0)\
+            .first()
     if price_bch_usd.price > 0:
         try:
             price_bch_usd = str(price_bch_usd.price)
@@ -46,7 +50,10 @@ def bch_balance_plus_unconfirmed():
     Gets current balance and any unconirmed transactions
     :return:
     """
-    userwallet = Bch_Wallet.query.filter_by(user_id=current_user.id).first()
+    userwallet = db.session\
+        .query(Bch_Wallet)\
+        .filter_by(user_id=current_user.id)\
+        .first()
     try:
         userbalance = str(userwallet.currentbalance)
         unconfirmed = str(userwallet.unconfirmed)
@@ -65,7 +72,8 @@ def bch_balance_plus_unconfirmed():
 def bch_transactions():
     
     # Get Transaction history
-    transactfull = Bch_WalletTransactions.query\
+    transactfull = db.session\
+        .query(Bch_WalletTransactions)\
         .filter(Bch_WalletTransactions.user_id == current_user.id)\
         .order_by(Bch_WalletTransactions.id.desc())\
         .limit(50)
@@ -78,7 +86,10 @@ def bch_transactions():
 @login_required
 def bch_receive():
     
-    wallet = Bch_Wallet.query.filter(Bch_Wallet.user_id == current_user.id).first()
+    wallet = db.session\
+        .query(Bch_Wallet)\
+        .filter(Bch_Wallet.user_id == current_user.id)\
+        .first()
     return jsonify({"bch_address": wallet.address1}), 200
 
 
@@ -86,10 +97,19 @@ def bch_receive():
 @login_required
 def bch_send():
     # Get wallet_btc
-    user = Auth_User.query.filter_by(id=current_user.id).first()
-    wallet = Bch_Wallet.query.filter_by(user_id=current_user.id).first()
+    user = db.session\
+        .query(Auth_User)\
+        .filter_by(id=current_user.id)\
+        .first()
+    wallet = db.session\
+        .query(Bch_Wallet)\
+        .filter_by(user_id=current_user.id)\
+        .first()
     # get walletfee
-    walletthefee = Bch_WalletFee.query.filter_by(id=1).first()
+    walletthefee = db.session\
+        .query(Bch_WalletFee)\
+        .filter_by(id=1)\
+        .first()
     wfee = Decimal(walletthefee.bch)
 
     # form variables

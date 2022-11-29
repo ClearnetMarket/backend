@@ -1,5 +1,5 @@
-from flask import request, session, jsonify
-from sqlalchemy import or_, func
+from flask import request,  jsonify
+from sqlalchemy import func
 from app.category import category
 from app import db
 

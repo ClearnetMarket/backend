@@ -70,7 +70,9 @@ def xmr_create_wallet(user_id):
 def xmr_create_qr_code(user_id, address):
     # find path of the user
     getuserlocation = userimagelocation(user_id=user_id)
-    get_user = Auth_User.query.get(user_id)
+    get_user = db.session\
+        .query(Auth_User)\
+        .get(user_id)
     thepath = os.path.join(UPLOADED_FILES_DEST_USER,
                            getuserlocation,
                            str(get_user.uuid))
@@ -95,8 +97,10 @@ def xmr_wallet_status(user_id):
     :param user_id:
     :return:
     """
-    userwallet = db.session.query(
-        Xmr_Wallet).filter_by(user_id=user_id).first()
+    userwallet = db.session\
+        .query(Xmr_Wallet)\
+        .filter_by(user_id=user_id)\
+        .first()
 
     if userwallet:
         pass
@@ -113,7 +117,9 @@ def xmr_send_coin(user_id, sendto, amount):
     :param amount:
     :return:
     """
-    getwallet = Xmr_WalletFee.query.get(1)
+    getwallet = db.session\
+        .query(Xmr_WalletFee)\
+        .get(1)
     walletfee = getwallet.amount
     a = xmr_check_balance(user_id=user_id, amount=amount)
     if a == 1:
@@ -224,7 +230,8 @@ def xmr_send_coin_to_escrow(amount,  user_id, order_uuid):
     if passed_balance_check == 1:
 
         type_transaction = 4
-        userwallet = Xmr_Wallet.query\
+        userwallet =db.session\
+            .query(Xmr_Wallet)\
             .filter(Xmr_Wallet.user_id == user_id)\
             .first()
         curbal = Decimal(userwallet.currentbalance)

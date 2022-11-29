@@ -10,7 +10,7 @@ class Feedback_Feedback(db.Model):
                    autoincrement=True,
                    unique=True)
     timestamp = db.Column(db.TIMESTAMP())
-
+    title_of_item = db.Column(db.VARCHAR(500))
     order_uuid = db.Column(db.VARCHAR(40))
     item_uuid = db.Column(db.VARCHAR(40))
 
@@ -27,7 +27,8 @@ class Feedback_Feedback(db.Model):
     customer_rating = db.Column(db.DECIMAL(4, 2))
     author_uuid = db.Column(db.VARCHAR(40))
 
-    review = db.Column(db.TEXT)
+    review_of_customer = db.Column(db.TEXT)
+    review_of_vendor = db.Column(db.TEXT)
 
     
 class Feedback_Feedback_Schema(ma.SQLAlchemyAutoSchema):

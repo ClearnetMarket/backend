@@ -112,7 +112,9 @@ def bch_create_wallet(user_id):
 def bch_create_qr_code(user_id, address):
     # find path of the user
     getuserlocation = userimagelocation(user_id=user_id)
-    get_user = Auth_User.query.get(user_id)
+    get_user = db.session\
+        .query(Auth_User)\
+        .get(user_id)
     thepath = os.path.join(UPLOADED_FILES_DEST_USER,
                            getuserlocation, str(get_user.uuid))
     path_plus_filename = thepath + '/' + address + '.png'
@@ -368,7 +370,8 @@ def finalize_order_bch(order_uuid):
     total_amount_from_sale = get_order.price_total_bch
 
     # get vendor fee
-    get_vendor_fee = Auth_UserFees.query\
+    get_vendor_fee = db.session\
+        .query(Auth_UserFees)\
         .filter(Auth_UserFees.user_id == get_order.vendor_id)\
         .first()
         
