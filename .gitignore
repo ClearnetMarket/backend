@@ -59,7 +59,7 @@ coverage.xml
 db.sqlite3
 
 # Flask stuff:
-instance/
+
 .webassets-cache
 
 # Scrapy stuff:
@@ -125,7 +125,7 @@ app/static/bootstrap
 
 .idea
 /config.py
-
+instance/config.py
 .idea/
 addamazonisn.py
 /passwords.py
