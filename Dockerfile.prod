@@ -26,5 +26,6 @@ ENV FLASK_APP=app.py
 
 ENV FLASK_ENV=development
 
-EXPOSE 5000:5100
-CMD ["python", "app.py", "--host", "0.0.0.0"]
+EXPOSE 5005:5005
+
+CMD ["python", "runProduction.py", "--host", "0.0.0.0"]

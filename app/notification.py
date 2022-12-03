@@ -22,6 +22,34 @@
 # 30 btc address error
 # 31 too little btc to send offsite
 
+
+#WALLET ERRORS
+# Bitcoin BTC
+# errors
+# 100 =  too litte or too much at withdrawl
+# 102 = wallet error
+# 103 = btc address error
+# 104 New Incomming Deposit
+# 105 Bitcoin Sent
+
+# Bitcoin Cash BCH
+# errors
+# 200 =  too litte or too much at withdrawl
+# 202 = wallet error
+# 203 = btc address error
+# 204 New Incomming Deposit
+# 205 Bitcoin Sent
+
+# Monero XMR
+# errors
+# 300 =  too litte or too much at withdrawl
+# 302 = wallet error
+# 303 = btc address error
+# 304 New Incomming Deposit
+# 305 Bitcoin Sent
+
+
+
 def notification(type, username, user_id, salenumber, bitcoin, bitcoincash, monero):
     from app import db
     from app.classes.message import Message_Notifications

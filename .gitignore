@@ -111,8 +111,6 @@ app/package-lock.json
 clearnet.ini
 
 rsync_svg.txt
-runLan.py
-runproduction.py
 setup/
 word_seeds.txt
 workspace.code-workspace

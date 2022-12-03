@@ -62,7 +62,7 @@ app.config['UPLOADED_FILES_DEST'] = ApplicationConfig.UPLOADED_FILES_DEST
 app.config['UPLOADED_FILES_ALLOW'] = ApplicationConfig.UPLOADED_FILES_ALLOW
 app.config['MAX_CONTENT_LENGTH'] = ApplicationConfig.MAX_CONTENT_LENGTH
 app.config['SECRET_KEY'] = ApplicationConfig.SECRET_KEY
-app.config['DEBUG'] = ApplicationConfig.DEBUG
+
 
 app.config['SESSION_TYPE'] = ApplicationConfig.SESSION_TYPE
 app.config['SESSION_COOKIE_NAME'] = ApplicationConfig.SESSION_COOKIE_NAME
