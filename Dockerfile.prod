@@ -22,9 +22,7 @@ RUN chown -R flask:flaskgroup /app
 
 USER flask
 
-ENV FLASK_APP=app.py
-
-ENV FLASK_ENV=development
+ENV FLASK_APP=runProduction.py
 
 EXPOSE 5005:5005
 
