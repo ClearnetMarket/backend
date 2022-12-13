@@ -7,7 +7,7 @@ from flask_wtf.csrf import generate_csrf
 def add_headers(response):
     # has to have http + ip + port or wont work
     # ip of where requests come from ie vue app
-    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5010'
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     response.headers['Access-Control-Allow-Headers'] = 'Authorization, authorization, Access-Control-Allow-Headers,' \
                                                        ' Origin,Accept, X-Requested-With, Content-Type,' \

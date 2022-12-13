@@ -24,6 +24,6 @@ USER flask
 
 ENV FLASK_APP=runProduction.py
 
-EXPOSE 5005:5005
+EXPOSE 5000
 
-CMD ["python", "runProduction.py", "--host", "0.0.0.0"]
+ENTRYPOINT ["gunicorn","--config", "gunicorn_config.py", "runProduction:app"]
