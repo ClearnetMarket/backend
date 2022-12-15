@@ -75,6 +75,7 @@ app.config['SESSION_REDIS'] = ApplicationConfig.SESSION_REDIS
 
 app.config['ORIGIN_URL'] = ApplicationConfig.ORIGIN_URL
 
+
 session.configure(bind=ApplicationConfig.SQLALCHEMY_DATABASE_URI_0)
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
