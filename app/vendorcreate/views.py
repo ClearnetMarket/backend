@@ -230,12 +230,13 @@ def vendorcreate_delete_item(uuid):
                     os.remove(file42)
                 except:
                     pass
-
-            pathtofolder = os.path.join(UPLOADED_FILES_DEST_ITEM,
-                                        getitemlocation,
-                                        specific_folder)
-            shutil.rmtree(pathtofolder)
-
+            try:
+                pathtofolder = os.path.join(UPLOADED_FILES_DEST_ITEM,
+                                            getitemlocation,
+                                            specific_folder)
+                shutil.rmtree(pathtofolder)
+            except:
+                pass
             db.session.delete(vendoritem)
             db.session.commit()
             return jsonify({'status': 'Deleted Item'}) 

@@ -27,6 +27,7 @@ def get_order_model(uuid):
     if request.method == 'GET':
         # get order
         # user must be customer or vendor
+
         get_order = db.session \
             .query(User_Orders) \
             .filter(or_(User_Orders.customer_id == current_user.id,

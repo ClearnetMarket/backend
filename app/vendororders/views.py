@@ -350,6 +350,14 @@ def vendor_orders_put_online(uuid):
             .filter(Item_MarketItem.uuid == uuid) \
             .first()
 
+        if len(get_item.item_title) <= 10:
+            return jsonify({'status': 'Item Title not Long Enough'}), 200
+        if len(get_item.image_one_url) <= 10:
+            return jsonify({'status': 'Item Title not Long Enough'}), 200
+        if get_item.price < 0:
+            return jsonify({'status': 'Item Title not Long Enough'}), 200
+        
+
         get_item.online = 1
 
         db.session.add(get_item)
@@ -372,7 +380,7 @@ def vendor_orders_put_offline(uuid):
             .first()
 
         get_item.online = 0
-
+        
         db.session.add(get_item)
         db.session.commit()
         return jsonify({'status': 'success'})

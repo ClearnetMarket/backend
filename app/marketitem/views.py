@@ -20,8 +20,10 @@ def marketitem_item_main(item_id):
             .filter(Item_MarketItem.uuid == item_id)\
             .first()
         if item_for_sale:
+            
             item_schema = Item_MarketItem_Schema()
             result = item_schema.dump(item_for_sale)
+
             return jsonify(result), 200
         else:
             jsonify({"Error": "No Item exists"}), 404
@@ -54,6 +56,7 @@ def marketitem_item_info_title(item_uuid):
     :return:
     """
     if request.method == 'GET':
+
         item_for_sale = db.session\
             .query(Item_MarketItem)\
             .filter(Item_MarketItem.uuid == item_uuid)\

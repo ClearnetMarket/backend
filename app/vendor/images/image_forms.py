@@ -152,7 +152,7 @@ def image1(formdata, item, directoryifitemlisting):
 
         if len(formdata.filename) > 2:
             item.image_one_server = id_pic1
-            item.image_one_url = 'http://www.clearnetmarket.com/item/' + item.uuid + '/' + id_pic1 + "_250x.jpg"
+            item.image_one_url = 'https://freeport.cash/item/' + item.uuid + '/' + id_pic1 + "_250x.jpg"
             db.session.add(item)
             imagespider(base_path=directoryifitemlisting)
         else:
@@ -189,7 +189,7 @@ def image2(formdata, item, directoryifitemlisting):
         os.rename(filenamenewfull, newfileNameDestination2)
         if len(formdata.filename) > 2:
             item.image_two_server = id_pic2
-            item.image_two_url = 'http://www.clearnetmarket.com/item/'+ item.uuid + '/' + id_pic2 + "_250x.jpg"
+            item.image_two_url = 'https://freeport.cash/item/'+ item.uuid + '/' + id_pic2 + "_250x.jpg"
             db.session.add(item)
             imagespider(base_path=directoryifitemlisting)
         else:
@@ -226,7 +226,7 @@ def image3(formdata, item, directoryifitemlisting):
         if len(formdata.filename) > 5:
             # add profile to db
             item.image_three_server = id_pic3
-            item.image_three_url = 'http://www.clearnetmarket.com/item/'+ item.uuid + '/' + id_pic3 + "_250x.jpg"
+            item.image_three_url = 'https://freeport.cash/item/'+ item.uuid + '/' + id_pic3 + "_250x.jpg"
             db.session.add(item)
             imagespider(base_path=directoryifitemlisting)
         else:
@@ -263,7 +263,7 @@ def image4(formdata, item, directoryifitemlisting):
 
             # add profile to db
             item.image_four_server = id_pic4
-            item.image_four_url = 'http://www.clearnetmarket.com/item/'+ item.uuid + '/' + id_pic4 + "_250x.jpg"
+            item.image_four_url = 'https://freeport.cash/item/'+ item.uuid + '/' + id_pic4 + "_250x.jpg"
             db.session.add(item)
             imagespider(base_path=directoryifitemlisting)
         else:

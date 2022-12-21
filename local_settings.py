@@ -58,7 +58,7 @@ class ApplicationConfig:
     CORS_SUPPORT_CREDENTIALS = True
     CORS_EXPOSE_HEADERS = None
     CORS_ALLOW_HEADERS = "*"
-    CORS_ORIGIN_WHITELIST = ['http://localhost']
+    CORS_ORIGIN_WHITELIST = ['http://localhost', '*']
 
 
 

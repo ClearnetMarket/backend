@@ -35,25 +35,24 @@ def vendor_signup():
 
     # create vendor stats
     stats = Profile_StatisticsVendor(
-        username=current_user.username,
-        vendorid=current_user.id,
-        totalsales=0,
-        totaltrades=0,
-        totalreviews=0,
-        startedselling=now,
-        vendorrating=5,
-        avgitemrating=0,
-        diffpartners=0,
-        disputecount=0,
-        beenflagged=0,
-        totalbtcspent=0,
-        totalbtcrecieved=0,
-        totalbtccashspent=0,
-        totalbtccashrecieved=0,
-        totalxmrspent=0,
-        totalxmrrecieved=0,
-        totalusdmade=0,
-        vendor_uuid=current_user.uuid
+        user_name=current_user.username,
+        vendor_uuid=current_user.uuid,
+        total_sales=0,
+        total_reviews=0,
+        started_selling=now,
+        vendor_rating=5,
+        avg_item_rating=0,
+        diff_partners=0,
+        dispute_count=0,
+        been_flagged=0,
+        total_btc_spent=0,
+        total_btc_recieved=0,
+        total_bch_spent=0,
+        total_bch_recieved=0,
+        total_xmr_spent=0,
+        total_xmr_recieved=0,
+        total_usd_made=0,
+        
     )
     # create vendor exact address
     new_address = Vendor_ExactAddress(
