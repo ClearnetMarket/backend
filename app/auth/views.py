@@ -34,7 +34,7 @@ def check_session():
     Checks auth token to ensure user is authenticated
     """
     api_key = request.headers.get('Authorization')
-    print(api_key)
+    
     if api_key:
         api_key = api_key.replace('bearer ', '', 1)
         user_exists = db.session\
@@ -46,7 +46,7 @@ def check_session():
                 .query(Auth_User)\
                 .filter(Auth_User.api_key == api_key)\
                 .first()
-            print(user)
+            print(user.confirmed)
             return jsonify({
                 "login": True,
                 'user': {'user_id': user.uuid,
@@ -56,7 +56,8 @@ def check_session():
                          'profile_image': user.profileimage,
                          'country': user.country,
                          'currency': user.currency,
-                         'token': user.api_key
+                         'token': user.api_key,
+                         'confirmed': user.confirmed
                          },
                 'token': user.api_key
             }), 200
@@ -164,7 +165,6 @@ def register_user():
     currency = request.json["currency"]
     country = request.json["country"]
     display_username = request.json["display_username"]
-    pin = request.json["pin"]
 
     part_one_code = uuid4().hex
     part_two_code = uuid4().hex
@@ -192,7 +192,7 @@ def register_user():
         email=email,
         password_hash=hashed_password,
         member_since=now,
-        wallet_pin=pin,
+        wallet_pin=0000, # took out pin for easier signup
         profileimage='user-unknown.png',
         bio='',
         api_key=key,
@@ -323,7 +323,8 @@ def register_user():
                  'country': new_user.country,
                  'currency': new_user.currency,
                  'admin_role': new_user.admin_role,
-                 'token': new_user.api_key
+                 'token': new_user.api_key,
+                 'confirmed': new_user.confirmed,
                  },
         'token':  new_user.api_key
     }), 200

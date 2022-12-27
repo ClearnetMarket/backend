@@ -69,7 +69,7 @@ class Checkout_ShoppingCart_Schema(ma.SQLAlchemyAutoSchema):
                   'shipping_info_0', 'shipping_info_2', 'shipping_info_3',
                   'shipping_day_0', 'shipping_day_2', 'shipping_day_3',
                   'shipping_price_3', 'shipping_price_3', 'shipping_price_3',
-                  'selected_digital_currency', 'selected_shipping', 'vendor_supply'
+                  'selected_digital_currency', 'selected_shipping', 'vendor_supply', 'currency'
                   )
 
 

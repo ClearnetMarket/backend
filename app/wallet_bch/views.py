@@ -113,42 +113,30 @@ def bch_send():
     wfee = Decimal(walletthefee.bch)
 
     # form variables
-    walletpin = request.json["walletpin"]
     send_to_address = request.json["send_to_address"]
     comment_on_blockchain = request.json["comment_on_blockchain"]
     amount = request.json["amount"]
 
     if user.dispute == 0:
-        if bcrypt.check_password_hash(user.walletpin, walletpin):
-            # test wallet btc stuff for security
-            walbal = Decimal(wallet.currentbalance)
-            amount2withfee = Decimal(amount) + Decimal(wfee)
-            # greater than amount with fee
-            if floating_decimals(walbal, 8) >= floating_decimals(amount2withfee, 8):
-                # greater than fee
-                if Decimal(amount) > Decimal(wfee):
-                    # add to wallet_btc work
-                    bch_send_coin(
-                        user_id=current_user.id,
-                        sendto=send_to_address,
-                        amount=amount,
-                        comment=comment_on_blockchain
-                    )
-                    db.session.commit()
-                    return jsonify({"status": "request sent to wallet"}), 200
-                else:
-                    return jsonify({"error": f"Cannot withdraw amount less than wallet_btc fee: {str(wfee)}"}), 409
+        # test wallet btc stuff for security
+        walbal = Decimal(wallet.currentbalance)
+        amount2withfee = Decimal(amount) + Decimal(wfee)
+        # greater than amount with fee
+        if floating_decimals(walbal, 8) >= floating_decimals(amount2withfee, 8):
+            # greater than fee
+            if Decimal(amount) > Decimal(wfee):
+                # add to wallet_btc work
+                bch_send_coin(
+                    user_id=current_user.id,
+                    sendto=send_to_address,
+                    amount=amount,
+                    comment=comment_on_blockchain
+                )
+                db.session.commit()
+                return jsonify({"status": "request sent to wallet"}), 200
             else:
                 return jsonify({"error": f"Cannot withdraw amount less than wallet_btc fee: {str(wfee)}"}), 409
         else:
-            current_fails = int(user.fails)
-            new_fail_amount = current_fails + 1
-            user.fails = new_fail_amount
-            db.session.add(user)
-            if int(user.fails) == 5:
-                user.locked = 1
-            db.session.add(user)
-            db.session.commit()
-
-            return jsonify({"error": "Unauthorized"}), 409
+            return jsonify({"error": f"Cannot withdraw amount less than wallet_btc fee: {str(wfee)}"}), 409
+    
 

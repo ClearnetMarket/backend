@@ -91,7 +91,12 @@ def btc_create_wallet(user_id):
             .query(Btc_WalletAddresses) \
             .filter(Btc_WalletAddresses.status == 0) \
             .first()
-
+        getnewaddress2 = db.session \
+            .query(Btc_WalletAddresses) \
+            .all()
+        for f in getnewaddress2:
+            print(f.status)
+        print(f"getnewaddress is {getnewaddress}")
         btc_walletcreate.address1 = getnewaddress.btcaddress
         btc_walletcreate.address1status = 1
         db.session.add(btc_walletcreate)

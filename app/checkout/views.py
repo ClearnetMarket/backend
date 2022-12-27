@@ -678,6 +678,7 @@ def data_shopping_cart_total():
         total_shipping_price_of_items_with_quantity = sum(total_shipping_cart)
 
         total = (total_shipping_price_of_items_with_quantity + total_price_of_items_with_quantity)
+        
         return jsonify({
             'total_items': total_items_in_cart,
             'total_shipping': total_shipping_price_of_items_with_quantity,
