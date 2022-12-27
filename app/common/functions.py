@@ -57,7 +57,7 @@ def convert_local_to_xmr(amount, currency):
 
 def genericprofile(path):
     user_id = str(path)
-    cmd = 'cp /home/clearnet_webapp/info/user/user-unknown.png /home/info/user/' + user_id
+    cmd = 'cp /home/droid/info/user/user-unknown.png /home/info/user/' + user_id
     try:
         os.system(cmd)
     except OSError:  # Python >2.7

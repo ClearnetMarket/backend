@@ -518,7 +518,7 @@ def cart_add_to_shopping_cart(itemuuid):
         .filter_by(uuid=itemuuid) \
         .first()
     if get_item_for_sale.vendor_uuid == current_user.uuid:
-        return jsonify({'error': 'Can not buy your own item.'}), 409
+        return jsonify({'error': 'Can not buy your own item.'}), 200
     # see if in shopping cart
     see_if_item_in_cart = db.session \
         .query(Checkout_CheckoutShoppingCart) \
@@ -619,7 +619,7 @@ def data_shopping_cart_in_cart():
 
             return carts_schema.jsonify(cart_items)
         else:
-            return jsonify({"status": None}), 409
+            return jsonify({"error": 'Cart is empty'}), 200
 
 
 @checkout.route('/data/saved', methods=['GET'])

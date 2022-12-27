@@ -69,7 +69,6 @@ def vendorcreate_clone_item(uuid):
                     destination_country_two=vendoritem.destination_country_two,
                     destination_country_three=vendoritem.destination_country_three,
                     destination_country_four=vendoritem.destination_country_four,
-                    destination_country_five=vendoritem.destination_country_five,
                     item_title=vendoritem.item_title,
                     item_count=vendoritem.item_count,
                     item_description=vendoritem.item_description,
@@ -117,12 +116,14 @@ def vendorcreate_clone_item(uuid):
                 newdirectory = UPLOADED_FILES_DEST_ITEM + newfolderdir
                 # loop over the files and copy them
                 # make the directory
-                mkdir_p(path=newdirectory)
-                for file_name in os.listdir(oldirectory):
-                    full_file_name = os.path.join(oldirectory, file_name)
-                    if os.path.isfile(full_file_name):
-                        shutil.copy(full_file_name, newdirectory)
-
+                try:
+                    mkdir_p(path=newdirectory)
+                    for file_name in os.listdir(oldirectory):
+                        full_file_name = os.path.join(oldirectory, file_name)
+                        if os.path.isfile(full_file_name):
+                            shutil.copy(full_file_name, newdirectory)
+                except:
+                    pass
                 # query the newly added item, and change the id's accordingly
                 item.node = vendoritem.node 
                 # commit to db

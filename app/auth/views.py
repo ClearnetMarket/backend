@@ -176,7 +176,7 @@ def register_user():
         .filter_by(email=email)\
         .first() is not None
     if user_exists_email:
-        return jsonify({"error": "User already exists"}), 409
+        return jsonify({"error": "Email already exists"}), 409
     user_exists_username = db.session\
         .query(Auth_User)\
         .filter_by(username=username)\

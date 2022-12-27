@@ -1,6 +1,6 @@
 README.MD
 
-# ClearnetMarket.com
+# freeport.cash
 
 Clearnet Market is an open-source platform for exchanging goods and services for cryptocurrency.
 
