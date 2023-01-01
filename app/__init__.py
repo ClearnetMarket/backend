@@ -112,6 +112,7 @@ def load_user_from_request(request):
             .first()
         if user:
             return user
+ 
     return None
 
 

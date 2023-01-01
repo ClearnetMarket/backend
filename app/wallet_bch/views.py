@@ -18,28 +18,58 @@ from app.classes.wallet_bch import\
 # end models
 
 
-@wallet_bch.route('/price', methods=['GET'])
-def bch_price_usd():
+@wallet_bch.route('/price/usd', methods=['GET'])
+def bch_price_anonymous():
     """
     Gets current price of bitcoin cash
     :return:
     """
-    price_bch_usd = db.session\
-            .query(Bch_Prices)\
-            .filter_by(currency_id=0)\
-            .first()
-    if price_bch_usd.price > 0:
+
+    price_bch = db.session\
+        .query(Bch_Prices)\
+        .filter_by(currency_id=0)\
+        .first()
+
+    if price_bch.price > 0:
         try:
-            price_bch_usd = str(price_bch_usd.price)
+            price_bch = str(price_bch.price)
         except:
-            price_bch_usd = 0
+            price_bch = 0
 
         return jsonify({
-            "bch_price_usd": price_bch_usd,
+            "bch_price": price_bch,
         })
     else:
         return jsonify({
-            "bch_price_usd": '0',
+            "bch_price": 'error',
+        })
+        
+        
+@wallet_bch.route('/price', methods=['GET'])
+@login_required
+def bch_price_for_user():
+    """
+    Gets current price of bitcoin cash
+    :return:
+    """
+
+    price_bch = db.session\
+            .query(Bch_Prices)\
+            .filter_by(currency_id=current_user.currency)\
+            .first()
+
+    if price_bch.price > 0:
+        try:
+            price_bch = str(price_bch.price)
+        except:
+            price_bch = 0
+
+        return jsonify({
+            "bch_price": price_bch,
+        })
+    else:
+        return jsonify({
+            "bch_price": 'error',
         })
 
 

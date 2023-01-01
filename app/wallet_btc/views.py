@@ -17,28 +17,53 @@ from app.classes.wallet_btc import \
 # end models
 
 
-@wallet_btc.route('/price', methods=['GET'])
-def btc_price_usd():
+@wallet_btc.route('/price/usd', methods=['GET'])
+def btc_price_anonymous():
     """
     Gets current price of bitcoin cash
     :return:
     """
-    price_btc_usd = db.session\
+    price_btc = db.session\
         .query(Btc_Prices)\
         .filter_by(currency_id=0)\
         .first()
-    print(price_btc_usd)
-    if price_btc_usd.price > 0:
+
+    if price_btc.price > 0:
         try:
-            price_btc_usd = str(price_btc_usd.price)
+            price_btc = str(price_btc.price)
         except:
-            price_btc_usd = 0
+            price_btc = 0
         return jsonify({
-            "btc_price_usd": price_btc_usd,
+            "btc_price": price_btc,
         })
     else:
         return jsonify({
-            "btc_price_usd": 'error',
+            "btc_price": 'error',
+        })
+        
+@wallet_btc.route('/price', methods=['GET'])
+@login_required
+def btc_price_for_user():
+    """
+    Gets current price of bitcoin cash
+    :return:
+    """
+    price_btc = db.session\
+        .query(Btc_Prices)\
+        .filter_by(currency_id=current_user.currency)\
+        .first()
+    
+    if price_btc.price > 0:
+        try:
+            price_btc = str(price_btc.price)
+        except:
+            price_btc = 0
+        return jsonify({
+            "btc_price": price_btc,
+        })
+    else:
+        return jsonify({
+            "btc_price": 'error',
         })
 
 

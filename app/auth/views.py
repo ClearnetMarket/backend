@@ -46,7 +46,7 @@ def check_session():
                 .query(Auth_User)\
                 .filter(Auth_User.api_key == api_key)\
                 .first()
-            print(user.confirmed)
+         
             return jsonify({
                 "login": True,
                 'user': {'user_id': user.uuid,
@@ -62,8 +62,10 @@ def check_session():
                 'token': user.api_key
             }), 200
         else:
+            print("here")
             return jsonify({"status": "error. user not found"}), 401
     else:
+        print("here")
         return jsonify({"status": "error"}), 401
 
 
@@ -124,6 +126,7 @@ def login():
             user.fails = new_fails
             db.session.add(user)
             db.session.commit()
+   
             return jsonify({"error": "Unauthorized"}), 401
 
         user.locked = 0
@@ -149,6 +152,7 @@ def login():
             'token': user.api_key
         }), 200
     else:
+        
         return jsonify({"error": "Unauthorized"}), 401
 
 

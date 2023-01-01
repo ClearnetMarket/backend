@@ -75,14 +75,8 @@ def create_item():
 
                 origin_country=current_user.country,
                 origin_country_name='',
-                destination_country_one=0,
-                destination_country_one_name='',
-                destination_country_two=0,
-                destination_country_two_name='',
-                destination_country_three=0,
-                destination_country_three_name='',
-                destination_country_four=0,
-                destination_country_four_name='',
+                international=False,
+
 
                 view_count=0,
                 item_rating=0,
@@ -183,60 +177,24 @@ def create_item_main(uuid):
     shipping_3_days = request.json["shipping_3_days"]
     if shipping_3_days == '':
         shipping_3_days = 0
+        
     # Shipping three price
     shipping_3_price = request.json["shipping_3_price"]
     if shipping_3_price == '':
         shipping_3_price = 0
-
-    # Shipping to Country One
-    if request.json["shipping_to_country_one"] == '':
-        shipping_to_country_one = 1000
-        shipping_to_country_one_name = 'WorldWide Shipping'
+   
+    # International and domestic
+    if request.json["international"] == '':
+        international = False
+        
     else:
-        shipping_to_country_one = request.json["shipping_to_country_one"]
+        if request.json["international"] == True:
+            international = True
+        else:
+            international = False
 
-        get_name_country_one = db.session\
-            .query(Query_Country)\
-            .filter(Query_Country.value == shipping_to_country_one)\
-            .first()
-        shipping_to_country_one_name = get_name_country_one.name
-    
-    # Shipping to Country two
-    if request.json["shipping_to_country_two"] == '':
-        shipping_to_country_two = 0
-        shipping_to_country_two_name = ''
-    else:
-        shipping_to_country_two = request.json["shipping_to_country_two"]
-        get_name_country_two = db.session\
-            .query(Query_Country)\
-            .filter(Query_Country.value == shipping_to_country_two)\
-            .first()
-        shipping_to_country_two_name = get_name_country_two.name
-
-    # Shipping to Country One
-    if request.json["shipping_to_country_three"] == '':
-        shipping_to_country_three = 0
-        shipping_to_country_three_name = ''
-    else:
-        shipping_to_country_three = request.json["shipping_to_country_three"]
-        get_name_country_three = db.session\
-            .query(Query_Country)\
-            .filter(Query_Country.value == shipping_to_country_three)\
-            .first()
-        shipping_to_country_three_name = get_name_country_three.name
-
-    # Shipping to Country four
-    if request.json["shipping_to_country_four"] == '':
-        shipping_to_country_four = 0
-        shipping_to_country_four_name = ''
-    else:
-        shipping_to_country_four = request.json["shipping_to_country_four"]
-        get_name_country_four = db.session\
-            .query(Query_Country)\
-            .filter(Query_Country.value == shipping_to_country_four)\
-            .first()
-        shipping_to_country_four_name = get_name_country_four.name
-
+            
+    # Description
     item_description = request.json["item_description"]
 
     # Shipping info
@@ -295,22 +253,18 @@ def create_item_main(uuid):
     item.shipping_price_3 = shipping_3_price
     item.shipping_day_3 = shipping_3_days
     item.shipping_info_3 = shipinfo3
-    item.destination_country_one = shipping_to_country_one
-    item.destination_country_one_name = shipping_to_country_one_name
-    item.destination_country_two = shipping_to_country_two
-    item.destination_country_two_name = shipping_to_country_two_name
-    item.destination_country_three = shipping_to_country_three
-    item.destination_country_three_name = shipping_to_country_three_name
-    item.destination_country_four = shipping_to_country_four
-    item.destination_country_four_name = shipping_to_country_four_name
+    item.international = international
+
 
     # add  to database
     db.session.add(item)
     db.session.commit()
 
     getimagesubfolder = itemlocation(x=item.id)
-    directoryifitemlisting = os.path.join(
-        UPLOADED_FILES_DEST_ITEM, getimagesubfolder, (str(item.uuid)))
+    directoryifitemlisting = os.path.join(UPLOADED_FILES_DEST_ITEM,
+                                          getimagesubfolder,
+                                          (str(item.uuid))
+                                          )
     mkdir_p(directoryifitemlisting)
     return jsonify({"status": 'success'}), 200
 
@@ -505,14 +459,8 @@ def get_item_fields(uuid):
             'shipping_price_3': item.shipping_price_3,
             'shipping_day_3': item.shipping_day_3,
             'shipping_info_3': item.shipping_info_3,
-            'destination_country_one': item.destination_country_one,
-            'destination_country_one_name': item.destination_country_one_name,
-            'destination_country_two': item.destination_country_two,
-            'destination_country_two_name': item.destination_country_two_name,
-            'destination_country_three': item.destination_country_three,
-            'destination_country_three_name': item.destination_country_three_name,
-            'destination_country_four': item.destination_country_four,
-            'destination_country_four_name': item.destination_country_four_name,
+            'international': item.international,
+
         })
 
 

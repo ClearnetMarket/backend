@@ -18,28 +18,53 @@ from app.classes.wallet_xmr import\
 # end models
 
 
-@wallet_xmr.route('/price', methods=['GET'])
-def xmr_price_usd():
+@wallet_xmr.route('/price/usd', methods=['GET'])
+def xmr_price_anonymous():
     """
     Gets current price of bitcoin cash
     :return:
     """
-    price_xmr_usd = db.session\
+    price_xmr = db.session\
         .query(Xmr_Prices)\
         .filter_by(currency_id=0)\
         .first()
-    if price_xmr_usd.price > 0:
+    if price_xmr.price > 0:
         try:
-            price_xmr_usd = str(price_xmr_usd.price)
+            price_xmr = str(price_xmr.price)
         except:
-            price_xmr_usd = 0
+            price_xmr = 0
 
         return jsonify({
-            "price_xmr_usd": price_xmr_usd,
+            "price_xmr": price_xmr,
         })
     else:
         return jsonify({
-            "price_xmr_usd": 'error',
+            "price_xmr": 'error',
+        })
+        
+@wallet_xmr.route('/price', methods=['GET'])
+@login_required
+def xmr_price_for_user():
+    """
+    Gets current price of bitcoin cash
+    :return:
+    """
+    price_xmr = db.session\
+        .query(Xmr_Prices)\
+        .filter_by(currency_id=current_user.currency)\
+        .first()
+    if price_xmr.price > 0:
+        try:
+            price_xmr = str(price_xmr.price)
+        except:
+            price_xmr = 0
+
+        return jsonify({
+            "price_xmr": price_xmr,
+        })
+    else:
+        return jsonify({
+            "price_xmr": 'error',
         })
 
 

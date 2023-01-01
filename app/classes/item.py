@@ -51,14 +51,8 @@ class Item_MarketItem(db.Model):
 
     origin_country = db.Column(db.INTEGER)
     origin_country_name = db.Column(db.VARCHAR(150))
-    destination_country_one = db.Column(db.INTEGER)
-    destination_country_one_name = db.Column(db.VARCHAR(150))
-    destination_country_two = db.Column(db.INTEGER)
-    destination_country_two_name = db.Column(db.VARCHAR(150))
-    destination_country_three = db.Column(db.INTEGER)
-    destination_country_three_name = db.Column(db.VARCHAR(150))
-    destination_country_four = db.Column(db.INTEGER)
-    destination_country_four_name = db.Column(db.VARCHAR(150))
+
+    international = db.Column(db.INTEGER)
 
     item_title = db.Column(db.VARCHAR(500))
     item_count = db.Column(db.INTEGER)
