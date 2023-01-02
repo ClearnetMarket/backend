@@ -26,7 +26,7 @@ class ApplicationConfig:
 
     DEBUG = True
 
-    UPLOADED_FILES_DEST = '/data/items'
+   
     UPLOADED_FILES_DEST_ITEM = '/data/item'
     UPLOADED_FILES_DEST_USER = '/data/user'
 

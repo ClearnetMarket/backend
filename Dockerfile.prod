@@ -1,8 +1,8 @@
 FROM python:3.11-rc-bullseye
 
-RUN groupadd flaskgroup && useradd -m -g flaskgroup -s /bin/bash flask
 
 RUN mkdir -p /app
+RUN mkdir -p /data
 
 WORKDIR /app
 
@@ -12,15 +12,12 @@ ENV PYTHONUNBUFFERED 1
 
 COPY requirements.txt /app
 
-RUN pip3 install --upgrade pip
+RUN pip3 install --upgrade pip 
 
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY . /app
 
-RUN chown -R flask:flaskgroup /app
-
-USER flask
 
 ENV FLASK_APP=runProduction.py
 

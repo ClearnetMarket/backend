@@ -34,7 +34,7 @@ def check_session():
     Checks auth token to ensure user is authenticated
     """
     api_key = request.headers.get('Authorization')
-    
+ 
     if api_key:
         api_key = api_key.replace('bearer ', '', 1)
         user_exists = db.session\
@@ -62,10 +62,10 @@ def check_session():
                 'token': user.api_key
             }), 200
         else:
-            print("here")
+          
             return jsonify({"status": "error. user not found"}), 401
     else:
-        print("here")
+       
         return jsonify({"status": "error"}), 401
 
 

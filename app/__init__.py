@@ -53,12 +53,10 @@ app.jinja_env.autoescape = True
 # configuration
 UPLOADED_FILES_DEST_USER = ApplicationConfig.UPLOADED_FILES_DEST_USER
 UPLOADED_FILES_DEST_ITEM = ApplicationConfig.UPLOADED_FILES_DEST_ITEM
-UPLOADED_FILES_DEST = ApplicationConfig.UPLOADED_FILES_DEST
 UPLOADED_FILES_ALLOW = ApplicationConfig.UPLOADED_FILES_ALLOW
 
 app.config['UPLOADED_FILES_DEST_USER'] = ApplicationConfig.UPLOADED_FILES_DEST_USER
 app.config['UPLOADED_FILES_DEST_ITEM'] = ApplicationConfig.UPLOADED_FILES_DEST_ITEM
-app.config['UPLOADED_FILES_DEST'] = ApplicationConfig.UPLOADED_FILES_DEST
 app.config['UPLOADED_FILES_ALLOW'] = ApplicationConfig.UPLOADED_FILES_ALLOW
 app.config['MAX_CONTENT_LENGTH'] = ApplicationConfig.MAX_CONTENT_LENGTH
 app.config['SECRET_KEY'] = ApplicationConfig.SECRET_KEY
@@ -177,6 +175,9 @@ def internal_error(error):
 # link locations
 from .main import main as main_blueprint
 app.register_blueprint(main_blueprint, url_prefix='/main')
+
+from .common import common as common_blueprint
+app.register_blueprint(common_blueprint, url_prefix='/common')
 
 from .auth import auth as auth_blueprint
 app.register_blueprint(auth_blueprint, url_prefix='/auth')

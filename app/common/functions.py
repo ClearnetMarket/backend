@@ -67,8 +67,8 @@ def genericprofile(path):
 def mkdir_p(path):
     try:
         os.makedirs(path, 0o755)
-    except:
-        pass
+    except Exception as e:
+        print(str(e))
 
 
 def itemlocation(x):

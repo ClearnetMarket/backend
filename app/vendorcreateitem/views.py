@@ -273,6 +273,7 @@ def create_item_main(uuid):
 def create_item_images(uuid):
     """
     Creates the Vendor images under form uploads
+    uses its own api key authorization system ..not sure why after going back
     """
     api_key_auth = request.headers.get('Authorization')
     if api_key_auth:
@@ -295,16 +296,25 @@ def create_item_images(uuid):
             getimagesubfolder = itemlocation(x=item.id)
             item.node = getimagesubfolder
             # directory of image
-            directoryifitemlisting = os.path.join(
-                UPLOADED_FILES_DEST_ITEM, getimagesubfolder, (str(item.uuid)))
+            directoryifitemlisting = os.path.join(UPLOADED_FILES_DEST_ITEM,
+                                                  getimagesubfolder,
+                                                  (str(item.uuid)))
+            print(f"direwctory: {directoryifitemlisting}")
             # create the image
-            mkdir_p(directoryifitemlisting)
             try:
+                mkdir_p(directoryifitemlisting)
+            
+            except Exception as e:
+                print(str(e))
+                pass
+            try:
+              
                 image_main = request.files['image_main']
-
                 image1(formdata=image_main, item=item,
                        directoryifitemlisting=directoryifitemlisting)
-            except:
+                print(directoryifitemlisting)
+            except Exception as e:
+                print(str(e))
                 pass
             try:
                 image_two = request.files['image_two']
