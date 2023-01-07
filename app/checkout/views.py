@@ -528,7 +528,7 @@ def cart_add_to_shopping_cart(itemuuid):
         if get_item_for_sale.shipping_free is True:
             shipping_selected = 1
             shipinfodesc = f'Takes {get_item_for_sale.shipping_day_0} days for Free'
-        elif get_item_for_sale.free_shipping is True:
+        elif get_item_for_sale.shipping_free is True:
             shipping_selected = 2
             shipinfodesc = f'Takes {get_item_for_sale.shipping_day_2} days for ' \
                            f'{get_item_for_sale.shipping_price_2}{get_item_for_sale.currency_symbol}'
@@ -558,7 +558,7 @@ def cart_add_to_shopping_cart(itemuuid):
             currency=get_item_for_sale.currency,
             title_of_item=get_item_for_sale.item_title,
             price_of_item=get_item_for_sale.price,
-            image_of_item=get_item_for_sale.image_one_url,
+            image_of_item=get_item_for_sale.image_one_url_250,
             shipping_info_0=get_item_for_sale.shipping_info_0,
             shipping_day_0=get_item_for_sale.shipping_day_0,
             shipping_info_2=get_item_for_sale.shipping_info_2,
@@ -618,6 +618,30 @@ def data_shopping_cart_in_cart():
                 .all()
 
             return carts_schema.jsonify(cart_items)
+        else:
+            return jsonify({"error": 'Cart is empty'}), 200
+
+
+@checkout.route('/data/incart/count', methods=['GET'])
+@login_required
+def data_shopping_cart_in_cart_count():
+    """
+    Returns items in the shopping cart
+    """
+    if request.method == 'GET':
+        cart = db.session \
+            .query(Checkout_CheckoutShoppingCart) \
+            .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
+                    Checkout_CheckoutShoppingCart.saved_for_later == 0) \
+            .first() is not None
+        if cart:
+            cart_items = db.session \
+                .query(Checkout_CheckoutShoppingCart) \
+                .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
+                        Checkout_CheckoutShoppingCart.saved_for_later == 0) \
+                .count()
+            print(cart_items)
+            return jsonify({"cart_count": cart_items}), 200
         else:
             return jsonify({"error": 'Cart is empty'}), 200
 

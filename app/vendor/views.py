@@ -227,6 +227,7 @@ def vendor_vendor_feedback_count(vendor_uuid):
             vendor_feedback_eight_percent = None
             vendor_feedback_nine_percent = None
             vendor_feedback_ten_percent = None
+            
         return jsonify({"total_feedback": vendor_feedback,
                         'feedback_one': vendor_feedback_one_percent,
                         'feedback_two': vendor_feedback_two_percent,
@@ -425,6 +426,7 @@ def vendor_update_address():
                 vendor_address.zip_code = zipcode
                 db.session.add(vendor_address)
                 db.session.commit()
+                
                 return jsonify({"status": 'success'})
             else:
                 return jsonify({"status": 'error'}), 409

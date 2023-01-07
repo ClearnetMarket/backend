@@ -7,6 +7,7 @@ import os
 from datetime import datetime
 from app.common.decorators import login_required
 from app.common.functions import mkdir_p, itemlocation
+
 # models
 from app.classes.item import Item_MarketItem
 from app.classes.auth import Auth_User
@@ -14,86 +15,6 @@ from app.classes.models import *
 from app.classes.category import Category_Categories, Category_Categories_Schema
 from app.vendor.images.image_forms import image1, image2, image3, image4
 
-
-@vendorcreateitem.route('/create-item', methods=['POST'])
-@login_required
-def create_item():
-    if request.method == 'POST':
-        now = datetime.utcnow()
-        see_if_empty_item = db.session\
-            .query(Item_MarketItem)\
-            .filter(Item_MarketItem.vendor_id == current_user.id, Item_MarketItem.item_title == '')\
-            .first()
-
-        if see_if_empty_item:
-            return jsonify({"status": 'success',
-                            'item_id': see_if_empty_item.uuid})
-        else:
-            createnewitemtemp = Item_MarketItem(
-                created=now,
-                node=1,
-                vendor_name=current_user.username,
-                vendor_id=current_user.id,
-                vendor_uuid=current_user.uuid,
-                vendor_display_name=current_user.display_name,
-                item_title='',
-                item_count=0,
-                item_description='',
-                item_condition=0,
-                keywords='',
-                category_name_0='',
-                category_id_0=0,
-
-                price=0,
-                currency=current_user.currency,
-                currency_symbol='',
-                digital_currency_1=0,
-                digital_currency_2=0,
-                digital_currency_3=0,
-
-                shipping_free=False,
-                shipping_two=False,
-                shipping_three=False,
-
-                shipping_day_0=0,
-                shipping_price_2=0,
-                shipping_day_2=0,
-                shipping_info_2='',
-                shipping_price_3=0,
-                shipping_info_3='',
-                shipping_day_3=0,
-
-                image_one_url=None,
-                image_two_url=None,
-                image_three_url=None,
-                image_four_url=None,
-
-                image_one_server=None,
-                image_two_server=None,
-                image_three_server=None,
-                image_four_server=None,
-
-                origin_country=current_user.country,
-                origin_country_name='',
-                international=False,
-
-
-                view_count=0,
-                item_rating=0,
-                review_count=0,
-                online=0,
-                total_sold=0
-            )
-            db.session.add(createnewitemtemp)
-            db.session.commit()
-
-            getimagesubfolder = itemlocation(x=createnewitemtemp.id)
-            directoryifitemlisting = os.path.join(
-                UPLOADED_FILES_DEST_ITEM, getimagesubfolder, (str(createnewitemtemp.uuid)))
-            mkdir_p(path=directoryifitemlisting)
-
-            return jsonify({"status": 'success',
-                            'item_id': createnewitemtemp.uuid})
 
 
 @vendorcreateitem.route('/create-item-main/<string:uuid>', methods=['POST'])
@@ -108,6 +29,7 @@ def create_item_main(uuid):
         .query(Query_Currency)\
         .filter(Query_Currency.value == current_user.currency)\
         .first()
+        
     currency_symbol = get_currency_symbol.symbol
     # accept bitcoin
     digital_currency_1 = request.json["digital_currency_1"]
@@ -155,9 +77,6 @@ def create_item_main(uuid):
 
     # Price
     price = request.json["price"]
-
-    # Keywords
-    #keywords = request.json["keywords"]
 
     # Free shipping days
     free_shipping_days = request.json["free_shipping_days"]
@@ -218,6 +137,12 @@ def create_item_main(uuid):
         category_value = get_category_query.value
         category_name = get_category_query.name
 
+    # origin country name
+    currency_list = db.session\
+        .query(Query_Country)\
+        .filter(Query_Country.value == current_user.country)\
+        .first()
+    item_country_name = currency_list.name
     # create image of item in database
     item = db.session\
         .query(Item_MarketItem)\
@@ -233,7 +158,6 @@ def create_item_main(uuid):
     item.item_count = item_count
     item.item_description = item_description
     item.item_condition = item_condition
-    #item.keywords = keywords
     item.category_name_0 = category_name
     item.category_id_0 = category_value
     item.price = price
@@ -254,7 +178,8 @@ def create_item_main(uuid):
     item.shipping_day_3 = shipping_3_days
     item.shipping_info_3 = shipinfo3
     item.international = international
-
+    item.origin_country_name = item_country_name
+    item.origin_country = current_user.country
 
     # add  to database
     db.session.add(item)
@@ -367,7 +292,11 @@ def delete_item_images(uuid, imagename):
             getitemlocation = itemlocation(x=item.id)
             # get path of item on folder
             pathtofile = os.path.join(
-                UPLOADED_FILES_DEST_ITEM, getitemlocation, specific_folder, imagename)
+                        UPLOADED_FILES_DEST_ITEM,
+                        getitemlocation,
+                        specific_folder, 
+                        imagename
+                        )
 
             ext_1 = '_225x.jpg'
             ext_2 = '_500x.jpg'
@@ -375,6 +304,10 @@ def delete_item_images(uuid, imagename):
             file1 = pathtofile + ext_1
             file2 = pathtofile + ext_2
 
+
+            print(uuid)
+            print(imagename)
+            print(pathtofile)
             if len(imagename) > 20:
                 if item.image_one_server == imagename:
                     try:
@@ -384,7 +317,8 @@ def delete_item_images(uuid, imagename):
                     except:
                         pass
                     item.image_one_server = None
-                    item.image_one_url = None
+                    item.image_one_url_250 = None
+                    item.image_one_url_500 = None
                     db.session.add(item)
                     db.session.commit()
                 if item.image_two_server == imagename:
@@ -395,7 +329,8 @@ def delete_item_images(uuid, imagename):
                     except:
                         pass
                     item.image_two_server = None
-                    item.image_two_url = None
+                    item.image_two_url_250 = None
+                    item.image_two_url_500 = None
                     db.session.add(item)
                     db.session.commit()
                 if item.image_three_server == imagename:
@@ -406,7 +341,8 @@ def delete_item_images(uuid, imagename):
                     except:
                         pass
                     item.image_three_server = None
-                    item.image_three_url = None
+                    item.image_three_url_250 = None
+                    item.image_three_url_500 = None
                     db.session.add(item)
                     db.session.commit()
                 if item.image_four_server == imagename:
@@ -417,7 +353,8 @@ def delete_item_images(uuid, imagename):
                     except:
                         pass
                     item.image_four_server = None
-                    item.image_four_url = None
+                    item.image_four_url_250 = None
+                    item.image_four_url_500 = None
                     db.session.add(item)
                     db.session.commit()
 
@@ -429,6 +366,96 @@ def delete_item_images(uuid, imagename):
     else:
         return jsonify({"error": 'Large Error'})
 
+
+@vendorcreateitem.route('/create-item', methods=['POST'])
+@login_required
+def create_item():
+    if request.method == 'POST':
+        now = datetime.utcnow()
+        see_if_empty_item = db.session\
+            .query(Item_MarketItem)\
+            .filter(Item_MarketItem.vendor_id == current_user.id, Item_MarketItem.item_title == '')\
+            .first()
+
+        if see_if_empty_item:
+            return jsonify({"status": 'success',
+                            'item_id': see_if_empty_item.uuid})
+        else:
+            createnewitemtemp = Item_MarketItem(
+                created=now,
+                node=1,
+
+                vendor_name=current_user.username,
+                vendor_id=current_user.id,
+                vendor_uuid=current_user.uuid,
+                vendor_display_name=current_user.display_name,
+
+                item_title='',
+                item_count=0,
+                item_description='',
+                item_condition=0,
+                keywords='',
+                category_name_0='',
+                category_id_0=0,
+
+                price=0,
+                currency=current_user.currency,
+                currency_symbol='',
+
+                digital_currency_1=0,
+                digital_currency_2=0,
+                digital_currency_3=0,
+
+                shipping_free=False,
+                shipping_two=False,
+                shipping_three=False,
+
+                shipping_day_0=0,
+                shipping_price_2=0,
+                shipping_day_2=0,
+                shipping_info_2='',
+                shipping_price_3=0,
+                shipping_info_3='',
+                shipping_day_3=0,
+
+                image_one_url_250=None,
+                image_two_url_250=None,
+                image_three_url_250=None,
+                image_four_url_250=None,
+
+                image_one_url_500=None,
+                image_two_url_500=None,
+                image_three_url_500=None,
+                image_four_url_500=None,
+
+                image_one_server=None,
+                image_two_server=None,
+                image_three_server=None,
+                image_four_server=None,
+
+                origin_country=current_user.country,
+                origin_country_name='',
+                international=False,
+
+                view_count=0,
+                item_rating=0,
+                review_count=0,
+                online=0,
+                total_sold=0
+            )
+            db.session.add(createnewitemtemp)
+            db.session.commit()
+
+            getimagesubfolder = itemlocation(x=createnewitemtemp.id)
+            directoryifitemlisting = os.path.join(
+                UPLOADED_FILES_DEST_ITEM,
+                getimagesubfolder,
+                (str(createnewitemtemp.uuid))
+            )
+            mkdir_p(path=directoryifitemlisting)
+
+            return jsonify({"status": 'success',
+                            'item_id': createnewitemtemp.uuid})
 
 @vendorcreateitem.route('/get-fields/<string:uuid>', methods=['GET'])
 @login_required

@@ -126,7 +126,6 @@ def xmr_receive():
 
 @wallet_xmr.route('/send', methods=['GET', 'POST'])
 @login_required
-@login_required
 def xmr_send():
 
     user = db.session\

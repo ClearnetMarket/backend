@@ -54,14 +54,13 @@ app.jinja_env.autoescape = True
 UPLOADED_FILES_DEST_USER = ApplicationConfig.UPLOADED_FILES_DEST_USER
 UPLOADED_FILES_DEST_ITEM = ApplicationConfig.UPLOADED_FILES_DEST_ITEM
 UPLOADED_FILES_ALLOW = ApplicationConfig.UPLOADED_FILES_ALLOW
+CURRENT_SETTINGS = ApplicationConfig.CURRENT_SETTINGS
 
 app.config['UPLOADED_FILES_DEST_USER'] = ApplicationConfig.UPLOADED_FILES_DEST_USER
 app.config['UPLOADED_FILES_DEST_ITEM'] = ApplicationConfig.UPLOADED_FILES_DEST_ITEM
 app.config['UPLOADED_FILES_ALLOW'] = ApplicationConfig.UPLOADED_FILES_ALLOW
 app.config['MAX_CONTENT_LENGTH'] = ApplicationConfig.MAX_CONTENT_LENGTH
 app.config['SECRET_KEY'] = ApplicationConfig.SECRET_KEY
-
-
 app.config['SESSION_TYPE'] = ApplicationConfig.SESSION_TYPE
 app.config['SESSION_COOKIE_NAME'] = ApplicationConfig.SESSION_COOKIE_NAME
 app.config['SESSION_COOKIE_SECURE'] = ApplicationConfig.SESSION_COOKIE_SECURE
@@ -70,9 +69,8 @@ app.config['SESSION_COOKIE_SAMESITE'] = ApplicationConfig.SESSION_COOKIE_SAMESIT
 app.config['SESSION_PERMANENT'] = ApplicationConfig.SESSION_PERMANENT
 app.config['SESSION_USE_SIGNER'] = ApplicationConfig.SESSION_USE_SIGNER
 app.config['SESSION_REDIS'] = ApplicationConfig.SESSION_REDIS
-
 app.config['ORIGIN_URL'] = ApplicationConfig.ORIGIN_URL
-
+app.config['CURRENT_SETTINGS'] = ApplicationConfig.CURRENT_SETTINGS
 
 session.configure(bind=ApplicationConfig.SQLALCHEMY_DATABASE_URI_0)
 db = SQLAlchemy(app)
