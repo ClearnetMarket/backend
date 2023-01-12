@@ -520,11 +520,15 @@ def cart_add_to_shopping_cart(itemuuid):
     if get_item_for_sale.vendor_uuid == current_user.uuid:
         return jsonify({'error': 'Can not buy your own item.'}), 200
     # see if in shopping cart
+
     see_if_item_in_cart = db.session \
         .query(Checkout_CheckoutShoppingCart) \
         .filter(Checkout_CheckoutShoppingCart.item_uuid == itemuuid) \
         .first() is not None
+
     if see_if_item_in_cart is False:
+     
+    
         if get_item_for_sale.shipping_free is True:
             shipping_selected = 1
             shipinfodesc = f'Takes {get_item_for_sale.shipping_day_0} days for Free'
@@ -594,7 +598,7 @@ def cart_add_to_shopping_cart(itemuuid):
         db.session.commit()
         return jsonify({'status': 'success'})
     else:
-        print("Item is in cart already")
+
         return jsonify({'error': 'Item is in cart already.'}), 200
 
 
@@ -1002,23 +1006,67 @@ def checkout_add_secret_info(itemid):
         return jsonify({'status': 'success'})
 
 
+def checkout_check_address():
+    """
+    This function checks if there is a proper address it either returns true or the issue
+    """
+    get_customer_shipping = db.session \
+        .query(UserData_DefaultAddress) \
+        .filter(UserData_DefaultAddress.uuid == Checkout_CheckoutShoppingCart.customer_uuid) \
+        .first()
+    if get_customer_shipping:
+        # check if Address
+        if len(get_customer_shipping.address) >=5:
+            pass
+        else:
+            return 'No Shipping Address provided for vendor'
+        # check if country
+        if get_customer_shipping.country != 0:
+            pass
+        else:
+            return 'No Shipping Address provided for vendor'
+
+        # check if country
+        if get_customer_shipping.country != 0:
+            pass
+        else:
+            return 'No Shipping Address provided for vendor'
+        # check if country
+        if len(get_customer_shipping.city) >= 5:
+            pass
+        else:
+            return 'City address needs to be specified'
+        
+        return True
+    else:
+        return jsonify({'status': 'No Shipping Address provided for vendor'}), 200
+    
 @checkout.route('/payment', methods=['POST'])
 @login_required
 def finalize():
     """
-    # PAYMENT STUFF
+    # PAYMENT STUFF once you click payment button
     """
-    x = checkout_make_order()
-    if x is True:
-        y = checkout_make_payment()
-        if y is True:
-            checkout_clear_shopping_cart(current_user.id)
-            db.session.commit()
-            return jsonify({'status': 'success'}), 200
-        else:
-            return jsonify({'status': 'Error with Payment.  Insuffied Funds.'}), 200
+    # check  if address
+    see_if_address = checkout_check_address()
+    if see_if_address is not True:
+        return jsonify({'status': see_if_address}), 200
     else:
-        return jsonify({'status': 'Error Creating Order'}), 200
+        # make order
+        create_order = checkout_make_order()
+        if create_order is not True:
+            return jsonify({'status': 'Error Creating Order'}), 200
+        else:
+            # send coin painment
+            check_payment = checkout_make_payment()
+            if check_payment is not True:
+                return jsonify({'status': 'Error with Payment.  Insuffied Funds.'}), 200
+            else:
+                checkout_clear_shopping_cart(current_user.id)
+                db.session.commit()
+                return jsonify({'status': 'success'}), 200
+      
+
 
 
 def checkout_make_order():

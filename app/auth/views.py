@@ -408,12 +408,12 @@ def confirm_seed():
                     .query(Auth_AccountSeedWords) \
                     .filter(Auth_AccountSeedWords.user_id == user.id)\
                     .first()
-                word0 = str(request.json["word0"])
-                word1 = str(request.json["word1"])
-                word2 = str(request.json["word2"])
-                word3 = str(request.json["word3"])
-                word4 = str(request.json["word4"])
-                word5 = str(request.json["word5"])
+                word0 = str(request.json["word0"]).replace(" ", "")
+                word1 = str(request.json["word1"]).replace(" ", "")
+                word2 = str(request.json["word2"]).replace(" ", "")
+                word3 = str(request.json["word3"]).replace(" ", "")
+                word4 = str(request.json["word4"]).replace(" ", "")
+                word5 = str(request.json["word5"]).replace(" ", "")
                 if word0 != userseed.word00:
                     return jsonify({"error 1": "Seed does not match"}), 409
                 if word1 != userseed.word01:
@@ -442,12 +442,12 @@ def confirm_seed():
 def retrieve_seed_to_unlock_account():
 
     if request.method == 'POST':
-        word0 = request.json["word0"]
-        word1 = request.json["word1"]
-        word2 = request.json["word3"]
-        word3 = request.json["word4"]
-        word4 = request.json["word5"]
-        word5 = request.json["word6"]
+        word0 = request.json["word0"].replace(" ", "")
+        word1 = request.json["word1"].replace(" ", "")
+        word2 = request.json["word3"].replace(" ", "")
+        word3 = request.json["word4"].replace(" ", "")
+        word4 = request.json["word5"].replace(" ", "")
+        word5 = request.json["word6"].replace(" ", "")
 
         # match the seed to the user
         userseed = db.session\

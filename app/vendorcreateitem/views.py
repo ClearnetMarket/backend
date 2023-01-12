@@ -14,7 +14,7 @@ from app.classes.auth import Auth_User
 from app.classes.models import *
 from app.classes.category import Category_Categories, Category_Categories_Schema
 from app.vendor.images.image_forms import image1, image2, image3, image4
-
+from app.vendor.item_management.check_online import put_online_allowed
 
 
 @vendorcreateitem.route('/create-item-main/<string:uuid>', methods=['POST'])
@@ -181,6 +181,12 @@ def create_item_main(uuid):
     item.origin_country_name = item_country_name
     item.origin_country = current_user.country
 
+    check_if_allowed = put_online_allowed(item=item)
+    if check_if_allowed is True:
+        
+        item.online = 1
+    else:
+        item.online = 0
     # add  to database
     db.session.add(item)
     db.session.commit()
@@ -304,10 +310,6 @@ def delete_item_images(uuid, imagename):
             file1 = pathtofile + ext_1
             file2 = pathtofile + ext_2
 
-
-            print(uuid)
-            print(imagename)
-            print(pathtofile)
             if len(imagename) > 20:
                 if item.image_one_server == imagename:
                     try:

@@ -11,6 +11,7 @@ from app.classes.feedback import Feedback_Feedback
 from app.wallet_bch.wallet_bch_work import bch_refund_rejected_user
 from app.wallet_btc.wallet_btc_work import btc_refund_rejected_user
 from app.wallet_xmr.wallet_xmr_work import xmr_refund_rejected_user
+from app.vendor.item_management.check_online import put_online_allowed
 
 
 @vendororders.route('/count', methods=['GET'])
@@ -343,26 +344,21 @@ def vendor_orders_put_online(uuid):
     This function puts items online in the itemsforsale page
     """
     if request.method == 'GET':
-
         get_item = db.session\
             .query(Item_MarketItem) \
             .filter(Item_MarketItem.vendor_uuid == current_user.uuid) \
             .filter(Item_MarketItem.uuid == uuid) \
             .first()
+        check_if_allowed = put_online_allowed(item=get_item)
+        if check_if_allowed is True:
+            
+            get_item.online = 1
 
-        if len(get_item.item_title) <= 10:
-            return jsonify({'status': 'Item Title not Long Enough'}), 200
-        if len(get_item.image_one_url) <= 10:
-            return jsonify({'status': 'Item Title not Long Enough'}), 200
-        if get_item.price < 0:
-            return jsonify({'status': 'Item Title not Long Enough'}), 200
-        
-
-        get_item.online = 1
-
-        db.session.add(get_item)
-        db.session.commit()
-        return jsonify({'status': 'success'})
+            db.session.add(get_item)
+            db.session.commit()
+            return jsonify({'status': 'success'})
+        else:
+            return jsonify({'status': check_if_allowed})
 
 
 @vendororders.route('/offline/<string:uuid>', methods=['GET'])

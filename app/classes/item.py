@@ -118,7 +118,7 @@ class Item_MarketItem_Schema(ma.SQLAlchemyAutoSchema):
         fields = (
                     'uuid', 'online', 'created', 'price', 'vendor_name', 'node_id', 'vendor_uuid',
                     'origin_country_name', 'currency_symbol',
-                    'item_title', 'item_count', 'item_description', 'currency',
+                    'item_title', 'item_count', 'item_description', 'currency', 'category_name_0',
                     'item_condition', 'keywords', 'price',
                     'digital_currency_1', 'digital_currency_2', 'digital_currency_3',
                     'image_one_url_250', 'image_two_url_250', 'image_three_url_250', 'image_four_url_250',
