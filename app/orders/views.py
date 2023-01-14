@@ -108,12 +108,13 @@ def get_order_vendor(uuid):
 def order_feedback_score(uuid):
     """
     CUSTOMER
-    Post  feedback     given by customer
+    Post  feedback   given by customer
     # type of feedback = 1
     :return:
     """
-    if request.method == 'POST':
 
+    if request.method == 'POST':
+        print("going down")
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.customer_id == current_user.id) \
@@ -125,25 +126,19 @@ def order_feedback_score(uuid):
             .filter(Feedback_Feedback.author_uuid == current_user.uuid) \
             .filter(Feedback_Feedback.order_uuid == uuid) \
             .first()
+      
         # if order exists else 409
         if get_order:
+            print(get_order.id)
             # get the request json
             try:
                 if request.json["vendorrating"]:
                     vendor_rating = request.json["vendorrating"]
                 else:
-                    return jsonify({"status": "error"}), 409
+                    return jsonify({"status": "error"}), 200
             except Exception as e:
-                print(str(e))
-                return jsonify({"status": "error"}), 409
-            try:
-                if request.json["itemrating"]:
-                    item_rating = request.json["itemrating"]
-                else:
-                    return jsonify({"status": "error"}), 409
-            except Exception as e:
-                print(str(e))
-                return jsonify({"status": "error"}), 409
+           
+                return jsonify({"status": "error"}), 200
 
             # set feedback to nearest integer
             if 0 <= Decimal(vendor_rating) <= 10:
@@ -151,18 +146,14 @@ def order_feedback_score(uuid):
             else:
                 vendorrating = 0
             # set feedback to nearest integer
-            if 0 <= Decimal(item_rating) <= 10:
-                itemrating = int(vendor_rating)
-            else:
-                itemrating = 0
-
+            print("halfway")
             # feedback exists just add the review
             get_order.type_of_feedback = vendor_rating
             get_order.author_uuid = current_user.uuid
             db.session.add(get_order)
 
             get_feedback.vendor_rating = vendorrating
-            get_feedback.item_rating = itemrating
+    
             db.session.add(get_feedback)
 
             # if both conditions are met set it as review added
@@ -171,12 +162,13 @@ def order_feedback_score(uuid):
                 and get_feedback.vendor_rating is not None:
                 get_order.vendor_feedback = 1
                 db.session.add(get_order)
-
+            print(get_feedback.review_of_vendor)
+            print(get_feedback.vendor_rating)
             db.session.commit()
 
             return jsonify({"status": "success"})
         else:
-            return jsonify({"status": "error"}), 409
+            return jsonify({"status": "error"}), 200
 
 
 @orders.route('/feedback/review/<string:uuid>', methods=['POST'])
@@ -208,7 +200,7 @@ def order_feedback_review(uuid):
             if request.json["review"]:
                 review_by_user = request.json["review"]
             else:
-                return jsonify({"status": "error"}), 409
+                return jsonify({"status": "error"}), 200
             # if no feedback exists
             # Note... vendor rating is none
 
@@ -230,7 +222,7 @@ def order_feedback_review(uuid):
             db.session.commit()
             return jsonify({"status": "success"})
         else:
-            return jsonify({"status": "error"}), 409
+            return jsonify({"status": "error"}), 200
 
 
 @orders.route('/vendor/feedback/score/<string:uuid>', methods=['POST'])
@@ -238,8 +230,8 @@ def order_feedback_review(uuid):
 def order_vendor_feedback_score(uuid):
     """
     VENDOR
-    Post feedback     given by vendor
-        # type of feedback = 2
+    Post feedback  given by vendor
+    # type of feedback = 2
     :return:
     """
 
@@ -304,6 +296,7 @@ def order_vendor_feedback_review(uuid):
     # type of feedback = 2
     :return:
     """
+
     if request.method == 'POST':
 
         # get the order by current customer
@@ -312,23 +305,28 @@ def order_vendor_feedback_review(uuid):
             .filter(User_Orders.vendor_id == current_user.id) \
             .filter(User_Orders.uuid == uuid) \
             .first()
-
+       
         # get feedback (might not be any)
         get_feedback = db.session \
             .query(Feedback_Feedback) \
             .filter(Feedback_Feedback.author_uuid == current_user.uuid) \
             .filter(Feedback_Feedback.order_uuid == uuid) \
             .first()
-
+      
         # if order exists else 409
         if get_order:
-            if request.json["review"]:
-                review_by_user = request.json["review"]
-            else:
-                return jsonify({"status": "error"}), 409
+   
+            try:
+                if request:
+                    review_by_user = request.json["review"]
+                else:
+                   
+                    return jsonify({"status": "error"}),200
+            except:
+                return jsonify({"status": "error"}), 200
             # if no feedback exists
             # Note... vendor rating is none
-
+      
             get_order.author_uuid = current_user.uuid
             get_order.review_of_customer = review_by_user
 
@@ -340,16 +338,19 @@ def order_vendor_feedback_review(uuid):
 
             # if both conditions are met set it as review added
             # this ensures proper review is added not just hhalf
+          
             if get_feedback:
-                if get_feedback.review_of_customeris is not None\
+                if get_feedback.review_of_customer is not None\
                     and get_feedback.customer_rating is not None:
                     get_order.user_feedback = 1
                     db.session.add(get_order)
 
             db.session.commit()
+          
             return jsonify({"status": "success"})
         else:
-            return jsonify({"status": "error"}), 409
+          
+            return jsonify({"status": "error"}), 200
 
 
 @orders.route('/feedback/get/<string:uuid>', methods=['GET'])

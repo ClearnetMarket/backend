@@ -1323,10 +1323,9 @@ def checkout_make_payment():
                     order_uuid=order.uuid
                 )
         # check if item is now offline
-        checkoutput_item_offline(get_item.uuid)
-        print("creating new feedback")
-        # create a review
-        create_new_feedback = Feedback_Feedback(
+
+        # create a review for vendor
+        add_new_feedback_for_customer = Feedback_Feedback(
             timestamp=datetime.utcnow(),
             title_of_item=order.title_of_item,
             order_uuid=order.uuid,
@@ -1337,16 +1336,31 @@ def checkout_make_payment():
             vendor_uuid=order.vendor_uuid,
             vendor_comment=None,
             type_of_feedback=1,
-            author_uuid=current_user.uuid,
             item_rating=None,
             vendor_rating=None,
             customer_rating=None,
             review_of_customer=None,
             review_of_vendor=None,
+            author_uuid=current_user.uuid,
         )
-        print(create_new_feedback)
-        db.session.add(create_new_feedback)
-        # commit to database
+        # create a review for customer
+        add_new_feedback_for_vendor = Feedback_Feedback(
+            timestamp=datetime.utcnow(),
+            order_uuid=order.uuid,
+            item_uuid=order.item_uuid,
+            customer_name=order.customer_user_name,
+            customer_uuid=order.customer_uuid,
+            vendor_name=order.vendor_user_name,
+            vendor_uuid=order.vendor_uuid,
+            vendor_comment=None,
+            type_of_feedback=1,
+            item_rating=None,
+            vendor_rating=None,
+            customer_rating=None,
+            author_uuid=order.vendor_uuid,
+            )
+        db.session.add(add_new_feedback_for_vendor)
+        db.session.add(add_new_feedback_for_customer)
         db.session.add(order)
         db.session.add(get_item)
         db.session.add(addmsg)

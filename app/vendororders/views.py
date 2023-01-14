@@ -302,7 +302,7 @@ def vendor_orders_add_vendor_feedback(order_uuid):
     - vendor gives a review for the customer
     """
     if request.method == 'POST':
-        now = datetime.utcnow()
+        
         see_if_feedback_exists = db.session\
                                      .query(User_Orders)\
                                      .filter(vendor_feedback=1)\
@@ -311,28 +311,19 @@ def vendor_orders_add_vendor_feedback(order_uuid):
                                      .first() is not None
       
         get_item_rating = request.json["item_rating"]
-        get_vendor_rating = request.json["vendor_rating"]
+        get_vendor_rating_for_customer = request.json["vendor_rating"]
         if see_if_feedback_exists:
-            get_order = db.session\
-                .query(User_Orders)\
-                .filter(uuid=order_uuid)\
-                .first()
-            add_new_feedback_for_vendor = Feedback_Feedback(
-                timestamp=now,
-                order_uuid=get_order.uuid,
-                item_uuid=get_order.item_uuid,
-                customer_name=get_order.customer_user_name,
-                customer_uuid=get_order.customer_uuid,
-                vendor_name=get_order.vendor_user_name,
-                vendor_uuid=get_order.vendor_uuid,
-                vendor_comment=None,
-                type_of_feedback=1,
-                item_rating=get_item_rating,
-                vendor_rating=get_vendor_rating,
-                customer_rating=None,
-                author_uuid=current_user.uuid,
-            )
-            db.session.add(add_new_feedback_for_vendor)
+            # get the feedback based on order uuid
+            get_feedback = db.session\
+            .query(Feedback_Feedback)\
+            .filter(Feedback_Feedback.order_uuid == order_uuid)\
+            .first()
+            
+            # set feedback based on form data from requests
+            get_feedback.customer_rating = get_vendor_rating_for_customer
+            get_feedback.item_rating = get_item_rating
+            
+            db.session.add(get_feedback)
             db.session.commit()
 
         return jsonify({'status': 'success'})
