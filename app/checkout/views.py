@@ -1063,6 +1063,7 @@ def finalize():
                 return jsonify({'status': 'Error with Payment.  Insuffied Funds.'}), 200
             else:
                 checkout_clear_shopping_cart(current_user.id)
+               
                 db.session.commit()
                 return jsonify({'status': 'success'}), 200
       
@@ -1147,6 +1148,7 @@ def checkout_make_order():
             .filter(Query_Country.value == get_customer_shipping.country) \
             .first()
         user_country = get_customer_country.name
+        print("making order")
         order = User_Orders(
             title_of_item=k.title_of_item,
             created=now,
@@ -1160,7 +1162,7 @@ def checkout_make_order():
             customer_uuid=k.customer_uuid,
             customer_id=k.customer_id,
             currency=k.currency,
-            overall_status=1,
+            overall_status=0,
             disputed_timer=None,
             moderator_uuid=None,
             date_shipped=None,
@@ -1206,7 +1208,9 @@ def checkout_make_order():
 
         db.session.add(new_notice_vendor)
         db.session.add(order)
+        
     db.session.flush()
+
     return True
 
 
@@ -1214,7 +1218,7 @@ def checkout_make_payment():
     """
     Sends the Payments for the cryptocurrencies
     """
-
+    print("ceckout make payment")
     cart_total = db.session \
         .query(Checkout_ShoppingCartTotal) \
         .filter_by(customer_id=current_user.id) \
@@ -1254,13 +1258,17 @@ def checkout_make_payment():
     orders = db.session \
         .query(User_Orders) \
         .filter(User_Orders.customer_uuid == current_user.uuid) \
-        .filter(User_Orders.overall_status is None) \
+        .filter(User_Orders.overall_status == 0) \
         .all()
 
+
+    print("going to orders")
     # loop through ORDERS. send coin and doing transactions 1 by 1.
     # this does not loop through the shopping cart
     # modifies orders
     for order in orders:
+        print("1")
+        print(order.id)
         get_item = db.session \
             .query(Item_MarketItem) \
             .filter(Item_MarketItem.uuid == order.item_uuid) \
@@ -1316,7 +1324,7 @@ def checkout_make_payment():
                 )
         # check if item is now offline
         checkoutput_item_offline(get_item.uuid)
-
+        print("creating new feedback")
         # create a review
         create_new_feedback = Feedback_Feedback(
             timestamp=datetime.utcnow(),
@@ -1336,6 +1344,7 @@ def checkout_make_payment():
             review_of_customer=None,
             review_of_vendor=None,
         )
+        print(create_new_feedback)
         db.session.add(create_new_feedback)
         # commit to database
         db.session.add(order)

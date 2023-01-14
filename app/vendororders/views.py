@@ -5,6 +5,7 @@ from flask_login import current_user
 from app.classes.item import Item_MarketItem
 from app.vendororders import vendororders
 from app import db
+from sqlalchemy import or_
 from app.common.decorators import login_required
 from app.classes.user_orders import User_Orders, User_Orders_Schema, User_Orders_Tracking
 from app.classes.feedback import Feedback_Feedback
@@ -181,7 +182,7 @@ def vendor_orders_shipped():
         vendor_orders = db.session\
             .query(User_Orders) \
             .filter_by(vendor_id=current_user.id) \
-            .filter_by(overall_status=3) \
+            .filter(or_(User_Orders.overall_status==3, User_Orders.overall_status==4))\
             .all()
         
         user_order_info = User_Orders_Schema(many=True)
