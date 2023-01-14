@@ -131,6 +131,7 @@ def order_feedback_score(uuid):
         if get_order:
             print(get_order.id)
             # get the request json
+            print(request.json)
             try:
                 if request.json["vendorrating"]:
                     vendor_rating = request.json["vendorrating"]
