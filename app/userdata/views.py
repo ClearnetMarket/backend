@@ -9,8 +9,12 @@ from app.classes.auth import Auth_User, Auth_User_Schema
 from app.classes.models import Query_Country, Query_Currency
 from app.classes.checkout import Checkout_CheckoutShoppingCart
 from app.classes.userdata import UserData_DefaultAddress
-from app.classes.feedback import Feedback_Feedback, Feedback_Feedback_Schema
-from app.classes.profile import Profile_StatisticsUser, Profile_StatisticsUser_Schema
+from app.classes.feedback import Feedback_Feedback,\
+Feedback_Feedback_Schema
+from app.classes.profile import Profile_StatisticsUser,\
+Profile_StatisticsUser_Schema,\
+Profile_StatisticsVendor_Schema,\
+Profile_StatisticsVendor
 # end models
 
 
@@ -240,10 +244,11 @@ def userdata_get_stats_feedback(user_uuid):
     if request.method == 'GET':
         user_feedback = db.session\
             .query(Feedback_Feedback)\
-            .filter_by(customer_uuid=user_uuid)\
-            .filter_by(type_of_feedback=2)\
+            .filter(Feedback_Feedback.customer_uuid==user_uuid)\
+            .filter(Feedback_Feedback.author_uuid != user_uuid)\
             .count()
-
+   
+   
         if user_feedback == 0:
             return jsonify({"total_feedback": 0,
                             'feedback_one': 0,
@@ -384,7 +389,7 @@ def userdata_get_stats_feedback(user_uuid):
 @userdata.route('/user-stats/<string:user_uuid>', methods=['GET'])
 def userdata_get_stats_user(user_uuid):
     """
-    Grabs stats of feedback
+    Grabs stats of feedback for buyting
     :return:
     """
     if request.method == 'GET':
@@ -393,4 +398,20 @@ def userdata_get_stats_user(user_uuid):
                         .filter_by(user_uuid=user_uuid)\
                         .first()
         user_schema = Profile_StatisticsUser_Schema()
+        return jsonify(user_schema.dump(get_user_stats))
+
+
+@userdata.route('/vendor-stats/<string:user_uuid>', methods=['GET'])
+def userdata_get_stats_vendor(user_uuid):
+    """
+    Grabs stats of feedback for selling
+    :return:
+    """
+    if request.method == 'GET':
+        get_user_stats = db.session\
+            .query(Profile_StatisticsVendor)\
+            .filter_by(vendor_uuid=user_uuid)\
+            .first()
+
+        user_schema = Profile_StatisticsVendor_Schema()
         return jsonify(user_schema.dump(get_user_stats))

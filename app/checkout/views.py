@@ -27,6 +27,9 @@ from app.classes.wallet_xmr import Xmr_Wallet
 from app.classes.vendor import Vendor_Notification
 from app.classes.userdata import UserData_DefaultAddress
 from app.classes.feedback import Feedback_Feedback
+from app.classes.profile import\
+    Profile_StatisticsUser, \
+    Profile_StatisticsVendor
 # endmodels
 
 from app.wallet_bch.wallet_bch_work import bch_send_coin_to_escrow
@@ -1148,7 +1151,7 @@ def checkout_make_order():
             .filter(Query_Country.value == get_customer_shipping.country) \
             .first()
         user_country = get_customer_country.name
-        print("making order")
+
         order = User_Orders(
             title_of_item=k.title_of_item,
             created=now,
@@ -1218,7 +1221,7 @@ def checkout_make_payment():
     """
     Sends the Payments for the cryptocurrencies
     """
-    print("ceckout make payment")
+
     cart_total = db.session \
         .query(Checkout_ShoppingCartTotal) \
         .filter_by(customer_id=current_user.id) \
@@ -1262,13 +1265,11 @@ def checkout_make_payment():
         .all()
 
 
-    print("going to orders")
     # loop through ORDERS. send coin and doing transactions 1 by 1.
     # this does not loop through the shopping cart
     # modifies orders
     for order in orders:
-        print("1")
-        print(order.id)
+
         get_item = db.session \
             .query(Item_MarketItem) \
             .filter(Item_MarketItem.uuid == order.item_uuid) \
@@ -1297,6 +1298,28 @@ def checkout_make_payment():
             orderid=order.id
         )
 
+        # BUYER stats
+        get_stats_buyer = db.session\
+            .query(Profile_StatisticsUser)\
+            .filter(Profile_StatisticsUser.user_uuid == current_user.uuid)\
+            .first()
+        # VENDOR Stats
+        get_stats_vendor = db.session\
+            .query(Profile_StatisticsVendor)\
+            .filter(Profile_StatisticsVendor.user_uuid == current_user.uuid)\
+            .first()
+            
+        # add total items bought
+        buyer_current_bought = get_stats_buyer.total_items_bought 
+        buyer_new_bought = buyer_current_bought + order.quantity
+        get_stats_buyer.total_items_bought = buyer_new_bought
+        
+        # add total partners
+        buyer_current_bought = get_stats_buyer.diff_partners
+        buyer_new_bought = buyer_current_bought + 1
+        get_stats_buyer.diff_partners = buyer_new_bought
+        
+        # BTC
         if order.digital_currency == 1:
             price_of_item_order = floating_decimals((order.price_total_btc + order.shipping_price_btc), 8)
             if current_cart_total_btc > 0:
@@ -1305,6 +1328,18 @@ def checkout_make_payment():
                     user_id=order.customer_id,
                     order_uuid=order.uuid
                 )
+                # Buyer add current coin
+                # Total Spent
+                buyer_current_coin = get_stats_buyer.total_btc_spent
+                buyer_new_coin = buyer_current_coin + price_of_item_order
+                get_stats_buyer.total_btc_spent = buyer_new_coin
+                
+                # Vendor add current coin
+                vendor_current_coin = get_stats_vendor.total_btc_recieved
+                vendor_new_coin = vendor_current_coin + price_of_item_order
+                get_stats_vendor.total_btc_recieved = vendor_new_coin
+            
+        # BCH
         if order.digital_currency == 2:
             price_of_item_order = floating_decimals((order.price_total_bch + order.shipping_price_bch), 8)
             if current_cart_total_bch > 0:
@@ -1313,7 +1348,16 @@ def checkout_make_payment():
                     user_id=order.customer_id,
                     order_uuid=order.uuid
                 )
-
+                # add current coin
+                buyer_current_coin = get_stats_buyer.total_bch_spent
+                buyer_new_coin = buyer_current_coin + price_of_item_order
+                get_stats_buyer.total_bch_spent = buyer_new_coin
+                
+                # Vendor add current coin
+                vendor_current_coin = get_stats_vendor.total_bch_recieved
+                vendor_new_coin = vendor_current_coin + price_of_item_order
+                get_stats_vendor.total_btc_recieved = vendor_new_coin
+        # XMR
         if order.digital_currency == 3:
             price_of_item_order = floating_decimals((order.price_total_xmr + order.shipping_price_xmr), 12)
             if current_cart_total_xmr > 0:
@@ -1322,7 +1366,16 @@ def checkout_make_payment():
                     user_id=order.customer_id,
                     order_uuid=order.uuid
                 )
-        # check if item is now offline
+                # add current coin
+                buyer_current_coin = get_stats_buyer.total_xmr_spent
+                buyer_new_coin = buyer_current_coin + price_of_item_order
+                get_stats_buyer.total_xmr_spent = buyer_new_coin
+                
+                # Vendor add current coin
+                vendor_current_coin = get_stats_vendor.total_xmr_recieved
+                vendor_new_coin = vendor_current_coin + price_of_item_order
+                get_stats_vendor.total_xmr_recieved = vendor_new_coin
+
 
         # create a review for vendor
         add_new_feedback_for_customer = Feedback_Feedback(
@@ -1359,6 +1412,10 @@ def checkout_make_payment():
             customer_rating=None,
             author_uuid=order.vendor_uuid,
             )
+        
+
+        db.session.add(get_stats_vendor)
+        db.session.add(get_stats_buyer)
         db.session.add(add_new_feedback_for_vendor)
         db.session.add(add_new_feedback_for_customer)
         db.session.add(order)

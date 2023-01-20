@@ -610,3 +610,22 @@ def get_currency_list():
             .all()
         currency_schema = Query_CurrencyList_Schema(many=True)
         return jsonify(currency_schema.dump(currency_list))
+
+
+@auth.route('/change-profile', methods=['POST'])
+@login_required
+def change_profile():
+
+    if request.method == 'POST':
+
+        user = db.session\
+            .query(Auth_User) \
+            .filter(Auth_User.id == current_user.id) \
+            .first()
+
+        new_bio = request.json["bio"]
+        user.bio = new_bio
+        db.session.add(user)
+        db.session.commit()
+
+        return jsonify({"status": "Success"}), 200

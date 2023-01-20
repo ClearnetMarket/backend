@@ -102,8 +102,9 @@ def vendor_vendor_feedback(vendor_uuid):
     if request.method == 'GET':
         vendor_feedback = db.session\
             .query(Feedback_Feedback)\
-            .filter_by(vendor_uuid=vendor_uuid)\
-            .filter_by(type_of_feedback=1)\
+            .filter(Feedback_Feedback.vendor_uuid==vendor_uuid)\
+            .filter(Feedback_Feedback.type_of_feedback==1)\
+            .filter(Feedback_Feedback.author_uuid!=vendor_uuid)\
             .order_by(Feedback_Feedback.timestamp.desc())\
             .limit(25)
 
@@ -114,13 +115,14 @@ def vendor_vendor_feedback(vendor_uuid):
 @vendor.route('/all-feedback/<string:vendor_uuid>', methods=['GET'])
 def vendor_vendor_feedback_count(vendor_uuid):
     """
-    Grabs feedback of the vendor
+    Grabs feedback of the vendor count for sidebar
     :return:
     """
     if request.method == 'GET':
         vendor_feedback = db.session\
             .query(Feedback_Feedback)\
-            .filter_by(vendor_uuid=vendor_uuid)\
+            .filter(Feedback_Feedback.vendor_uuid==vendor_uuid)\
+            .filter(Feedback_Feedback.vendor_rating != None)\
             .count()
         if vendor_feedback == 0:
             return jsonify({"total_feedback": 0,
@@ -142,6 +144,7 @@ def vendor_vendor_feedback_count(vendor_uuid):
                 .filter_by(vendor_uuid=vendor_uuid)\
                 .filter_by(vendor_rating=1)\
                 .count()
+            
             vendor_feedback_one_percent = (
                 (int(vendor_feedback_one) / int(vendor_feedback))*100)
 
@@ -214,8 +217,10 @@ def vendor_vendor_feedback_count(vendor_uuid):
                 .filter_by(vendor_uuid=vendor_uuid)\
                 .filter_by(vendor_rating=10)\
                 .count()
+            print(vendor_feedback_ten)
             vendor_feedback_ten_percent = (
                 (int(vendor_feedback_ten) / int(vendor_feedback))*100)
+
         else:
             vendor_feedback_one_percent = None
             vendor_feedback_two_percent = None
