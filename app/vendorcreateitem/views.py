@@ -230,13 +230,11 @@ def create_item_images(uuid):
             directoryifitemlisting = os.path.join(UPLOADED_FILES_DEST_ITEM,
                                                   getimagesubfolder,
                                                   (str(item.uuid)))
-            print(f"direwctory: {directoryifitemlisting}")
+      
             # create the image
             try:
                 mkdir_p(directoryifitemlisting)
-            
             except Exception as e:
-                print(str(e))
                 pass
             try:
               
@@ -245,7 +243,6 @@ def create_item_images(uuid):
                        directoryifitemlisting=directoryifitemlisting)
                 print(directoryifitemlisting)
             except Exception as e:
-                print(str(e))
                 pass
             try:
                 image_two = request.files['image_two']
@@ -565,3 +562,129 @@ def vendorcreateitem_get_item_category_list():
         category_schema = Category_Categories_Schema(many=True)
 
         return jsonify(category_schema.dump(category_list))
+
+
+@vendorcreateitem.route('/query/image/main/<string:itemuuid>', methods=['GET'])
+def item_main_image_server(itemuuid):
+    """
+    Returns list of item category 
+    :return:
+    """
+    if request.method == 'GET':
+        item_info = db.session\
+            .query(Item_MarketItem)\
+            .filter(Item_MarketItem.uuid == itemuuid)\
+            .first()
+
+        return jsonify({"status": item_info.image_one_server}), 200
+
+
+@vendorcreateitem.route('/query/image/two/<string:itemuuid>', methods=['GET'])
+def item_two_image_server(itemuuid):
+    """
+    Returns list of item category 
+    :return:
+    """
+    if request.method == 'GET':
+
+        item_info = db.session\
+            .query(Item_MarketItem)\
+            .filter(Item_MarketItem.uuid == itemuuid)\
+            .first()
+
+        return jsonify({"status": item_info.image_two_server}), 200
+
+
+@vendorcreateitem.route('/query/image/three/<string:itemuuid>', methods=['GET'])
+def item_three_image_server(itemuuid):
+    """
+    Returns list of item category 
+    :return:
+    """
+    if request.method == 'GET':
+
+        item_info = db.session\
+            .query(Item_MarketItem)\
+            .filter(Item_MarketItem.uuid == itemuuid)\
+            .first()
+
+        return jsonify({"status": item_info.image_three_server}), 200
+
+
+@vendorcreateitem.route('/query/image/four/<string:itemuuid>', methods=['GET'])
+def item_four_image_server(itemuuid):
+    """
+    Returns list of item category 
+    :return:
+    """
+    if request.method == 'GET':
+
+        item_info = db.session\
+            .query(Item_MarketItem)\
+            .filter(Item_MarketItem.uuid == itemuuid)\
+            .first()
+
+        return jsonify({"status": item_info.image_four_server}), 200
+
+
+@vendorcreateitem.route('/query/image/main/url/<string:itemuuid>', methods=['GET'])
+def item_main_image_url(itemuuid):
+    """
+    Returns list of item category 
+    :return:
+    """
+    if request.method == 'GET':
+        item_info = db.session\
+            .query(Item_MarketItem)\
+            .filter(Item_MarketItem.uuid == itemuuid)\
+            .first()
+
+        return jsonify({"status": item_info.image_one_url_250}), 200
+
+
+@vendorcreateitem.route('/query/image/two/url/<string:itemuuid>', methods=['GET'])
+def item_two_image_url(itemuuid):
+    """
+    Returns list of item category 
+    :return:
+    """
+    if request.method == 'GET':
+
+        item_info = db.session\
+            .query(Item_MarketItem)\
+            .filter(Item_MarketItem.uuid == itemuuid)\
+            .first()
+
+        return jsonify({"status": item_info.image_two_url_250}), 200
+
+
+@vendorcreateitem.route('/query/image/three/url/<string:itemuuid>', methods=['GET'])
+def item_three_image_url(itemuuid):
+    """
+    Returns list of item category 
+    :return:
+    """
+    if request.method == 'GET':
+
+        item_info = db.session\
+            .query(Item_MarketItem)\
+            .filter(Item_MarketItem.uuid == itemuuid)\
+            .first()
+
+        return jsonify({"status": item_info.image_three_url_250}), 200
+
+
+@vendorcreateitem.route('/query/image/four/url/<string:itemuuid>', methods=['GET'])
+def item_four_image_url(itemuuid):
+    """
+    Returns list of item category 
+    :return:
+    """
+    if request.method == 'GET':
+
+        item_info = db.session\
+            .query(Item_MarketItem)\
+            .filter(Item_MarketItem.uuid == itemuuid)\
+            .first()
+
+        return jsonify({"status": item_info.image_four_url_250}), 200
