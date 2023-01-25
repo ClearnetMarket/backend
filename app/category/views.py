@@ -20,6 +20,7 @@ def get_categories_today_featured():
             .query(Item_MarketItem) \
             .filter(Item_MarketItem.online == 1) \
             .filter(Item_MarketItem.image_one_server != '') \
+            .filter(Item_MarketItem.item_count != 0) \
             .order_by(Item_MarketItem.created.desc()) \
             .limit(10)
 
