@@ -14,8 +14,8 @@ from app import UPLOADED_FILES_DEST_ITEM, CURRENT_SETTINGS
 from app.classes.item import \
     Item_MarketItem
 
-base_url_prod = 'https://api.freeport.cash/common/'
-base_url_local = 'http://localhost:5000/common/'
+base_url_prod = 'https://api.freeport.cash/common/item/'
+base_url_local = 'http://localhost:5000/common/item/'
 
 
 def deleteimg_noredirect(id, img):
@@ -32,7 +32,8 @@ def deleteimg_noredirect(id, img):
                     getimagesubfolder = itemlocation(x=id)
                     spacer = '/'
 
-                    pathtofile = str(UPLOADED_FILES_DEST_ITEM + spacer + getimagesubfolder + spacer + specific_folder + spacer + img)
+                    pathtofile = str(UPLOADED_FILES_DEST_ITEM + spacer +
+                                     getimagesubfolder + spacer + specific_folder + spacer + img)
                     file_extension = ".jpg"
                     ext1 = '_225x'
                     ext2 = '_500x'
@@ -150,15 +151,18 @@ def image1(formdata, item, directoryifitemlisting):
         # puts new name with ending
         filenamenewfull = filenamenew + file_extension
         # gets aboslute path of new file
-        newfileNameDestination = os.path.join(directoryifitemlisting, newfileName)
+        newfileNameDestination = os.path.join(
+            directoryifitemlisting, newfileName)
         # renames file
         os.rename(filenamenewfull, newfileNameDestination)
         if CURRENT_SETTINGS == 'PRODUCTION':
 
             if len(formdata.filename) > 2:
                 item.image_one_server = id_pic1
-                item.image_one_url_250 = base_url_prod + item.uuid + '/' + id_pic1 + "_225x.jpg"
-                item.image_one_url_500 = base_url_prod + item.uuid + '/' + id_pic1 + "_500x.jpg"
+                item.image_one_url_250 = base_url_prod + \
+                    item.uuid + '/' + id_pic1 + "_225x.jpg"
+                item.image_one_url_500 = base_url_prod + \
+                    item.uuid + '/' + id_pic1 + "_500x.jpg"
                 db.session.add(item)
                 imagespider(base_path=directoryifitemlisting)
             else:
@@ -167,8 +171,10 @@ def image1(formdata, item, directoryifitemlisting):
 
             if len(formdata.filename) > 2:
                 item.image_one_server = id_pic1
-                item.image_one_url_250 = base_url_local + item.uuid + '/' + id_pic1 + "_225x.jpg"
-                item.image_one_url_500 = base_url_local + item.uuid + '/' + id_pic1 + "_500x.jpg"
+                item.image_one_url_250 = base_url_local + \
+                    item.uuid + '/' + id_pic1 + "_225x.jpg"
+                item.image_one_url_500 = base_url_local + \
+                    item.uuid + '/' + id_pic1 + "_500x.jpg"
                 db.session.add(item)
                 imagespider(base_path=directoryifitemlisting)
             else:
@@ -203,13 +209,15 @@ def image2(formdata, item, directoryifitemlisting):
             directoryifitemlisting, newfileName)
         # renames file
         os.rename(filenamenewfull, newfileNameDestination2)
-        
+
         if CURRENT_SETTINGS == 'PRODUCTION':
 
             if len(formdata.filename) > 2:
                 item.image_two_server = id_pic2
-                item.image_two_url_250 = base_url_prod + item.uuid + '/' + id_pic2 + "_225x.jpg"
-                item.image_two_url_500 = base_url_prod + item.uuid + '/' + id_pic2 + "_500x.jpg"
+                item.image_two_url_250 = base_url_prod + \
+                    item.uuid + '/' + id_pic2 + "_225x.jpg"
+                item.image_two_url_500 = base_url_prod + \
+                    item.uuid + '/' + id_pic2 + "_500x.jpg"
                 db.session.add(item)
                 imagespider(base_path=directoryifitemlisting)
             else:
@@ -218,13 +226,15 @@ def image2(formdata, item, directoryifitemlisting):
 
             if len(formdata.filename) > 2:
                 item.image_two_server = id_pic2
-                item.image_two_url_250 = base_url_local + item.uuid + '/' + id_pic2 + "_225x.jpg"
-                item.image_two_url_500 = base_url_local + item.uuid + '/' + id_pic2 + "_500x.jpg"
+                item.image_two_url_250 = base_url_local + \
+                    item.uuid + '/' + id_pic2 + "_225x.jpg"
+                item.image_two_url_500 = base_url_local + \
+                    item.uuid + '/' + id_pic2 + "_500x.jpg"
                 db.session.add(item)
                 imagespider(base_path=directoryifitemlisting)
             else:
                 item.image_two_server = None
-                
+
     else:
         if item.image_two_server:
             if len(item.image_two_server) > 5:
@@ -254,13 +264,15 @@ def image3(formdata, item, directoryifitemlisting):
             directoryifitemlisting, newfileName)
         # renames file
         os.rename(filenamenewfull, newfileNameDestination)
-        
+
         if CURRENT_SETTINGS == 'PRODUCTION':
 
             if len(formdata.filename) > 2:
                 item.image_three_server = id_pic3
-                item.image_three_url_250 = base_url_prod + item.uuid + '/' + id_pic3 + "_225x.jpg"
-                item.image_three_url_500 = base_url_prod + item.uuid + '/' + id_pic3 + "_500x.jpg"
+                item.image_three_url_250 = base_url_prod + \
+                    item.uuid + '/' + id_pic3 + "_225x.jpg"
+                item.image_three_url_500 = base_url_prod + \
+                    item.uuid + '/' + id_pic3 + "_500x.jpg"
                 db.session.add(item)
                 imagespider(base_path=directoryifitemlisting)
             else:
@@ -269,13 +281,15 @@ def image3(formdata, item, directoryifitemlisting):
 
             if len(formdata.filename) > 2:
                 item.image_three_server = id_pic3
-                item.image_three_url_250 = base_url_local + item.uuid + '/' + id_pic3 + "_225x.jpg"
-                item.image_three_url_500 = base_url_local + item.uuid + '/' + id_pic3 + "_500x.jpg"
+                item.image_three_url_250 = base_url_local + \
+                    item.uuid + '/' + id_pic3 + "_225x.jpg"
+                item.image_three_url_500 = base_url_local + \
+                    item.uuid + '/' + id_pic3 + "_500x.jpg"
                 db.session.add(item)
                 imagespider(base_path=directoryifitemlisting)
             else:
                 item.image_three_server = None
-                
+
     else:
         if item.image_three_server is not None:
             if len(item.image_three_server) > 5:
@@ -304,13 +318,15 @@ def image4(formdata, item, directoryifitemlisting):
             directoryifitemlisting, newfileName)
         # renames file
         os.rename(filenamenewfull, newfileNameDestination)
-        
+
         if CURRENT_SETTINGS == 'PRODUCTION':
 
             if len(formdata.filename) > 2:
                 item.image_four_server = id_pic4
-                item.image_four_url_250 = base_url_prod + item.uuid + '/' + id_pic4 + "_225x.jpg"
-                item.image_four_url_500 = base_url_prod + item.uuid + '/' + id_pic4 + "_500x.jpg"
+                item.image_four_url_250 = base_url_prod + \
+                    item.uuid + '/' + id_pic4 + "_225x.jpg"
+                item.image_four_url_500 = base_url_prod + \
+                    item.uuid + '/' + id_pic4 + "_500x.jpg"
                 db.session.add(item)
                 imagespider(base_path=directoryifitemlisting)
             else:
@@ -319,14 +335,15 @@ def image4(formdata, item, directoryifitemlisting):
 
             if len(formdata.filename) > 2:
                 item.image_four_server = id_pic4
-                item.image_four_url_250 = base_url_local + item.uuid + '/' + id_pic4 + "_225x.jpg"
-                item.image_four_url_500 = base_url_local + item.uuid + '/' + id_pic4 + "_500x.jpg"
+                item.image_four_url_250 = base_url_local + \
+                    item.uuid + '/' + id_pic4 + "_225x.jpg"
+                item.image_four_url_500 = base_url_local + \
+                    item.uuid + '/' + id_pic4 + "_500x.jpg"
                 db.session.add(item)
                 imagespider(base_path=directoryifitemlisting)
             else:
                 item.image_four_server = None
-                
-      
+
     else:
         if item.image_four_server:
             if len(item.image_four_server) > 5:

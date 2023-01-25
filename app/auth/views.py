@@ -25,7 +25,7 @@ from app.classes.auth import \
 from app.wallet_bch.wallet_bch_work import bch_create_wallet
 from app.wallet_btc.wallet_btc_work import btc_create_wallet
 from app.wallet_xmr.wallet_xmr_work import xmr_create_wallet
-
+from app.auth.profileimage.image_forms import image1
 
 @auth.route("/whoami", methods=["GET"])
 @login_required
@@ -54,6 +54,7 @@ def check_session():
                          'user_email': user.email,
                          'user_admin': user.admin_role,
                          'profile_image': user.profileimage,
+                         'profileimage_url_250': user.profileimage_url_250,
                          'country': user.country,
                          'currency': user.currency,
                          'token': user.api_key,
@@ -611,12 +612,14 @@ def get_currency_list():
         currency_schema = Query_CurrencyList_Schema(many=True)
         return jsonify(currency_schema.dump(currency_list))
 
-
-@auth.route('/change-profile', methods=['POST'])
+###
+##PROFILE
+####
+@auth.route('/change-profile', methods=['PUT'])
 @login_required
-def change_profile():
+def change_profile_info():
 
-    if request.method == 'POST':
+    if request.method == 'PUT':
 
         user = db.session\
             .query(Auth_User) \
@@ -629,3 +632,150 @@ def change_profile():
         db.session.commit()
 
         return jsonify({"status": "Success"}), 200
+
+###
+# PROFILE
+####
+
+
+@auth.route('/userbio', methods=['GET'])
+@login_required
+def user_profile_info():
+
+    if request.method == 'GET':
+
+        user = db.session\
+            .query(Auth_User) \
+            .filter(Auth_User.id == current_user.id) \
+            .first()
+
+        new_bio = user.bio
+   
+        return jsonify({"bio": new_bio}), 200
+
+
+@auth.route('/create-profile-image/<string:uuid>', methods=['POST', 'OPTIONS'])
+def create_profile_image(uuid):
+
+    api_key_auth = request.headers.get('Authorization')
+    if api_key_auth:
+        api_key = api_key_auth.replace('bearer ', '', 1)
+        user = db.session\
+            .query(Auth_User)\
+            .filter_by(api_key=api_key)\
+            .first()
+       
+        if user:
+            # node location
+            getimagesubfolder = '1'
+            # directory of image
+            directory_user_profile = os.path.join(UPLOADED_FILES_DEST_USER,
+                                                  getimagesubfolder,
+                                                  (str(user.uuid)))
+
+            # create the image
+       
+            mkdir_p(directory_user_profile)
+            image_main = request.files['image_main']
+            image1(formdata=image_main,
+                    user=user,
+                    directory_user_profile=directory_user_profile)
+        
+         
+
+            db.session.add(user)
+            db.session.commit()
+
+            return jsonify({"status": 'success'})
+        else:
+            return jsonify({"error": 'no_api_key'})
+    else:
+        return jsonify({"error": 'no_api_key'})
+
+
+@auth.route('/delete-profile/<string:uuid>/<string:imagename>', methods=['DELETE'])
+@login_required
+def delete_item_images(uuid, imagename):
+    """
+    gets specific id and image, it will delete on the server accordingly
+    :param uuid:
+    :param imagename:
+    :return:
+    """
+
+    user = db.session\
+        .query(Auth_User)\
+        .filter_by(id=current_user.id)\
+        .first()
+   
+    if user is None:
+        return jsonify({"error": 'Large Error'})
+    else:
+        # get folder for item id
+        specific_folder = str(user.uuid)
+        # get node location
+        getitemlocation = '1'
+        # get path of item on folder
+        pathtofile = os.path.join(
+            UPLOADED_FILES_DEST_USER,
+            getitemlocation,
+            specific_folder,
+            imagename
+        )
+
+        ext_1 = '_225x.jpg'
+        file0 = pathtofile + ".jpg"
+        file1 = pathtofile + ext_1
+      
+        if len(imagename) < 10: 
+  
+            return jsonify({"error": 'No Images match description'}), 200
+        else:
+
+            if user.profileimage == imagename:
+                
+                print(file0)
+                print(file1)
+                os.remove(file0)
+                os.remove(file1)
+
+                user.profileimage = None
+                user.profileimage_url_250 = None
+            
+                db.session.add(user)
+                db.session.commit()
+
+            return jsonify({"status": 'Success'}), 200
+      
+
+
+
+
+@auth.route('/query/profileimage/server/<string:uuid>', methods=['GET'])
+def item_main_image_server(uuid):
+    """
+    Returns user server image
+    :return:
+    """
+    if request.method == 'GET':
+        user_image_server = db.session\
+            .query(Auth_User)\
+            .filter(Auth_User.uuid == uuid)\
+            .first()
+   
+        return jsonify({"status": user_image_server.profileimage}), 200
+
+
+@auth.route('/query/profileimage/url/<string:uuid>', methods=['GET'])
+def item_main_image_url(uuid):
+    """
+    Returns user image url 
+    :return:
+    """
+    if request.method == 'GET':
+        user_image_url = db.session\
+            .query(Auth_User)\
+            .filter(Auth_User.uuid == uuid)\
+            .first()
+
+        return jsonify({"status": user_image_url.profileimage_url_250}), 200

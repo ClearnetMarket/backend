@@ -56,7 +56,7 @@ def convertimage_225(newfullpathfilename, root, file):
         hsize = int((float(img.size[1])*float(wpercent)))
         img = img.resize((basewidth_225, hsize), Image.ANTIALIAS)
         imagesave = os.path.join(root, renamed_file)
-        img.save(imagesave, subsampling=0, quality=100, optimize=True)
+        img.save(imagesave, subsampling=0,quality=100, optimize=True)
         os.chmod(renamed_file, 0o775)
         print("converted")
         print("name: ", renamed_file)
@@ -67,42 +67,6 @@ def convertimage_225(newfullpathfilename, root, file):
         if getsize == 0:
             os.remove(imagesave)
 
-
-def convertimage_500(newfullpathfilename, root, file):
-    # CREATE A 250 size image
-    # opens the image
-    img = Image.open(newfullpathfilename)
-    # gets base name
-    thebasename = os.path.splitext(file)[0]
-    newname_500 = thebasename + "_500x"
-    renamed_file = (os.path.join(root, newname_500 + extension))
-    # test to see if already done
-    seeifexists = os.path.exists(renamed_file)
-    if seeifexists is True:
-        pass
-    else:
-        # creates new basename
-        print("")
-        print("*"*10)
-        print("name: ", newfullpathfilename)
-        print("format:", img.format)
-        print("dimensions:",  "%dx%d" % img.size)
-        # convert
-        wpercent = (basewidth_500/float(img.size[0]))
-        hsize = int((float(img.size[1])*float(wpercent)))
-        img = img.resize((basewidth_500, hsize), Image.ANTIALIAS)
-        imagesave = os.path.join(root, renamed_file)
-        img.save(imagesave, subsampling=0, quality=100, optimize=True)
-        os.chmod(renamed_file, 0o775)
-        print("converted")
-        print("name: ", renamed_file)
-        print("dimensions:", "%dx%d" % img.size)
-        print("*"*10)
-        print("")
-        # if size is 0 delete it
-        getsize = os.path.getsize(imagesave)
-        if getsize == 0:
-            os.remove(imagesave)
 
 
 def imagespider(base_path):
@@ -120,13 +84,11 @@ def imagespider(base_path):
 
                 # convert image if not jpg
                 if not file.endswith(".jpg"):
-                    convertimage(
-                        thefile=file, pathoffile=pathofimage, directoryofimage=root)
+                    convertimage(thefile=file, pathoffile=pathofimage, directoryofimage=root)
                 # pass files already dne
                 if file.endswith("_225x.jpg"):
                     pass
-                elif file.endswith("_500x.jpg"):
-                    pass
+              
                 else:
                     # see if width greater than 250
                     y = testsize(newfullpathfilename)
@@ -135,5 +97,4 @@ def imagespider(base_path):
                     else:
                         # convert image to 225
                         convertimage_225(newfullpathfilename, root, file)
-                        # convert image to 500
-                        convertimage_500(newfullpathfilename, root, file)
+                       

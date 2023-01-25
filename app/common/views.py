@@ -1,5 +1,6 @@
 from app.classes.item import Item_MarketItem
-from app import UPLOADED_FILES_DEST_ITEM, db
+from app.classes.auth import Auth_User
+from app import UPLOADED_FILES_DEST_ITEM, db, UPLOADED_FILES_DEST_USER
 from app.common.functions import itemlocation
 from flask import url_for, send_from_directory
 from app.common import common
@@ -9,10 +10,10 @@ import os
 
 
 
-@common.route('/<string:uuid>/<path:filename>')
+@common.route('/item/<string:uuid>/<path:filename>')
 def image_forsale_file(uuid, filename):
     """
-    Takes UUID of User and 
+    Takes UUID of item and filename 
     """
     try:
         get_item_id = db.session\
@@ -28,4 +29,26 @@ def image_forsale_file(uuid, filename):
       
         return send_from_directory(directory=directory_of_file, path=thefile, as_attachment=False)
     except Exception as e:
-        return "https://www.freeiconspng.com/thumbs/no-image-icon/no-image-icon-6.png"
+        return str(e)
+
+
+@common.route('/user/<string:uuid>/<path:filename>')
+def image_user_profile_file(uuid, filename):
+    """
+    Takes UUID of User and  id
+    """
+    try:
+        get_user_id = db.session\
+            .query(Auth_User)\
+            .filter(Auth_User.uuid == uuid)\
+            .first()
+
+        getimagesubfolder = itemlocation(x=get_user_id.id)
+
+        directory_of_file = UPLOADED_FILES_DEST_USER
+
+        thefile = os.path.join(getimagesubfolder, uuid, filename)
+
+        return send_from_directory(directory=directory_of_file, path=thefile, as_attachment=False)
+    except Exception as e:
+        return str(e)
