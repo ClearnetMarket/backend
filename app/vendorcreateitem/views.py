@@ -62,7 +62,7 @@ def create_item_main(uuid):
     title = request.json["item_title"]
     # Item Condition Query
     if request.json["item_condition"] == '':
-        return jsonify({"status": 'error'})
+       item_condition = 6
     else:
         item_condition = request.json["item_condition"]
         item_condition = item_condition
@@ -73,7 +73,7 @@ def create_item_main(uuid):
     if item_count > 0:
         item_count = int(item_count)
     else:
-        return jsonify({"status": 'error'})
+        item_count = 0
 
     # Price
     price = request.json["price"]
@@ -124,9 +124,12 @@ def create_item_main(uuid):
  
     # Category
     if request.json["category_id_0"] == '':
-        get_category_query = None
-        category_value = None
-        category_name = None
+        get_category_query = db.session\
+            .query(Category_Categories)\
+            .filter(Category_Categories.value == category)\
+            .first()
+        category_value = 0
+        category_name = 'Category'
         return jsonify({"status": 'error', })
     else:
         category = request.json["category_id_0"]
@@ -181,12 +184,7 @@ def create_item_main(uuid):
     item.origin_country_name = item_country_name
     item.origin_country = current_user.country
 
-    check_if_allowed = put_online_allowed(item=item)
-    if check_if_allowed is True:
-        
-        item.online = 1
-    else:
-        item.online = 0
+   
     # add  to database
     db.session.add(item)
     db.session.commit()

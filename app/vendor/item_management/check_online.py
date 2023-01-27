@@ -1,14 +1,20 @@
 
 def put_online_allowed(item):
 
-    # check item has a title
-    if len(item.item_title) <= 6:
+
+    if item.item_title:
+        # check item has a title
+        if len(item.item_title) <= 6:
+            return 'Item Title not Long Enough'
+    else:
         return 'Item Title not Long Enough'
-
-    # Check there is a main image
-    if len(item.image_one_url_250) <= 10:
+    if item.image_one_url_250:
+        # Check there is a main image
+        if len(item.image_one_url_250) <= 10:
+            return 'There must be a main image'
+    else:
         return 'There must be a main image'
-
+        
     # Check there is a count greater than 0
     if item.item_count == 0:
         return 'Item count is 0 cannot put online'
@@ -51,7 +57,7 @@ def put_online_allowed(item):
 
     # check if shipping info specified
     # shipping two
-    print(item.shipping_two)
+   
     if item.shipping_two is True:
         if len(item.shipping_info_2) > 3:
             pass

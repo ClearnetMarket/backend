@@ -8,6 +8,7 @@ from app.common.functions import mkdir_p
 from app.common.decorators import login_required
 from app.classes.item import Item_MarketItem, items_schema
 import shutil
+from app.vendor.item_management.check_online import put_online_allowed
 
 
 @vendorcreate.route('/itemsforsale', methods=['GET'])
@@ -18,12 +19,22 @@ def vendorcreate_items_for_sale():
   
     :return:
     """
+    change_status = False
     forsale = db.session\
         .query(Item_MarketItem) \
         .filter(Item_MarketItem.vendor_id == current_user.id)\
         .order_by(Item_MarketItem.id.desc())\
         .all()
+    for f in forsale:
+        check_if_allowed = put_online_allowed(item=f)
+        if check_if_allowed is not True:
 
+            f.online = 0
+            change_status = True
+        # add  to database
+        db.session.add(f)
+    if change_status is True:
+        db.session.commit()
     return items_schema.jsonify(forsale)
 
 

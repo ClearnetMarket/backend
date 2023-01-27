@@ -368,7 +368,9 @@ def vendor_orders_put_offline(uuid):
             .first()
 
         get_item.online = 0
+        print("offline!!!")
         
         db.session.add(get_item)
         db.session.commit()
+        print(get_item.online)
         return jsonify({'status': 'success'})
