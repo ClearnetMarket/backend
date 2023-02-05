@@ -166,9 +166,9 @@ def xmr_send():
                     db.session.commit()
                     return jsonify({"status": "request sent to wallet"}), 200
                 else:
-                    return jsonify({"error": f"Cannot withdraw amount less than wallet fee: {str(wfee)}"}), 409
+                    return jsonify({"error": f"Cannot withdraw amount less than wallet fee: {str(wfee)}"}), 200
             else:
-                return jsonify({"error": f"Cannot withdraw amount less than wallet fee: {str(wfee)}"}), 409
+                return jsonify({"error": f"Cannot withdraw amount less than wallet fee: {str(wfee)}"}), 200
         else:
             current_fails = int(user.fails)
             new_fail_amount = current_fails + 1
@@ -178,6 +178,6 @@ def xmr_send():
                 user.locked = 1
             db.session.add(user)
             db.session.commit()
-            return jsonify({"error": "Unauthorized"}), 409
+            return jsonify({"error": "Unauthorized"}), 200
     else:
-        return jsonify({"error": "Account is locked due to dispute"}), 409
+        return jsonify({"error": "Account is locked due to dispute"}), 200

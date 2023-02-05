@@ -153,10 +153,10 @@ def message_create():
     :return:
     """
     now = datetime.utcnow()
-
+  
     # json request variables
     get_user_two_uuid = request.json["user_two_uuid"]
-    get_body = request.json["textbody"]
+    get_body = request.json["body"]
     if get_user_two_uuid == current_user.uuid:
         return jsonify({"error": "Cannot message yourself"}), 409
 

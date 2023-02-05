@@ -1306,7 +1306,7 @@ def checkout_make_payment():
         # VENDOR Stats
         get_stats_vendor = db.session\
             .query(Profile_StatisticsVendor)\
-            .filter(Profile_StatisticsVendor.user_uuid == current_user.uuid)\
+            .filter(Profile_StatisticsVendor.vendor_uuid == current_user.uuid)\
             .first()
             
         # add total items bought

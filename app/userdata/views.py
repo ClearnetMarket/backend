@@ -30,11 +30,12 @@ def userdata_get_shopping_cart_count():
             .query(Checkout_CheckoutShoppingCart)\
             .filter(Checkout_CheckoutShoppingCart.customer_id == current_user.id)\
             .count()
+        print(shopping_cart_count)
         if shopping_cart_count:
 
             return jsonify({'status': shopping_cart_count})
         else:
-            return jsonify({'status': 0})
+            return jsonify({'status': '0'})
 
 
 @userdata.route('/country-currency', methods=['GET'])
@@ -74,6 +75,8 @@ def userdata_home(user_uuid):
             .query(Auth_User)\
             .filter(Auth_User.uuid == user_uuid)\
             .first()
+   
+        print(userdata_user.profileimage_url_250)
         user_schema = Auth_User_Schema()
         return jsonify(user_schema.dump(userdata_user))
 

@@ -64,10 +64,10 @@ def check_session():
             }), 200
         else:
           
-            return jsonify({"status": "error. user not found"}), 401
+            return jsonify({"status": "error. user not found"}), 200
     else:
        
-        return jsonify({"status": "error"}), 401
+        return jsonify({"status": "error"}), 200
 
 
 @auth.route("/amiconfirmed", methods=["GET"])
@@ -115,7 +115,7 @@ def login():
                    .filter_by(username=username)\
                    .first() is not None
         if not user:
-            return jsonify({"error": "Unauthorized"}), 401
+            return jsonify({"error": "unauthorized"}), 200
         user = db.session\
             .query(Auth_User)\
             .filter_by(username=username)\
@@ -128,7 +128,7 @@ def login():
             db.session.add(user)
             db.session.commit()
    
-            return jsonify({"error": "Unauthorized"}), 401
+            return jsonify({"error": "unauthorized"}), 200
 
         user.locked = 0
         user.fails = 0
@@ -154,7 +154,7 @@ def login():
         }), 200
     else:
         
-        return jsonify({"error": "Unauthorized"}), 401
+        return jsonify({"error": "Unauthorized"}), 200
 
 
 @auth.route("/register", methods=["POST"])
@@ -519,9 +519,9 @@ def change_pin():
 
         if user.passwordpinallowed == 1:
             if not bcrypt.check_password_hash(user.password, password):
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), 200
             if not bcrypt.check_password_hash(user.wallet_pin, old_pin):
-                return jsonify({"error": "Unauthorized"}), 401
+                return jsonify({"error": "Unauthorized"}), 200
 
             hashed_pin = bcrypt.generate_password_hash(new_pin)
             user.wallet_pin = hashed_pin
@@ -529,8 +529,8 @@ def change_pin():
             db.session.add(user)
             db.session.commit()
 
-            return jsonify({"status": "success"}), 409
-        return jsonify({"error": "Must unlock account to change password"}), 409
+            return jsonify({"status": "success"}), 200
+        return jsonify({"error": "Must unlock account to change password"}), 200
 
 
 @auth.route("/vacation-on", methods=["POST"])
@@ -541,7 +541,7 @@ def vacation_on():
         .filter(Auth_User.id == user_id) \
         .first()
     if user is None:
-        return jsonify({"error": "Unauthorized"}), 401
+        return jsonify({"error": "Unauthorized"}), 200
     # get physical items
     aitems = db.session\
         .query(Item_MarketItem)\
@@ -558,7 +558,7 @@ def vacation_on():
         db.session.commit()
         return jsonify({"status": "Vacation Mode Enabled"}), 200
     else:
-        return jsonify({"error": "Vacation Mode already enabled"}), 409
+        return jsonify({"error": "Vacation Mode already enabled"}), 200
 
 
 @auth.route("/vacation-off", methods=["POST"])
@@ -570,7 +570,7 @@ def vacation_off():
         .first()
 
     if user is None:
-        return jsonify({"error": "Unauthorized"}), 401
+        return jsonify({"error": "Unauthorized"}), 200
 
     if user.vacation == 1:
         # Go into vacation mode
@@ -580,7 +580,7 @@ def vacation_off():
 
         return jsonify({"status": "Vacation Mode Disabled"}), 200
     else:
-        return jsonify({"error": "Vacation Mode already disabled"}), 409
+        return jsonify({"error": "Vacation Mode already disabled"}), 200
 
 
 @auth.route('/query/country', methods=['GET'])

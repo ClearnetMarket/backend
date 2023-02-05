@@ -46,7 +46,7 @@ def marketitem_item_flagged(item_id):
                             "item_id_number_reports": flagged_item.howmany,
                             })
         else:
-            jsonify({"Error": "No flagged items"}), 401
+            jsonify({"Error": "No flagged items"}), 200
 
 
 @marketitem.route('/info/<string:item_uuid>', methods=['GET'])
