@@ -8,25 +8,6 @@ from app.classes.category import Category_Categories, Category_Categories_Schema
 from app.classes.item import Item_MarketItem, Item_MarketItem_Schema
 
 
-@category.route('/query/index/todayfeatured', methods=['GET'])
-def get_categories_today_featured():
-    """
-    Used on index.  Grabs today's featured items
-    :return:
-    """
-    if request.method == 'GET':
-
-        todayfeaturedfull = db.session \
-            .query(Item_MarketItem) \
-            .filter(Item_MarketItem.online == 1) \
-            .filter(Item_MarketItem.image_one_server != '') \
-            .filter(Item_MarketItem.item_count != 0) \
-            .order_by(Item_MarketItem.created.desc()) \
-            .limit(10)
-
-        item_schema = Item_MarketItem_Schema(many=True)
-        return jsonify(item_schema.dump(todayfeaturedfull))
-
 
 @category.route('/sidebar', methods=['GET'])
 def get_categories_sidebar():

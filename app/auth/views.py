@@ -199,7 +199,7 @@ def register_user():
         member_since=now,
         wallet_pin=0000, # took out pin for easier signup
         profileimage='user-unknown.png',
-        bio='',
+        bio=None,
         api_key=key,
         country=country,
         currency=currency,
@@ -217,7 +217,8 @@ def register_user():
         shard=1,
         usernode=0,
         confirmed=0,
-        passwordpinallowed=0
+        passwordpinallowed=0,
+        profileimage_url_250=None,
     )
 
     db.session.add(new_user)

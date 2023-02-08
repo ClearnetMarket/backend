@@ -201,7 +201,7 @@ def order_feedback_review(uuid):
         # if order exists else 
         get_stats_vendor = db.session\
             .query(Profile_StatisticsVendor)\
-            .filter(Profile_StatisticsVendor.user_uuid == current_user.uuid)\
+            .filter(Profile_StatisticsVendor.vendor_uuid == current_user.uuid)\
             .first()
         if get_order:
             if request.json["review"]:

@@ -216,6 +216,9 @@ app.register_blueprint(vendorcreateitem_blueprint, url_prefix='/vendorcreateitem
 from .vendororders import vendororders as vendororders_blueprint
 app.register_blueprint(vendororders_blueprint, url_prefix='/vendororders')
 
+from .item_query import itemquery as itemquery_blueprint
+app.register_blueprint(itemquery_blueprint, url_prefix='/itemquery')
+
 from .vendor import vendor as vendor_blueprint
 app.register_blueprint(vendor_blueprint, url_prefix='/vendor')
 
