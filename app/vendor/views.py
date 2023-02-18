@@ -217,7 +217,6 @@ def vendor_vendor_feedback_count(vendor_uuid):
                 .filter_by(vendor_uuid=vendor_uuid)\
                 .filter_by(vendor_rating=10)\
                 .count()
-            print(vendor_feedback_ten)
             vendor_feedback_ten_percent = (
                 (int(vendor_feedback_ten) / int(vendor_feedback))*100)
 

@@ -30,7 +30,7 @@ def userdata_get_shopping_cart_count():
             .query(Checkout_CheckoutShoppingCart)\
             .filter(Checkout_CheckoutShoppingCart.customer_id == current_user.id)\
             .count()
-        print(shopping_cart_count)
+ 
         if shopping_cart_count:
 
             return jsonify({'status': shopping_cart_count})
@@ -76,7 +76,6 @@ def userdata_home(user_uuid):
             .filter(Auth_User.uuid == user_uuid)\
             .first()
    
-        print(userdata_user.profileimage_url_250)
         user_schema = Auth_User_Schema()
         return jsonify(user_schema.dump(userdata_user))
 
@@ -93,12 +92,10 @@ def userdata_update():
         try:
             new_currency_id = request.json["currency"]['value']
         except Exception as e:
-            print(str(e))
             new_currency_id = None
         try:
             new_country_id = request.json["country"]['value']
         except Exception as e:
-            print(str(e))
             new_country_id = None
 
         if new_currency_id is not None:

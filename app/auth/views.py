@@ -97,7 +97,6 @@ def logout():
         logout_user()
         return jsonify({'status': 'logged out'}), 200
     except Exception as e:
-        print(e)
         return jsonify({"error", 'error'}), 400
 
 
@@ -734,9 +733,7 @@ def delete_item_images(uuid, imagename):
         else:
 
             if user.profileimage == imagename:
-                
-                print(file0)
-                print(file1)
+
                 os.remove(file0)
                 os.remove(file1)
 

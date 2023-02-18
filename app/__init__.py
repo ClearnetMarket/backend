@@ -72,7 +72,7 @@ app.config['SESSION_REDIS'] = ApplicationConfig.SESSION_REDIS
 app.config['ORIGIN_URL'] = ApplicationConfig.ORIGIN_URL
 app.config['CURRENT_SETTINGS'] = ApplicationConfig.CURRENT_SETTINGS
 
-session.configure(bind=ApplicationConfig.SQLALCHEMY_DATABASE_URI_0)
+session.configure(bind=ApplicationConfig.SQLALCHEMY_DATABASE_URI)
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 server_session = Session(app)
@@ -238,4 +238,7 @@ from app.wallet_xmr import wallet_xmr as wallet_xmr_blueprint
 app.register_blueprint(wallet_xmr_blueprint, url_prefix='/xmr')
 
 
-
+with app.app_context():
+    db.configure_mappers()
+    db.create_all()
+    db.session.commit()

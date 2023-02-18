@@ -13,12 +13,12 @@ class ApplicationConfig:
     POSTGRES_PW = 'postgres'
     POSTGRES_SERVER = 'database:5432'
     POSTGRES_DBNAME00 = 'clearnet'
-    SQLALCHEMY_DATABASE_URI_0 = "postgresql+psycopg2://{}:{}@{}/{}".format(POSTGRES_USERNAME,
+    SQLALCHEMY_DATABASE_URI = "postgresql+psycopg2://{}:{}@{}/{}".format(POSTGRES_USERNAME,
                                                                            POSTGRES_PW,
                                                                            POSTGRES_SERVER,
                                                                            POSTGRES_DBNAME00
                                                                            )
-    SQLALCHEMY_BINDS = {'clearnet': SQLALCHEMY_DATABASE_URI_0}
+    SQLALCHEMY_BINDS = {'clearnet': SQLALCHEMY_DATABASE_URI}
     # sqlalchemy config
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TRAP_HTTP_EXCEPTIONS = True

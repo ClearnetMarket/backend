@@ -1,16 +1,121 @@
 
 from flask import request, jsonify
 from flask_login import login_required, current_user
-
+from datetime import datetime
 from app.moderator import moderator
 from app import db
 
-from app.classes.user_orders import User_Orders, User_Orders_Schema
-from app.classes.feedback import Feedback_Feedback, Feedback_Feedback_Schema
-from app.classes.message import Message_Chat
+from app.classes.user_orders import\
+    User_Orders,\
+    User_Orders_Schema
+from app.classes.feedback import\
+    Feedback_Feedback,\
+    Feedback_Feedback_Schema
+from app.classes.message import\
+    Message_Chat
+from app.classes.service import \
+    Service_Issue,\
+    Service_Ticket,\
+    Service_Tickets_Comments,\
+    Service_Tickets_Comments_Schema,\
+    Service_Ticket_Schema
+from app.classes.auth import Auth_User
 from app.wallet_btc.wallet_btc_moderator import finalize_order_dispute_btc
 from app.wallet_bch.wallet_bch_moderator import finalize_order_dispute_bch
 from app.wallet_xmr.wallet_xmr_moderator import finalize_order_dispute_xmr
+
+
+@moderator.route('/create/ticket/comment', methods=['POST'])
+@login_required
+def create_comment_to_ticket():
+    """
+    Creates a ticket for the user when they have an issue and leaves a first comment
+    :return:
+    """
+    now = datetime.utcnow()
+
+    user = db.session\
+        .query(Auth_User) \
+        .filter(Auth_User.id == current_user.id)\
+        .first()
+    if user.admin > 5:
+        adminrole = 1
+    else:
+        adminrole = 0
+
+    # get the body of text for message
+    textbody = request.json["textbody"]
+    # get the txt id
+    ticket_uuid = request.json["ticketid"]
+
+    # get main ticket so we can update read status
+    get_main_ticket = db.session\
+        .query(Service_Ticket)\
+        .filter(Service_Ticket.uuid == ticket_uuid)\
+        .first()
+
+    # set status of ticket to read
+    get_main_ticket.status = 1
+
+    db.session.add(get_main_ticket)
+
+    # create a comment
+    user_ticket_comment = Service_Tickets_Comments(
+        author=user.display_name,
+        uuid=ticket_uuid,
+        author_uuid=user.uuid,
+        timestamp=now,
+        admin=adminrole,
+        text_body=textbody,
+    )
+
+    db.session.add(user_ticket_comment)
+    db.session.commit()
+
+    return jsonify({"ticket": user_ticket_comment.uuid})
+
+
+
+
+@moderator.route('/ticket', methods=['POST'])
+@login_required
+def get_ticket_mod():
+    """
+    Gets the specific ticket info
+    :return:
+    """
+
+    get_ticket = request.json['ticketid']
+    
+
+    user_tickets = db.session \
+        .query(Service_Tickets_Comments) \
+        .filter(Service_Tickets_Comments.uuid == get_ticket) \
+        .order_by(Service_Tickets_Comments.timestamp.desc())\
+        .first()
+    print(user_tickets.author_uuid)
+    comments_schema = Service_Tickets_Comments_Schema()
+    return jsonify(comments_schema.dump(user_tickets))
+
+
+@moderator.route('/ticket/messages', methods=['POST'])
+@login_required
+def ticket_issue_messages():
+    """
+    Gets the specific ticket info
+    :return:
+    """
+    get_ticket = request.json['ticketid']
+
+    user_tickets = db.session \
+        .query(Service_Tickets_Comments) \
+        .filter(Service_Tickets_Comments.uuid == get_ticket) \
+        .order_by(Service_Tickets_Comments.timestamp.desc())\
+        .all()
+
+    comments_schema = Service_Tickets_Comments_Schema(many=True)
+    return jsonify(comments_schema.dump(user_tickets))
+
 
 
 @moderator.route('/disputes/available', methods=['GET'])
@@ -302,3 +407,91 @@ def become_mod_of_order(uuid):
             db.session.commit()
 
             return jsonify({"status": "success"})
+##TICKETS
+
+
+@moderator.route('/tickets/stats', methods=['GET'])
+@login_required
+def ticket_stats():
+    """
+    Gets the vendor ratings
+    1 = vendor
+    :return:
+    """
+    if request.method == 'GET':
+        if not current_user.admin_role == 10:
+            return jsonify({"status": "unauthorized"})
+        else:
+            user_tickets_count = db.session \
+                .query(Service_Ticket) \
+                .order_by(Service_Ticket.timestamp.desc())\
+                .count()
+            user_tickets_open = db.session \
+                .query(Service_Ticket) \
+                .filter(Service_Ticket.status == 1)\
+                .order_by(Service_Ticket.timestamp.desc())\
+                .count()
+            user_tickets_completed = db.session \
+                .query(Service_Ticket) \
+                .filter(Service_Ticket.status == 2)\
+                .order_by(Service_Ticket.timestamp.desc())\
+                .count()
+
+            return jsonify({
+                            "count": user_tickets_count,
+                            "open": user_tickets_open,
+                            "completed": user_tickets_completed,
+                            })
+
+@moderator.route('/disputes/stats', methods=['GET'])
+@login_required
+def disputes_stats():
+    """
+    Gets the vendor ratings
+    1 = vendor
+    :return:
+    """
+    if request.method == 'GET':
+        if not current_user.admin_role == 10:
+            return jsonify({"status": "unauthorized"})
+        else:
+            user_tickets_count = db.session \
+                .query(Service_Ticket) \
+                .order_by(Service_Ticket.timestamp.desc())\
+                .count()
+            user_tickets_open = db.session \
+                .query(Service_Ticket) \
+                .filter(Service_Ticket.status == 1)\
+                .order_by(Service_Ticket.timestamp.desc())\
+                .count()
+            user_tickets_completed = db.session \
+                .query(Service_Ticket) \
+                .filter(Service_Ticket.status == 2)\
+                .order_by(Service_Ticket.timestamp.desc())\
+                .count()
+
+            return jsonify({
+                "count": user_tickets_count,
+                "open": user_tickets_open,
+                "completed": user_tickets_completed,
+            })
+
+@moderator.route('/getalltickets', methods=['GET'])
+@login_required
+def get_all_tickets():
+    """
+    Gets the vendor ratings
+    1 = vendor
+    :return:
+    """
+    if request.method == 'GET':
+        if not current_user.admin_role == 10:
+            return jsonify({"status": "unauthorized"})
+        else:
+            user_tickets = db.session \
+                .query(Service_Ticket) \
+                .order_by(Service_Ticket.timestamp.desc())\
+                .all()
+          
+            comments_schema = Service_Ticket_Schema(many=True)
+            return jsonify(comments_schema.dump(user_tickets))

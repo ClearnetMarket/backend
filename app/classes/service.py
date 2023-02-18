@@ -1,5 +1,8 @@
 from app import db, ma
+from uuid import uuid4
 
+def get_uuid():
+    return uuid4().hex
 
 class Service_ShippingSecret(db.Model):
     __tablename__ = 'service_shipping_secret'
@@ -226,3 +229,60 @@ class Service_Issue_Schema(ma.SQLAlchemyAutoSchema):
     timestamp = ma.auto_field()
     admin = ma.auto_field()
     status = ma.auto_field()
+    
+
+
+
+class Service_Ticket(db.Model):
+    __tablename__ = 'service_tickets'
+    __bind_key__ = 'clearnet'
+    __table_args__ = {"schema": "public"}
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uuid = db.Column(db.String(32), default=get_uuid)
+    author = db.Column(db.VARCHAR(140))
+    subject = db.Column(db.VARCHAR(512))
+    author_uuid = db.Column(db.String(32))
+    timestamp = db.Column(db.TIMESTAMP())
+    admin = db.Column(db.INTEGER)
+    status = db.Column(db.INTEGER)
+
+    
+class Service_Ticket_Schema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Service_Ticket
+    id = ma.auto_field()
+    uuid = ma.auto_field()
+    author = ma.auto_field()
+    subject = ma.auto_field()
+    author_uuid = ma.auto_field()
+    timestamp = ma.auto_field()
+    admin = ma.auto_field()
+    status = ma.auto_field()
+
+
+
+
+
+class Service_Tickets_Comments(db.Model):
+    __tablename__ = 'service_tickets_comments'
+    __bind_key__ = 'clearnet'
+    __table_args__ = {"schema": "public"}
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uuid = db.Column(db.String(32))
+    author = db.Column(db.VARCHAR(140))
+    author_uuid = db.Column(db.String(32))
+    timestamp = db.Column(db.TIMESTAMP())
+    admin = db.Column(db.INTEGER)
+    text_body = db.Column(db.TEXT)
+
+
+class Service_Tickets_Comments_Schema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Service_Tickets_Comments
+    id = ma.auto_field()
+    uuid = ma.auto_field()
+    author = ma.auto_field()
+    author_uuid = ma.auto_field()
+    timestamp = ma.auto_field()
+    admin = ma.auto_field()
+    text_body = ma.auto_field()
