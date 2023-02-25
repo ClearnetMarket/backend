@@ -105,7 +105,9 @@ def message_msg_comments(post_id):
                 ) \
         .filter(Message_Chat.post_id == post_id) \
         .first()
-    if get_msg_post is not None:
+    if get_msg_post is None:
+        return jsonify({"status": "unauthorized"})
+    else:
         get_msg_post_comments = db.session \
             .query(Message_Comment) \
             .filter(Message_Comment.post_id == post_id) \
@@ -349,6 +351,7 @@ def create_new_post_dispute(order_uuid):
     if get_post is None:
 
         generic_message = "A dispute has been issued."
+        
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.uuid == order_uuid) \

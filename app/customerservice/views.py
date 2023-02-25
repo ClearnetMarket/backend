@@ -31,8 +31,12 @@ def ticket_mark_as_read(ticketuuid):
         .filter(Service_Ticket.uuid == ticketuuid) \
         .order_by(Service_Ticket.timestamp.desc())\
         .first()
+        
+    if user_tickets.status == 0:
+        user_tickets.status = 0
+    else:
+        user_tickets.status = 1
 
-    user_tickets.status = 1
     db.session.add(user_tickets)
     db.session.commit()
     
@@ -93,13 +97,13 @@ def ticket_issue():
         .first()
         
     user_tickets = db.session \
-        .query(Service_Tickets_Comments) \
-        .filter(Service_Tickets_Comments.uuid == get_ticket) \
-        .filter(Service_Tickets_Comments.author_uuid == user.uuid) \
-        .order_by(Service_Tickets_Comments.timestamp.desc())\
+        .query(Service_Ticket) \
+        .filter(Service_Ticket.uuid == get_ticket) \
+        .filter(Service_Ticket.author_uuid == user.uuid) \
+        .order_by(Service_Ticket.timestamp.desc())\
         .first()
     print(user_tickets.author_uuid)
-    comments_schema = Service_Tickets_Comments_Schema()
+    comments_schema = Service_Ticket_Schema()
     return jsonify(comments_schema.dump(user_tickets))
     
 @customerservice.route('/ticket/messages', methods=['POST'])
@@ -200,7 +204,7 @@ def create_comment_to_ticket():
         .first()
     
     # set status of ticket to read
-    get_main_ticket.status = 1
+    get_main_ticket.status = 3
     
     db.session.add(get_main_ticket)
     

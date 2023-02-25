@@ -13,7 +13,7 @@ from app.wallet_bch.wallet_bch_work import bch_refund_rejected_user
 from app.wallet_btc.wallet_btc_work import btc_refund_rejected_user
 from app.wallet_xmr.wallet_xmr_work import xmr_refund_rejected_user
 from app.vendor.item_management.check_online import put_online_allowed
-
+from app.classes.vendor import Vendor_Notification
 
 @vendororders.route('/count', methods=['GET'])
 @login_required
@@ -225,9 +225,11 @@ def vendor_orders_disputed():
     if request.method == 'GET':
         vendor_orders = db.session\
             .query(User_Orders) \
-            .filter_by(vendor_id=current_user.id) \
+            .filter(User_Orders.vendor_id==current_user.id) \
             .filter_by(overall_status=8) \
             .all()
+        for f in vendor_orders:
+            print(f.id)
         vendor_orders_schema = User_Orders_Schema(many=True)
         return jsonify(vendor_orders_schema.dump(vendor_orders))
 
@@ -368,9 +370,40 @@ def vendor_orders_put_offline(uuid):
             .first()
 
         get_item.online = 0
-        print("offline!!!")
+     
         
         db.session.add(get_item)
         db.session.commit()
-        print(get_item.online)
+
         return jsonify({'status': 'success'})
+
+
+@vendororders.route('/notification/dispute/<string:uuid>', methods=['POST'])
+@login_required
+def vendor_notification_dispute(uuid):
+    """
+    This function puts items offline in the itemsforsale page
+    """         
+   
+    if request.method == 'POST':
+        now = datetime.utcnow()
+        get_order = db.session\
+            .query(User_Orders)\
+            .filter(User_Orders.uuid==uuid)\
+            .first()
+        if get_order.vendor_uuid == current_user.uuid or get_order.customer_uuid == current_user.uuid:
+          
+            
+            print("HGEREWER")
+            create_new_notification = Vendor_Notification(
+                dateadded=now,
+                user_id=get_order.vendor_id,
+                new_feedback=0,
+                new_disputes=1,
+                new_orders=0,
+                new_returns=0,
+            )
+            db.session.add(create_new_notification)
+            db.session.commit()
+            return jsonify({'status': 'successfully created notification'})
+        

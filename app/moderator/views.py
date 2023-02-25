@@ -89,12 +89,12 @@ def get_ticket_mod():
     
 
     user_tickets = db.session \
-        .query(Service_Tickets_Comments) \
-        .filter(Service_Tickets_Comments.uuid == get_ticket) \
-        .order_by(Service_Tickets_Comments.timestamp.desc())\
+        .query(Service_Ticket) \
+        .filter(Service_Ticket.uuid == get_ticket) \
+        .order_by(Service_Ticket.timestamp.desc())\
         .first()
-    print(user_tickets.author_uuid)
-    comments_schema = Service_Tickets_Comments_Schema()
+   
+    comments_schema = Service_Ticket_Schema()
     return jsonify(comments_schema.dump(user_tickets))
 
 
@@ -117,50 +117,26 @@ def ticket_issue_messages():
     return jsonify(comments_schema.dump(user_tickets))
 
 
-
-@moderator.route('/disputes/available', methods=['GET'])
+@moderator.route('/ticket/close/<string:uuid>', methods=['POST'])
 @login_required
-def get_disputes_main_page_need_mod():
+def ticket_mark_closed(uuid):
     """
-    This gets currently open disputes that appears on the moderator home page
+    Mark a ticket as closed
     :return:
     """
-    if request.method == 'GET':
-        # see if current user is a mod
-     
-        if current_user.admin_role >= 2:
-            # query the disputes
-            get_disputes = db.session \
-                .query(User_Orders) \
-                .filter(User_Orders.overall_status == 8) \
-                .filter(User_Orders.moderator_uuid is None)\
-                .all()
-            disputes_schema = User_Orders_Schema(many=True)
-            return jsonify(disputes_schema.dump(get_disputes))
-        else:
-            return jsonify({"status": "error"})
+
+    user_ticket = db.session \
+        .query(Service_Ticket) \
+        .filter(Service_Ticket.uuid == uuid) \
+        .first()
+    user_ticket.status = 0
+    
+    db.session.add(user_ticket)
+    db.session.commit()
+        
+    return jsonify({"status": "success"})
 
 
-@moderator.route('/disputes/modded', methods=['GET'])
-@login_required
-def get_disputes_main_page_has_mod():
-    """
-    This gets currently open disputes that appears on the moderator home page
-    :return:
-    """
-    if request.method == 'GET':
-        # see if current user is a mod
-        if current_user.admin_role >= 2:
-            # query the disputes
-            get_disputes = db.session \
-                .query(User_Orders) \
-                .filter(User_Orders.overall_status == 8) \
-                .filter(User_Orders.moderator_uuid is not None)\
-                .all()
-            disputes_schema = User_Orders_Schema(many=True)
-            return jsonify(disputes_schema.dump(get_disputes))
-        else:
-            return jsonify({"status": "error"})
 
 
 @moderator.route('/dispute/settle/<string:uuid>', methods=['POST'])
@@ -171,7 +147,7 @@ def mark_dispute_finished(uuid):
     :return:
     """
     if request.method == 'POST':
-        
+        print("Here")
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.moderator_uuid == current_user.uuid) \
@@ -223,7 +199,7 @@ def mark_dispute_cancelled_still_open(uuid):
 
         get_order = db.session \
             .query(User_Orders) \
-            .filter(User_Orders.customer_id == current_user.id) \
+            .filter(User_Orders.moderator_uuid == current_user.uuid) \
             .filter(User_Orders.uuid == uuid) \
             .first()
         if get_order.moderator_uuid != current_user.uuid:
@@ -248,7 +224,7 @@ def mark_dispute_cancelled_still_closed(uuid):
 
         get_order = db.session \
             .query(User_Orders) \
-            .filter(User_Orders.customer_id == current_user.id) \
+            .filter(User_Orders.moderator_uuid == current_user.uuid) \
             .filter(User_Orders.uuid == uuid) \
             .first()
         if get_order.moderator_uuid != current_user.uuid:
@@ -266,21 +242,21 @@ def mark_dispute_cancelled_still_closed(uuid):
 @login_required
 def extend_dispute_time(uuid):
     """
-    Extends order for more time
+    Extends order for more time.  Will need to add into crons file
     :return:
     """
     if request.method == 'GET':
 
         get_order = db.session \
             .query(User_Orders) \
-            .filter(User_Orders.customer_id == current_user.id) \
+            .filter(User_Orders.moderator_uuid == current_user.uuid) \
             .filter(User_Orders.uuid == uuid) \
             .first()
         if get_order.moderator_uuid != current_user.uuid:
             return jsonify({"status": "error"})
 
         get_order.extended_timer = 1
-
+    
         db.session.add(get_order)
         db.session.commit()
 
@@ -298,6 +274,7 @@ def add_message_after_dispute(uuid):
             # get the generic user order model
             get_order = db.session \
                 .query(User_Orders) \
+                .filter(User_Orders.moderator_uuid == current_user.uuid) \
                 .filter(User_Orders.uuid == uuid) \
                 .first()
             if "textbody" in request.json:
@@ -374,42 +351,10 @@ def get_vendor_ratings(uuid):
             return jsonify(feedback_schema.dump(get_user_ratings))
 
 
-@moderator.route('/takeonmod/<string:uuid>', methods=['GET'])
-@login_required
-def become_mod_of_order(uuid):
-    """
-    Gets the vendor ratings
-    1 = vendor
-    :return:
-    """
-    if request.method == 'GET':
-        if current_user.admin_role >= 2:
-            # get the order from the uuid
-            get_order = db.session \
-                .query(User_Orders) \
-                .filter(User_Orders.uuid == uuid) \
-                .filter(User_Orders.moderator_uuid is None)\
-                .first()
-            # set current moderator as mod
-            get_order.moderator_uuid = current_user.uuid
-            # add to db
-            db.session.add(get_order)
-            # get the message post that is currently none for mod uuid
-            get_message_post = db.session\
-                .query(Message_Chat)\
-                .filter(Message_Chat.order_uuid == get_order.uuid)\
-                .first()
-            # set post mod id as current id
-            get_message_post.mod_uuid = current_user.uuid
-            # add to db
-            db.session.add(get_message_post)
-            # commit to db
-            db.session.commit()
 
-            return jsonify({"status": "success"})
+
+
 ##TICKETS
-
-
 @moderator.route('/tickets/stats', methods=['GET'])
 @login_required
 def ticket_stats():
@@ -443,7 +388,7 @@ def ticket_stats():
                             "completed": user_tickets_completed,
                             })
 
-@moderator.route('/disputes/stats', methods=['GET'])
+@moderator.route('/dispute/stats', methods=['GET'])
 @login_required
 def disputes_stats():
     """
@@ -452,28 +397,18 @@ def disputes_stats():
     :return:
     """
     if request.method == 'GET':
-        if not current_user.admin_role == 10:
+        if current_user.admin_role != 10:
             return jsonify({"status": "unauthorized"})
         else:
-            user_tickets_count = db.session \
-                .query(Service_Ticket) \
-                .order_by(Service_Ticket.timestamp.desc())\
+            user_disputes_count = db.session \
+                .query(User_Orders) \
+                .filter(User_Orders.overall_status == 8)\
                 .count()
-            user_tickets_open = db.session \
-                .query(Service_Ticket) \
-                .filter(Service_Ticket.status == 1)\
-                .order_by(Service_Ticket.timestamp.desc())\
-                .count()
-            user_tickets_completed = db.session \
-                .query(Service_Ticket) \
-                .filter(Service_Ticket.status == 2)\
-                .order_by(Service_Ticket.timestamp.desc())\
-                .count()
+           
 
             return jsonify({
-                "count": user_tickets_count,
-                "open": user_tickets_open,
-                "completed": user_tickets_completed,
+                "count": user_disputes_count,
+            
             })
 
 @moderator.route('/getalltickets', methods=['GET'])
@@ -495,3 +430,87 @@ def get_all_tickets():
           
             comments_schema = Service_Ticket_Schema(many=True)
             return jsonify(comments_schema.dump(user_tickets))
+
+
+@moderator.route('/takeonmod/<string:uuid>', methods=['GET'])
+@login_required
+def become_mod_of_order(uuid):
+    """
+    Gets the vendor ratings
+    1 = vendor
+    :return:
+    """
+    if request.method == 'GET':
+        if current_user.admin_role <= 2:
+            return jsonify({"status": "unauthorized"})
+        else:
+            # get the order from the uuid
+            get_order = db.session \
+                .query(User_Orders) \
+                .filter(User_Orders.uuid == uuid) \
+                .filter(User_Orders.moderator_uuid == None)\
+                .first()
+            # set current moderator as mod
+            get_order.moderator_uuid = current_user.uuid
+            get_order.moderator_user_name = current_user.display_name
+            # add to db
+            db.session.add(get_order)
+            # get the message post that is currently none for mod uuid
+            get_message_post = db.session\
+                .query(Message_Chat)\
+                .filter(Message_Chat.order_uuid == get_order.uuid)\
+                .first()
+            # set post mod id as current id
+            get_message_post.mod_uuid = current_user.uuid
+           
+            # add to db
+            db.session.add(get_message_post)
+            # commit to db
+            db.session.commit()
+
+            return jsonify({"status": "success"})
+
+
+@moderator.route('/disputes/available', methods=['GET'])
+@login_required
+def get_disputes_main_page_need_mod():
+    """
+    This gets currently open disputes that appears on the moderator home page
+    :return:
+    """
+    if request.method == 'GET':
+        # see if current user is a mod
+
+        if current_user.admin_role >= 2:
+            # query the disputes
+            get_disputes = db.session \
+                .query(User_Orders) \
+                .filter(User_Orders.overall_status == 8) \
+                .filter(User_Orders.moderator_uuid == None)\
+                .all()
+            disputes_schema = User_Orders_Schema(many=True)
+            return jsonify(disputes_schema.dump(get_disputes))
+        else:
+            return jsonify({"status": "error"})
+
+
+@moderator.route('/disputes/modded', methods=['GET'])
+@login_required
+def get_disputes_main_page_has_mod():
+    """
+    This gets currently open disputes that appears on the moderator home page
+    :return:
+    """
+    if request.method == 'GET':
+        # see if current user is a mod
+        if current_user.admin_role >= 2:
+            # query the disputes
+            get_disputes = db.session \
+                .query(User_Orders) \
+                .filter(User_Orders.overall_status == 8) \
+                .filter(User_Orders.moderator_uuid != None)\
+                .all()
+            disputes_schema = User_Orders_Schema(many=True)
+            return jsonify(disputes_schema.dump(get_disputes))
+        else:
+            return jsonify({"status": "error"})

@@ -1170,6 +1170,7 @@ def checkout_make_order():
             moderator_uuid=None,
             date_shipped=None,
             completed_time=None,
+            extended_timer=0,
             released=0,
             private_note=None,
             escrow=0,

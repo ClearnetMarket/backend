@@ -29,6 +29,7 @@ class User_Orders(db.Model):
     customer_uuid = db.Column(db.VARCHAR(40))
     customer_id = db.Column(db.INTEGER)
     moderator_uuid = db.Column(db.VARCHAR(40))
+    moderator_user_name = db.Column(db.VARCHAR(40))
 
     overall_status = db.Column(db.INTEGER)
     disputed_timer = db.Column(db.TIMESTAMP())

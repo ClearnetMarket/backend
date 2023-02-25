@@ -5,7 +5,7 @@ from operator import or_
 from flask import request, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import or_
-
+from datetime import datetime, timedelta
 from app.orders import orders
 from app import db
 
@@ -60,8 +60,34 @@ def get_order_model(uuid):
             item_schema = User_Orders_Schema()
             return jsonify(item_schema.dump(get_order))
         else:
-            return jsonify({"status": "error"}), 409
+            return jsonify({"status": "error"}), 200
 
+
+@orders.route('/autofinalize/<string:uuid>', methods=['GET'])
+@login_required
+def get_order_autofinalize_time(uuid):
+    """
+    Gets the order for the customer
+    :return:
+    """
+    if request.method == 'GET':
+
+        # get order
+        # user must be customer or vendor
+
+        get_order = db.session \
+            .query(User_Orders) \
+            .filter(User_Orders.uuid == uuid) \
+            .first()
+        # if order exists
+        if get_order:
+            # return schema
+            whenbought = get_order.created
+            twentydaysfromorder = (whenbought + timedelta(days=20))
+            
+            return jsonify({"status":twentydaysfromorder})
+        else:
+            return jsonify({"status": "error"}), 200
 
 
 
