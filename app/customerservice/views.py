@@ -81,16 +81,16 @@ def user_get_ticket_count():
     return jsonify({"tickets": user_tickets})
     
 
-@customerservice.route('/ticket', methods=['POST'])
+@customerservice.route('/ticket/<string:ticketuuid>', methods=['POST'])
 @login_required
-def ticket_issue():
+def ticket_issue(ticketuuid):
     """
     Gets the specific ticket info
     :return:
     """
  
-    get_ticket = request.json['ticketid']
-    print(get_ticket)
+    get_ticket = str(ticketuuid)
+   
     user = db.session\
         .query(Auth_User) \
         .filter(Auth_User.id == current_user.id)\
@@ -106,15 +106,16 @@ def ticket_issue():
     comments_schema = Service_Ticket_Schema()
     return jsonify(comments_schema.dump(user_tickets))
     
-@customerservice.route('/ticket/messages', methods=['POST'])
+
+@customerservice.route('/ticket/messages/<string:ticketuuid>', methods=['POST'])
 @login_required
-def ticket_issue_messages():
+def ticket_issue_messages(ticketuuid):
     """
     Gets the specific ticket info
     :return:
     """
 
-    get_ticket = request.json['ticketid']
+    get_ticket = str(ticketuuid)
 
 
     user_tickets = db.session \
@@ -224,9 +225,26 @@ def create_comment_to_ticket():
     return jsonify({"ticket": user_ticket_comment.uuid})
 
 
+@customerservice.route('/newticket', methods=['GET'])
+@login_required
+def get_ticket_count_warning_index():
+    """
+    Gets the count of tickets have new messages
+    :return:
+    """
 
-    
-    
+    get_main_ticket = db.session\
+        .query(Service_Ticket)\
+        .filter(Service_Ticket.author_uuid == current_user.uuid)\
+        .filter(Service_Ticket.status == 2)\
+        .count()
+    print()
+    return jsonify({
+        "count": get_main_ticket,
+    })
+
+
+
     
     
     

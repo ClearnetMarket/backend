@@ -55,7 +55,7 @@ def create_comment_to_ticket():
         .first()
 
     # set status of ticket to read
-    get_main_ticket.status = 1
+    get_main_ticket.status = 2
 
     db.session.add(get_main_ticket)
 
@@ -77,15 +77,15 @@ def create_comment_to_ticket():
 
 
 
-@moderator.route('/ticket', methods=['POST'])
+@moderator.route('/ticket/<string:ticketuuid>', methods=['GET'])
 @login_required
-def get_ticket_mod():
+def get_ticket_mod(ticketuuid):
     """
     Gets the specific ticket info
     :return:
     """
 
-    get_ticket = request.json['ticketid']
+    get_ticket = str(ticketuuid)
     
 
     user_tickets = db.session \
@@ -98,14 +98,15 @@ def get_ticket_mod():
     return jsonify(comments_schema.dump(user_tickets))
 
 
-@moderator.route('/ticket/messages', methods=['POST'])
+@moderator.route('/ticket/messages/<string:ticketuuid>', methods=['GET'])
 @login_required
-def ticket_issue_messages():
+def ticket_issue_messages(ticketuuid):
+    print("HEREWEWE")
     """
     Gets the specific ticket info
     :return:
     """
-    get_ticket = request.json['ticketid']
+    get_ticket = str(ticketuuid)
 
     user_tickets = db.session \
         .query(Service_Tickets_Comments) \
@@ -117,7 +118,7 @@ def ticket_issue_messages():
     return jsonify(comments_schema.dump(user_tickets))
 
 
-@moderator.route('/ticket/close/<string:uuid>', methods=['POST'])
+@moderator.route('/ticket/close/<string:uuid>', methods=['PUT'])
 @login_required
 def ticket_mark_closed(uuid):
     """
