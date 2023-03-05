@@ -52,12 +52,12 @@
 
 def notification(type, username, user_id, salenumber, bitcoin, bitcoincash, monero):
     from app import db
-    from app.classes.message import Message_Notifications
+    from app.classes.message import Notification_Notifications
 
     from datetime import datetime
     now = datetime.utcnow()
-    addnotice = Message_Notifications(
-        type=type,
+    addnotice = Notification_Notifications(
+        type_of_notification=type,
         username=username,
         user_id=user_id,
         salenumber=salenumber,

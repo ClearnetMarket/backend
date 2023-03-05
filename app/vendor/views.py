@@ -291,7 +291,7 @@ def vendor_topbar_get_disputes_count():
         .filter(Vendor_Notification.new_disputes == 1)\
         .filter(Vendor_Notification.user_id == current_user.id)\
         .count()
-    print(new_disputes)
+  
     return jsonify({"count": new_disputes})
 
 

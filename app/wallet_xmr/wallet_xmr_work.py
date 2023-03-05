@@ -308,11 +308,11 @@ def finalize_order_xmr(order_uuid):
     # get fee for website
     fee_for_freeport = (Decimal(total_amount_from_sale) * Decimal(vendor_fee_percent))/100
     fee_for_freeport_exact = floating_decimals(fee_for_freeport, 12)
-    print(fee_for_freeport_exact)
+ 
     # get amount to vendor
     amount_for_vendor = total_amount_from_sale - fee_for_freeport
     amount_for_vendor_exact = floating_decimals(amount_for_vendor, 12)
-    print(amount_for_vendor_exact)
+  
     # send fee to freeport
     xmr_send_coin_to_user(amount=fee_for_freeport_exact,
                           user_id=1,

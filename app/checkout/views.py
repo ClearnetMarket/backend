@@ -647,7 +647,7 @@ def data_shopping_cart_in_cart_count():
                 .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid,
                         Checkout_CheckoutShoppingCart.saved_for_later == 0) \
                 .count()
-            print(cart_items)
+
             return jsonify({"cart_count": cart_items}), 200
         else:
             return jsonify({"error": 'Cart is empty'}), 200

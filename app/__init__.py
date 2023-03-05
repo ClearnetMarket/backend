@@ -204,6 +204,9 @@ app.register_blueprint(userdata_blueprint, url_prefix='/info')
 from .message import message as message_blueprint
 app.register_blueprint(message_blueprint, url_prefix='/msg')
 
+from .notification import notification as notification_blueprint
+app.register_blueprint(notification_blueprint, url_prefix='/notification')
+
 from .checkout import checkout as checkout_blueprint
 app.register_blueprint(checkout_blueprint, url_prefix='/checkout')
 

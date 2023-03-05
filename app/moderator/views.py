@@ -101,7 +101,7 @@ def get_ticket_mod(ticketuuid):
 @moderator.route('/ticket/messages/<string:ticketuuid>', methods=['GET'])
 @login_required
 def ticket_issue_messages(ticketuuid):
-    print("HEREWEWE")
+
     """
     Gets the specific ticket info
     :return:
@@ -148,7 +148,7 @@ def mark_dispute_finished(uuid):
     :return:
     """
     if request.method == 'POST':
-        print("Here")
+   
         get_order = db.session \
             .query(User_Orders) \
             .filter(User_Orders.moderator_uuid == current_user.uuid) \

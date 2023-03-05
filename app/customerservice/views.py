@@ -102,7 +102,7 @@ def ticket_issue(ticketuuid):
         .filter(Service_Ticket.author_uuid == user.uuid) \
         .order_by(Service_Ticket.timestamp.desc())\
         .first()
-    print(user_tickets.author_uuid)
+ 
     comments_schema = Service_Ticket_Schema()
     return jsonify(comments_schema.dump(user_tickets))
     
@@ -238,7 +238,7 @@ def get_ticket_count_warning_index():
         .filter(Service_Ticket.author_uuid == current_user.uuid)\
         .filter(Service_Ticket.status == 2)\
         .count()
-    print()
+  
     return jsonify({
         "count": get_main_ticket,
     })

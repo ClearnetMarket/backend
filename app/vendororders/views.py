@@ -228,8 +228,7 @@ def vendor_orders_disputed():
             .filter(User_Orders.vendor_id==current_user.id) \
             .filter_by(overall_status=8) \
             .all()
-        for f in vendor_orders:
-            print(f.id)
+
         vendor_orders_schema = User_Orders_Schema(many=True)
         return jsonify(vendor_orders_schema.dump(vendor_orders))
 
@@ -393,8 +392,6 @@ def vendor_notification_dispute(uuid):
             .first()
         if get_order.vendor_uuid == current_user.uuid or get_order.customer_uuid == current_user.uuid:
           
-            
-            print("HGEREWER")
             create_new_notification = Vendor_Notification(
                 dateadded=now,
                 user_id=get_order.vendor_id,

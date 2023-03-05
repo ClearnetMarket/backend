@@ -239,7 +239,7 @@ def create_item_images(uuid):
                 image_main = request.files['image_main']
                 image1(formdata=image_main, item=item,
                        directoryifitemlisting=directoryifitemlisting)
-                print(directoryifitemlisting)
+           
             except Exception as e:
                 pass
             try:

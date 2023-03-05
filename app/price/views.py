@@ -113,7 +113,7 @@ def get_total_wallet(currency):
         amount=bchwallet.currentbalance, currency=currency)
     current_local_price_from_xmr = convert_to_local_xmr(
         amount=xmrwallet.currentbalance, currency=currency)
-    print(current_local_price_from_xmr)
+
     current_amounts_in_wallet = Decimal(current_local_price_from_btc) + Decimal(current_local_price_from_bch) + Decimal(current_local_price_from_xmr)
 
     return jsonify({"coin": current_amounts_in_wallet})

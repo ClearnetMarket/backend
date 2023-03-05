@@ -1,37 +1,47 @@
 from flask import jsonify, request
 from flask_login import current_user, login_required
+from sqlalchemy import or_
 from app.classes.user_orders import User_Orders
 from app.message import message
 from app import db
 from datetime import datetime
 from sqlalchemy import or_
 from app.classes.auth import Auth_User
-from app.classes.message import Message_Chat, \
-    Message_Comment, \
-    Message_Comment_Schema, \
+from app.classes.message import \
+    Message_Chat, \
     Message_Chat_Schema, \
-    Message_Post, \
-    Message_Notifications
+    Message_Post
+from app.classes.notifications import Message_Notifications
 from app.classes.item import Item_MarketItem
 
 
-@message.route('/notification-count', methods=['GET'])
-def message_notitification_count():
+@message.route('/markasread/<int:post_id>', methods=['PUT'])
+@login_required
+def message_markasread(post_id):
     """
-    Gets the notification count for new users
+    Counts the number of messages a user has
     :return:
     """
 
-    user_id = current_user.id
-    gnotifications = db.session \
-        .query(Message_Notifications) \
-        .filter(Message_Notifications.user_id == user_id,
-                Message_Notifications.read == 0) \
-        .count()
+    get_msg_post = db.session \
+        .query(Message_Chat) \
+        .filter(or_(Message_Chat.user_one_uuid == current_user.uuid,
+                    Message_Chat.user_two_uuid == current_user.uuid)) \
+        .filter(Message_Chat.post_id == post_id) \
+        .filter(Message_Chat.read == 1) \
+        .first()
+
+    if get_msg_post:
+
+        get_msg_post.read = 0
+
+        db.session.add(get_msg_post)
+        db.session.commit()
 
     return jsonify({
-        "messagescount": gnotifications,
+        "status": 'success',
     })
+
 
 
 @message.route('/count', methods=['GET'])
@@ -65,7 +75,9 @@ def message_msg_sidebar():
         .filter(or_(Message_Chat.user_one_uuid == current_user.uuid,
                     Message_Chat.user_two_uuid == current_user.uuid)) \
         .distinct(Message_Chat.post_id) \
+        .order_by(Message_Chat.post_id.desc()) \
         .all()
+
     msg_schema = Message_Chat_Schema(many=True)
 
     return jsonify(msg_schema.dump(get_msgs_side))
@@ -101,6 +113,7 @@ def message_msg_comments(post_id):
         .filter(or_(Message_Chat.user_one_uuid == current_user.uuid,
                     Message_Chat.user_two_uuid == current_user.uuid,
                     Message_Chat.mod_uuid == current_user.uuid,
+
                     )
                 ) \
         .filter(Message_Chat.post_id == post_id) \
@@ -109,12 +122,12 @@ def message_msg_comments(post_id):
         return jsonify({"status": "unauthorized"})
     else:
         get_msg_post_comments = db.session \
-            .query(Message_Comment) \
-            .filter(Message_Comment.post_id == post_id) \
-            .order_by(Message_Comment.timestamp.desc()) \
+            .query(Message_Chat) \
+            .filter(Message_Chat.post_id == post_id) \
+            .order_by(Message_Chat.timestamp.desc()) \
             .all()
 
-        comments_schema = Message_Comment_Schema(many=True)
+        comments_schema = Message_Chat_Schema(many=True)
         return jsonify(comments_schema.dump(get_msg_post_comments))
 
 
@@ -138,12 +151,12 @@ def message_msg_comments_orderuuid(order_uuid):
 
     if get_msg_post is not None:
         get_msg_post_comments = db.session \
-            .query(Message_Comment) \
-            .filter(Message_Comment.post_id == get_msg_post.post_id) \
-            .order_by(Message_Comment.timestamp.desc()) \
+            .query(Message_Chat) \
+            .filter(Message_Chat.post_id == get_msg_post.post_id) \
+            .order_by(Message_Chat.timestamp.desc()) \
             .all()
 
-        comments_schema = Message_Comment_Schema(many=True)
+        comments_schema =Message_Chat_Schema(many=True)
         return jsonify(comments_schema.dump(get_msg_post_comments))
 
 
@@ -151,7 +164,7 @@ def message_msg_comments_orderuuid(order_uuid):
 @login_required
 def message_create():
     """
-    Creates a New Message
+    Creates a New Message.  No previous message can exist.
     :return:
     """
     now = datetime.utcnow()
@@ -160,7 +173,7 @@ def message_create():
     get_user_two_uuid = request.json["user_two_uuid"]
     get_body = request.json["body"]
     if get_user_two_uuid == current_user.uuid:
-        return jsonify({"error": "Cannot message yourself"}), 409
+        return jsonify({"error": "Cannot message yourself"}), 200
 
     if "item_uuid" in request.json:
         item_uuid = request.json["item_uuid"]
@@ -217,8 +230,16 @@ def message_create():
                 body=get_body,
                 post_id=newpost.id,
                 admin=0,
-                read=0
+                read=1
             )
+            create_new_notification = Message_Notifications(
+                type_of_notification=1,
+                username=get_market_item.vendor_display_name,
+                user_uuid=get_market_item.vendor_uuid,
+                timestamp=now,
+                read=1,
+            )
+
         else:
             create_new_message = Message_Chat(
                 timestamp=now,
@@ -233,25 +254,55 @@ def message_create():
                 body=get_body,
                 post_id=None,
                 admin=0,
-                read=0
+                read=1
             )
-
+            create_new_notification = Message_Notifications(
+                type_of_notification=1,
+                username=get_user_two_name_display,
+                user_uuid=get_user_two_uuid,
+                timestamp=now,
+                read=1,
+            )
+        
+        # create new notification
+        
+        db.session.add(create_new_notification)
         db.session.add(create_new_message)
         db.session.commit()
 
     else:
-        create_new_comment = Message_Comment(
-            body=get_body,
+
+        create_new_message = Message_Chat(
             timestamp=now,
-            user_one_uuid=current_user.uuid,
-            user_one=current_user.display_name,
-            post_id=get_post.post_id,
+            order_uuid=order_uuid,
+            item_uuid=item_uuid,
+            user_one=get_market_item.vendor_display_name,
+            user_one_uuid=get_market_item.vendor_uuid,
+            user_two=current_user.display_name,
+            user_two_uuid=current_user.uuid,
             mod_name=None,
             mod_uuid=None,
+            body=get_body,
+            post_id=get_post.post_id,
+            admin=0,
+            read=1
         )
+        create_new_notification = Message_Notifications(
+            type_of_notification=1,
+            username=get_market_item.vendor_display_name,
+            user_uuid=get_market_item.vendor_uuid,
+            timestamp=now,
+            read=1,
+        )
+        
+        # set main post to unread
+        get_post.read = 1
 
-        db.session.add(create_new_comment)
+        db.session.add(get_post)
+        db.session.add(create_new_notification)
+        db.session.add(create_new_message)
         db.session.commit()
+        
     return jsonify({"status": "Success"})
 
 
@@ -259,7 +310,7 @@ def message_create():
 @login_required
 def message_comment(post_id):
     """
-    Creates a New comment
+    Creates a New comment on an existing post
     :return:
     """
     now = datetime.utcnow()
@@ -272,52 +323,85 @@ def message_comment(post_id):
 
     # get ori post
     get_post = db.session \
-        .query(Message_Chat) \
-        .filter(Message_Chat.post_id == post_id) \
+        .query(Message_Post) \
+        .filter(Message_Post.id == post_id) \
         .first()
-
-    # set mod variables
-    if current_user.admin_role > 2:
-        mod_uuid = current_user.uuid
-    else:
-        mod_uuid = None
-
+    get_other_comment = db.session\
+        .query(Message_Chat)\
+        .filter(or_(Message_Chat.user_one_uuid == current_user.uuid,
+                    Message_Chat.user_two_uuid == current_user.uuid,
+                    ))\
+        .first()
     # see if one of the two users is in the convo or else cant talk in it
-    if get_post.user_one_uuid == current_user.uuid \
-            or get_post.user_two_uuid == current_user.uuid \
-            or get_post.mod_uuid == current_user.uuid:
+    if get_other_comment.user_one_uuid == current_user.uuid \
+            or get_other_comment.user_two_uuid == current_user.uuid \
+            or get_other_comment.mod_uuid == current_user.uuid:
 
-        # get user and ensure it exists
-        get_user_name = db.session \
-            .query(Auth_User) \
-            .filter(Auth_User.uuid == current_user.uuid) \
-            .first()
+        if get_other_comment.user_one_uuid == current_user.uuid:
+            get_comment_user_one_name = current_user.uuid
+            get_comment_user_one_uuid = current_user.display_name
+            get_comment_user_two_name = None
+            get_comment_user_two_uuid = None
+        else:
+            get_comment_user_one_name = None
+            get_comment_user_one_uuid = None
+            get_comment_user_two_name = current_user.uuid
+            get_comment_user_two_uuid = current_user.display_name
+
         if current_user.admin_role < 2:
+            
             # if user isnt an admin
-            create_new_comment = Message_Comment(
-                body=get_body,
+            create_new_comment = Message_Chat(
                 timestamp=now,
-                user_one_uuid=get_user_name.uuid,
-                user_one=get_user_name.display_name,
-                post_id=post_id,
+                order_uuid=get_other_comment.order_uuid,
+                item_uuid=get_other_comment.item_uuid,
+                user_one=get_comment_user_one_name,
+                user_one_uuid=get_comment_user_one_uuid,
+                user_two=get_comment_user_two_name,
+                user_two_uuid=get_comment_user_two_uuid,
                 mod_name=None,
                 mod_uuid=None,
+                body=get_body,
+                admin=0,
+                post_id=get_post.id,
+                read=1
             )
         else:
             # user is an admin
-            create_new_comment = Message_Comment(
-                body=get_body,
+            create_new_comment = Message_Chat(
                 timestamp=now,
-                user_one_uuid=None,
+                order_uuid=get_other_comment.order_uuid,
+                item_uuid=get_other_comment.item_uuid,
                 user_one=None,
-                post_id=post_id,
-                mod_name=None,
-                mod_uuid=mod_uuid,
+                user_one_uuid=None,
+                user_two=None,
+                user_two_uuid=None,
+                mod_name=current_user.display_name,
+                mod_uuid=current_user.uuid,
+                body=get_body,
+                admin=1,
+                post_id=get_post.id,
+                read=1
             )
-        # set it as unread for flagging notification
-        get_post.read = 1
 
+
+        create_new_notification_vendor = Message_Notifications(
+            type_of_notification=1,
+            username=get_comment_user_one_name,
+            user_uuid=get_comment_user_one_uuid,
+            timestamp=now,
+            read=1,
+        )
+        create_new_notification_customer = Message_Notifications(
+            type_of_notification=1,
+            username=get_comment_user_two_name,
+            user_uuid=get_comment_user_two_uuid,
+            timestamp=now,
+            read=1,
+        )
         # commit to db
+        db.session.add(create_new_notification_vendor)
+        db.session.add(create_new_notification_customer)
         db.session.add(get_post)
         db.session.add(create_new_comment)
         db.session.commit()
@@ -338,7 +422,6 @@ def create_new_post_dispute(order_uuid):
     It creates a generic message and  fills the post field.
 
     """
-
     now = datetime.utcnow()
 
     # see if a post already exists
@@ -381,6 +464,21 @@ def create_new_post_dispute(order_uuid):
             read=1
         )
 
+        create_new_notification_vendor = Message_Notifications(
+            type_of_notification=1,
+            username=get_order.vendor_user_name,
+            user_uuid=get_order.vendor_uuid,
+            timestamp=now,
+            read=1,
+        )
+        create_new_notification_customer = Message_Notifications(
+            type_of_notification=1,
+            username=get_order.customer_user_name,
+            user_uuid=get_order.customer_uuid,
+            timestamp=now,
+            read=1,
+        )
+        
         # update order to reflect post id and timer
         get_order.dispute_post_id = newpost.id
 
@@ -388,6 +486,8 @@ def create_new_post_dispute(order_uuid):
         get_order.disputed_timer = now
 
         # commit to database
+        db.session.add(create_new_notification_customer)
+        db.session.add(create_new_notification_vendor)
         db.session.add(get_order)
         db.session.add(create_new_message)
         db.session.commit()
