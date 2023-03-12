@@ -1,8 +1,6 @@
 
 import redis
 
-
-
 class ApplicationConfig:
     """
     Basic Configuration for a generic User
@@ -26,7 +24,6 @@ class ApplicationConfig:
 
     DEBUG = True
 
-   
     UPLOADED_FILES_DEST_ITEM = '/data/item'
     UPLOADED_FILES_DEST_USER = '/data/user'
 

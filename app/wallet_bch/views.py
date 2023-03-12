@@ -165,8 +165,8 @@ def bch_send():
                 db.session.commit()
                 return jsonify({"status": "request sent to wallet"}), 200
             else:
-                return jsonify({"error": f"Cannot withdraw amount less than wallet_btc fee: {str(wfee)}"}), 409
+                return jsonify({"error": f"Cannot withdraw amount less than wallet_btc fee: {str(wfee)}"}), 200
         else:
-            return jsonify({"error": f"Cannot withdraw amount less than wallet_btc fee: {str(wfee)}"}), 409
+            return jsonify({"error": f"Cannot withdraw amount less than wallet_btc fee: {str(wfee)}"}), 200
     
 

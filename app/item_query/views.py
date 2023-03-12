@@ -1,5 +1,4 @@
 from flask import request,  jsonify
-from sqlalchemy import func
 from app.item_query import itemquery
 from app import db
 

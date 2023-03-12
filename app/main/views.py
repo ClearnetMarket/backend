@@ -14,14 +14,14 @@ def static_from_root():
         disallow('/wallet_bch'),
         disallow('/wallet_xmr'),
         disallow('/admin'),
-        
+
     ])))
 
 
 @app.route('/index', methods=['GET'])
 @app.route('/', methods=['GET'])
 def index():
-    return jsonify({"ping": "pong"}), 200
+    return jsonify({"Status": "Api is online"}), 200
 
 
 @app.route('/csrf', methods=['GET'])

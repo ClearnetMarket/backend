@@ -394,7 +394,7 @@ def vendor_get_address(vendoruuid):
                 "zipcode": zipcode,
             })
         else:
-            return jsonify({"status": 'error'}), 409
+            return jsonify({"status": 'error'}), 200
 
 
 @vendor.route('/update/defaultaddress', methods=['PUT'])
@@ -434,9 +434,9 @@ def vendor_update_address():
                 
                 return jsonify({"status": 'success'})
             else:
-                return jsonify({"status": 'error'}), 409
+                return jsonify({"status": 'error'}), 200
         else:
-            return jsonify({"status": 'error'}), 409
+            return jsonify({"status": 'error'}), 200
 
 
 @vendor.route('/itemsforsale/<string:vendor_uuid>', methods=['GET'])

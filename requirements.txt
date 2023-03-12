@@ -5,11 +5,9 @@ flask-qrcode
 flask-login
 flask-moment
 flask-paranoid
-flask_mail
 flask-bcrypt
 flask-cors
 flask_marshmallow
-Flask-WTF
 gunicorn
 python-dateutil
 python-dotenv
@@ -19,3 +17,5 @@ qrcode[pil]
 qrcode
 redis
 sqlalchemy
+flask_wtf
+flask_mail

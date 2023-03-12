@@ -5,7 +5,7 @@ from operator import or_
 from flask import request, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import or_
-from datetime import datetime, timedelta
+from datetime import  timedelta
 from app.orders import orders
 from app import db
 
@@ -90,7 +90,6 @@ def get_order_autofinalize_time(uuid):
             return jsonify({"status": "error"}), 200
 
 
-
 @orders.route('/count', methods=['GET'])
 @login_required
 def get_user_orders_count():
@@ -166,7 +165,7 @@ def order_feedback_score(uuid):
                     vendor_rating = request.json["vendorrating"]
                 else:
                     return jsonify({"status": "error"}), 200
-            except Exception as e:
+            except Exception:
            
                 return jsonify({"status": "error"}), 200
 
@@ -361,7 +360,6 @@ def order_vendor_feedback_review(uuid):
       
         # if order exists else
         if get_order:
-   
             try:
                 if request:
                     review_by_user = request.json["review"]

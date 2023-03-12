@@ -122,13 +122,8 @@ app/static/bootstrap
 /app/static/javascriptaddons/
 
 .idea
-/config.py
-instance/config.py
 .idea/
-addamazonisn.py
 /passwords.py
-config.py
-crawlerparts/
 crons.txt
 getnewitems.py
 helperfunctions/
@@ -137,4 +132,4 @@ tools/
 updateolditemscrawler.py
 nginx.txt
 
-app/node_modules/
+/settings_production.py

@@ -14,6 +14,7 @@ from app.classes.service import \
     Service_Ticket_Schema
 from app.classes.auth import Auth_User
 from app.classes.user_orders import User_Orders
+
 # End Models
 
 
@@ -43,13 +44,11 @@ def ticket_mark_as_read(ticketuuid):
     return jsonify({"status": "success"})
 
 
-
-
 @customerservice.route('/tickets', methods=['GET'])
 @login_required
 def user_get_tickets():
     """
-    Gets the issues for the sidebar so they can click and view previous issues
+    Gets the issues for the sidebar they can click and view previous issues
     :return:
     """
 
@@ -68,7 +67,7 @@ def user_get_tickets():
 @login_required
 def user_get_ticket_count():
     """
-    Gets the issues for the sidebar so they can click and view previous issues
+    Gets the issues for the sidebar they can click and view previous issues
     :return:
     """
 

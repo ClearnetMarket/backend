@@ -364,20 +364,20 @@ def cart_calculate_item_shipping_and_price_all(userid):
             # convert it to btc cash
             xmr_ship_price = Decimal(convert_local_to_xmr(amount=shipprice, currency=getitem.currency))
             # get it formatted correctly
-            xmr_shipprice_formatted = (floating_decimals(xmr_ship_price, 12))
+            xmr_shipprice_formatted = floating_decimals(xmr_ship_price, 12)
             # times the shipping price times quantity
             xmr_shippingtotal = Decimal(f.quantity_of_item) * Decimal(xmr_shipprice_formatted)
             # return shipping price
-            xmr_ship_price_final = (floating_decimals(xmr_shippingtotal, 12))
+            xmr_ship_price_final = floating_decimals(xmr_shippingtotal, 12)
             # set variable in database
             f.final_shipping_price_xmr = xmr_ship_price_final
 
             # PRICING
             xmr_itemprice = Decimal(getitem.price)
             xmr_price_per_item = Decimal(convert_local_to_xmr(amount=xmr_itemprice, currency=getitem.currency))
-            xmr_price_formatted = (floating_decimals(xmr_price_per_item, 12))
+            xmr_price_formatted = floating_decimals(xmr_price_per_item, 12)
             xmr_pricing_multiply = Decimal(f.quantity_of_item) * Decimal(xmr_price_formatted)
-            xmr_price_final = (floating_decimals(xmr_pricing_multiply, 12))
+            xmr_price_final = floating_decimals(xmr_pricing_multiply, 12)
             f.final_price_xmr = xmr_price_final
 
         db.session.add(f)
@@ -515,12 +515,13 @@ def cart_add_to_shopping_cart(itemuuid):
     """
     Adds item to shopping cart
     """
-
+    print("here")
     get_item_for_sale = db.session \
         .query(Item_MarketItem) \
         .filter_by(uuid=itemuuid) \
         .first()
     if get_item_for_sale.vendor_uuid == current_user.uuid:
+        print("here")
         return jsonify({'error': 'Can not buy your own item.'}), 200
     # see if in shopping cart
 
@@ -529,9 +530,10 @@ def cart_add_to_shopping_cart(itemuuid):
         .filter(Checkout_CheckoutShoppingCart.item_uuid == itemuuid) \
         .first() is not None
 
-    if see_if_item_in_cart is False:
-     
-    
+    if see_if_item_in_cart is True:
+        return jsonify({'error': 'Item is in cart already.'}), 200
+    else:
+
         if get_item_for_sale.shipping_free is True:
             shipping_selected = 1
             shipinfodesc = f'Takes {get_item_for_sale.shipping_day_0} days for Free'
@@ -600,9 +602,7 @@ def cart_add_to_shopping_cart(itemuuid):
         cart_calculate_total_price(new_shopping_cart_item.customer_id)
         db.session.commit()
         return jsonify({'status': 'success'})
-    else:
 
-        return jsonify({'error': 'Item is in cart already.'}), 200
 
 
 @checkout.route('/data/incart', methods=['GET'])
@@ -709,7 +709,6 @@ def data_shopping_cart_total():
         total_shipping_price_of_items_with_quantity = sum(total_shipping_cart)
 
         total = (total_shipping_price_of_items_with_quantity + total_price_of_items_with_quantity)
-        
         return jsonify({
             'total_items': total_items_in_cart,
             'total_shipping': total_shipping_price_of_items_with_quantity,

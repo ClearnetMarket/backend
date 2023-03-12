@@ -28,7 +28,6 @@ from app.wallet_xmr.wallet_xmr_work import xmr_create_wallet
 from app.auth.profileimage.image_forms import image1
 
 @auth.route("/whoami", methods=["GET"])
-@login_required
 def check_session():
     """
     Checks auth token to ensure user is authenticated
@@ -63,11 +62,9 @@ def check_session():
                 'token': user.api_key
             }), 200
         else:
-          
-            return jsonify({"status": "error. user not found"}), 200
+            return jsonify({"status": "error. user not found"}), 401
     else:
-       
-        return jsonify({"status": "error"}), 200
+        return jsonify({"status": "error"}), 401
 
 
 @auth.route("/amiconfirmed", methods=["GET"])
@@ -80,6 +77,7 @@ def check_confirmed():
         .query(Auth_User)\
         .filter(Auth_User.id == current_user.id)\
         .first()
+
     if user.confirmed == 0:
         confirmed = False
     else:
@@ -180,13 +178,13 @@ def register_user():
         .filter_by(email=email)\
         .first() is not None
     if user_exists_email:
-        return jsonify({"error": "Email already exists"}), 409
+        return jsonify({"error": "Email already exists"}), 200
     user_exists_username = db.session\
         .query(Auth_User)\
         .filter_by(username=username)\
         .first() is not None
     if user_exists_username:
-        return jsonify({"error": "User already exists"}), 409
+        return jsonify({"error": "User already exists"}), 200
 
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
@@ -416,17 +414,17 @@ def confirm_seed():
                 word4 = str(request.json["word4"]).replace(" ", "")
                 word5 = str(request.json["word5"]).replace(" ", "")
                 if word0 != userseed.word00:
-                    return jsonify({"error 1": "Seed does not match"}), 409
+                    return jsonify({"error 1": "Seed does not match"}), 200
                 if word1 != userseed.word01:
-                    return jsonify({"error 2": "Seed does not match"}), 409
+                    return jsonify({"error 2": "Seed does not match"}), 200
                 if word2 != userseed.word02:
-                    return jsonify({"error 3": "Seed does not match"}), 409
+                    return jsonify({"error 3": "Seed does not match"}), 200
                 if word3 != userseed.word03:
-                    return jsonify({"error": "Seed does not match 4"}), 409
+                    return jsonify({"error": "Seed does not match 4"}), 200
                 if word4 != userseed.word04:
-                    return jsonify({"error": "Seed does not match 5"}), 409
+                    return jsonify({"error": "Seed does not match 5"}), 200
                 if word5 != userseed.word05:
-                    return jsonify({"error": "Seed does not match 6"}), 409
+                    return jsonify({"error": "Seed does not match 6"}), 200
 
                 user.confirmed = 1
 
@@ -436,7 +434,7 @@ def confirm_seed():
                     'status': 'success'
                 }), 200
             else:
-                return jsonify({"error": "Seed does not exist"}), 409
+                return jsonify({"error": "Seed does not exist"}), 200
 
 
 @auth.route('/unlock-account', methods=['POST'])
@@ -476,7 +474,7 @@ def retrieve_seed_to_unlock_account():
             current_user.is_active()
             return jsonify({'status': 'Account Unlocked'}), 200
         else:
-            return jsonify({'error': 'Incorrect Seed'}), 409
+            return jsonify({'error': 'Incorrect Seed'}), 200
 
 
 @auth.route('/change-password', methods=['POST'])
@@ -499,7 +497,7 @@ def change_password():
             return jsonify({"status": "success"}), 200
 
         else:
-            return jsonify({"error": "Incorrect Passwords"}), 409
+            return jsonify({"error": "Incorrect Passwords"}), 200
 
 
 @auth.route('/change-pin', methods=['POST'])
@@ -633,11 +631,6 @@ def change_profile_info():
 
         return jsonify({"status": "Success"}), 200
 
-###
-# PROFILE
-####
-
-
 @auth.route('/userbio', methods=['GET'])
 @login_required
 def user_profile_info():
@@ -664,7 +657,7 @@ def create_profile_image(uuid):
             .query(Auth_User)\
             .filter_by(api_key=api_key)\
             .first()
-       
+
         if user:
             # node location
             getimagesubfolder = '1'
@@ -680,8 +673,6 @@ def create_profile_image(uuid):
             image1(formdata=image_main,
                     user=user,
                     directory_user_profile=directory_user_profile)
-        
-         
 
             db.session.add(user)
             db.session.commit()

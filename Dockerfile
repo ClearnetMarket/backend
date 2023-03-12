@@ -4,6 +4,8 @@ ENV PYTHONFAULTHANDLER=1
 
 ENV PYTHONUNBUFFERED=1
 
+ENV MODE=DEVELOPMENT
+
 RUN mkdir -p /app
 
 COPY requirements.txt /app

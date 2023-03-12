@@ -229,7 +229,7 @@ def userdata_get_all_feedback(user_uuid):
             .filter_by(customer_uuid=user_uuid)\
             .filter_by(type_of_feedback=2)\
             .order_by(Feedback_Feedback.timestamp.desc())\
-            .limit(100)
+            .limit(10)
             
         user_schema = Feedback_Feedback_Schema(many=True)
         return jsonify(user_schema.dump(user_feedback))

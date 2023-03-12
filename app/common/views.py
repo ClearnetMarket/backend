@@ -1,13 +1,11 @@
 from app.classes.item import Item_MarketItem
 from app.classes.auth import Auth_User
-from app import UPLOADED_FILES_DEST_ITEM, db, UPLOADED_FILES_DEST_USER
+from app import db, UPLOADED_FILES_DEST_USER
 from app.common.functions import itemlocation
-from flask import url_for, send_from_directory
+from flask import send_from_directory
 from app.common import common
 from app import UPLOADED_FILES_DEST_ITEM
 import os
-
-
 
 
 @common.route('/item/<string:uuid>/<path:filename>')

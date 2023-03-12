@@ -3,7 +3,7 @@ from flask import Flask, jsonify, json
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
-from flask_mail import Mail
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from flask_login import LoginManager
@@ -11,26 +11,22 @@ from sqlalchemy.orm import sessionmaker
 from werkzeug.routing import BaseConverter
 import decimal
 from flask_wtf.csrf import CSRFProtect
+from config import load_config
 
-try:
-    from instance.config import ApplicationConfig
-except Exception as e:
-    from local_settings import ApplicationConfig
-    
-    
+
+ApplicationConfig = load_config()
+
+
+
 app = Flask(__name__,
             static_url_path='',
             static_folder='static',
             template_folder='templates')
-
-
 app.config.from_object(ApplicationConfig)
-
 session = sessionmaker()
 
 check_enviroment = ApplicationConfig.CURRENT_SETTINGS
 print(f"starting server with {check_enviroment} settings")
-
 
 class RegexConverter(BaseConverter):
     def __init__(self, url_map, *items):
@@ -71,12 +67,13 @@ app.config['SESSION_USE_SIGNER'] = ApplicationConfig.SESSION_USE_SIGNER
 app.config['SESSION_REDIS'] = ApplicationConfig.SESSION_REDIS
 app.config['ORIGIN_URL'] = ApplicationConfig.ORIGIN_URL
 app.config['CURRENT_SETTINGS'] = ApplicationConfig.CURRENT_SETTINGS
+app.config['SQLALCHEMY_DATABASE_URI'] = ApplicationConfig.SQLALCHEMY_DATABASE_URI
+
 
 session.configure(bind=ApplicationConfig.SQLALCHEMY_DATABASE_URI)
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 server_session = Session(app)
-mail = Mail(app)
 ma = Marshmallow(app)
 #csrf = CSRFProtect(app)
 
@@ -89,7 +86,7 @@ login_manager.anonymous_user = "Guest"
 def load_user_from_request(request):
 
     from app.classes.auth import Auth_User
-    # first, try to login using the api_key url arg
+    # first, try to log in using the api_key url arg
     api_key = request.args.get('api_key')
     if api_key:
         user = db.session\
@@ -98,7 +95,7 @@ def load_user_from_request(request):
             .first()
         if user:
             return user
-    # next, try to login using Basic Auth
+    # next, try to log in using Basic Auth
     api_key_auth = request.headers.get('Authorization')
     if api_key_auth:
         api_key = api_key_auth.replace('bearer ', '', 1)
@@ -108,7 +105,7 @@ def load_user_from_request(request):
             .first()
         if user:
             return user
- 
+
     return None
 
 
