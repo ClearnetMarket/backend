@@ -247,8 +247,6 @@ def xmr_send_coin_to_escrow(amount,  user_id, order_uuid):
                             order_uuid=order_uuid,
                             item_uuid=None
                             )
-    else:
-        pass
 
 
 def xmr_send_coin_to_user(amount, user_id, order_uuid):

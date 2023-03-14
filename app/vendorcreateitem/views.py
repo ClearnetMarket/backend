@@ -14,7 +14,6 @@ from app.classes.auth import Auth_User
 from app.classes.models import *
 from app.classes.category import Category_Categories, Category_Categories_Schema
 from app.vendor.images.image_forms import image1, image2, image3, image4
-from app.vendor.item_management.check_online import put_online_allowed
 
 
 @vendorcreateitem.route('/create-item-main/<string:uuid>', methods=['POST'])
@@ -107,12 +106,11 @@ def create_item_main(uuid):
         international = False
         
     else:
-        if request.json["international"] == True:
+        if request.json["international"]:
             international = True
         else:
             international = False
 
-            
     # Description
     item_description = request.json["item_description"]
 
@@ -124,29 +122,25 @@ def create_item_main(uuid):
  
     # Category
     if request.json["category_id_0"] == '':
-        get_category_query = db.session\
-            .query(Category_Categories)\
-            .filter(Category_Categories.value == category)\
-            .first()
-        category_value = 0
-        category_name = 'Category'
-        return jsonify({"status": 'error', })
-    else:
-        category = request.json["category_id_0"]
-        get_category_query = db.session\
-            .query(Category_Categories)\
-            .filter(Category_Categories.value == category)\
-            .first()
-        category_value = get_category_query.value
-        category_name = get_category_query.name
+        return jsonify({"error": 'Error:  Could not find category' })
 
-    # origin country name
+    category = request.json["category_id_0"]
+
+    get_category_query = db.session\
+        .query(Category_Categories)\
+        .filter(Category_Categories.value == category)\
+        .first()
+    category_value = get_category_query.value
+    category_name = get_category_query.name
+
+
     currency_list = db.session\
         .query(Query_Country)\
         .filter(Query_Country.value == current_user.country)\
         .first()
     item_country_name = currency_list.name
-    # create image of item in database
+
+
     item = db.session\
         .query(Item_MarketItem)\
         .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id)\
@@ -184,7 +178,6 @@ def create_item_main(uuid):
     item.origin_country_name = item_country_name
     item.origin_country = current_user.country
 
-   
     # add  to database
     db.session.add(item)
     db.session.commit()
@@ -202,73 +195,70 @@ def create_item_main(uuid):
 def create_item_images(uuid):
     """
     Creates the Vendor images under form uploads
-    uses its own api key authorization system ..not sure why after going back
+    uses its own api key authorization system.
     """
     api_key_auth = request.headers.get('Authorization')
-    if api_key_auth:
-        api_key = api_key_auth.replace('bearer ', '', 1)
-        get_user = db.session\
-            .query(Auth_User)\
-            .filter_by(api_key=api_key)\
-            .first()
-        see_if_user_allowed = db.session\
-                                  .query(Item_MarketItem)\
-                                  .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == get_user.id)\
-                                  .first() is not None
-        if see_if_user_allowed:
+    if api_key_auth is None:
+        return jsonify({"error": 'Error: Unauthorized'}), 200
+    api_key = api_key_auth.replace('bearer ', '', 1)
+    get_user = db.session\
+        .query(Auth_User)\
+        .filter_by(api_key=api_key)\
+        .first()
+    see_if_user_allowed = db.session\
+                              .query(Item_MarketItem)\
+                              .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == get_user.id)\
+                              .first()
+    if see_if_user_allowed is None:
+        return jsonify({"error": 'Error: Unauthorized'}), 200
 
-            item = db.session\
-                .query(Item_MarketItem)\
-                .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == get_user.id) \
-                .first()
-            # node location
-            getimagesubfolder = itemlocation(x=item.id)
-            item.node = getimagesubfolder
-            # directory of image
-            directoryifitemlisting = os.path.join(UPLOADED_FILES_DEST_ITEM,
-                                                  getimagesubfolder,
-                                                  (str(item.uuid)))
-      
-            # create the image
-            try:
-                mkdir_p(directoryifitemlisting)
-            except Exception as e:
-                pass
-            try:
-              
-                image_main = request.files['image_main']
-                image1(formdata=image_main, item=item,
-                       directoryifitemlisting=directoryifitemlisting)
-           
-            except Exception as e:
-                pass
-            try:
-                image_two = request.files['image_two']
-                image2(formdata=image_two, item=item,
-                       directoryifitemlisting=directoryifitemlisting)
-            except:
-                pass
-            try:
-                image_three = request.files['image_three']
-                image3(formdata=image_three, item=item,
-                       directoryifitemlisting=directoryifitemlisting)
-            except:
-                pass
-            try:
+    item = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == get_user.id) \
+        .first()
 
-                image_four = request.files['image_four']
-                image4(formdata=image_four,  item=item,
-                       directoryifitemlisting=directoryifitemlisting)
-            except:
-                pass
-            db.session.add(item)
-            db.session.commit()
+    # node location
+    getimagesubfolder = itemlocation(x=item.id)
+    item.node = getimagesubfolder
 
-            return jsonify({"status": 'success'})
-        else:
-            return jsonify({"error": 'no_api_key'})
-    else:
-        return jsonify({"error": 'no_api_key'})
+    # directory of image
+    directoryifitemlisting = os.path.join(UPLOADED_FILES_DEST_ITEM,
+                                          getimagesubfolder,
+                                          (str(item.uuid)))
+
+    # create the image folder
+    try:
+        mkdir_p(directoryifitemlisting)
+    except:
+        pass
+    try:
+        image_main = request.files['image_main']
+        image1(formdata=image_main, item=item,
+               directoryifitemlisting=directoryifitemlisting)
+    except:
+        pass
+    try:
+        image_two = request.files['image_two']
+        image2(formdata=image_two, item=item,
+               directoryifitemlisting=directoryifitemlisting)
+    except:
+        pass
+    try:
+        image_three = request.files['image_three']
+        image3(formdata=image_three, item=item,
+               directoryifitemlisting=directoryifitemlisting)
+    except:
+        pass
+    try:
+        image_four = request.files['image_four']
+        image4(formdata=image_four,  item=item,
+               directoryifitemlisting=directoryifitemlisting)
+    except:
+        pass
+    db.session.add(item)
+    db.session.commit()
+
+    return jsonify({"status": 'success'})
 
 
 @vendorcreateitem.route('/delete-image/<string:uuid>/<string:imagename>', methods=['DELETE'])
@@ -285,174 +275,173 @@ def delete_item_images(uuid, imagename):
         .query(Item_MarketItem)\
         .filter_by(uuid=uuid)\
         .first()
-    if item is not None:
-        if item.vendor_id == current_user.id:
-            # get folder for item id
-            specific_folder = str(item.uuid)
-            # get node location
-            getitemlocation = itemlocation(x=item.id)
-            # get path of item on folder
-            pathtofile = os.path.join(
-                        UPLOADED_FILES_DEST_ITEM,
-                        getitemlocation,
-                        specific_folder, 
-                        imagename
-                        )
+    if item is  None:
+        return jsonify({"error": 'Error: Unauthorized'}), 200
+    if item.vendor_id != current_user.id:
+        return jsonify({"error": 'Error: Unauthorized'}), 200
+    # get folder for item id
+    specific_folder = str(item.uuid)
+    # get node location
+    getitemlocation = itemlocation(x=item.id)
+    # get path of item on folder
+    pathtofile = os.path.join(
+                UPLOADED_FILES_DEST_ITEM,
+                getitemlocation,
+                specific_folder,
+                imagename
+                )
 
-            ext_1 = '_225x.jpg'
-            ext_2 = '_500x.jpg'
-            file0 = pathtofile + ".jpg"
-            file1 = pathtofile + ext_1
-            file2 = pathtofile + ext_2
+    if len(imagename) < 20:
+        return jsonify({"error": 'Error: Incorrent image Name'}), 200
 
-            if len(imagename) > 20:
-                if item.image_one_server == imagename:
-                    try:
-                        os.remove(file0)
-                        os.remove(file1)
-                        os.remove(file2)
-                    except:
-                        pass
-                    item.image_one_server = None
-                    item.image_one_url_250 = None
-                    item.image_one_url_500 = None
-                    db.session.add(item)
-                    db.session.commit()
-                if item.image_two_server == imagename:
-                    try:
-                        os.remove(file0)
-                        os.remove(file1)
-                        os.remove(file2)
-                    except:
-                        pass
-                    item.image_two_server = None
-                    item.image_two_url_250 = None
-                    item.image_two_url_500 = None
-                    db.session.add(item)
-                    db.session.commit()
-                if item.image_three_server == imagename:
-                    try:
-                        os.remove(file0)
-                        os.remove(file1)
-                        os.remove(file2)
-                    except:
-                        pass
-                    item.image_three_server = None
-                    item.image_three_url_250 = None
-                    item.image_three_url_500 = None
-                    db.session.add(item)
-                    db.session.commit()
-                if item.image_four_server == imagename:
-                    try:
-                        os.remove(file0)
-                        os.remove(file1)
-                        os.remove(file2)
-                    except:
-                        pass
-                    item.image_four_server = None
-                    item.image_four_url_250 = None
-                    item.image_four_url_500 = None
-                    db.session.add(item)
-                    db.session.commit()
+    ext_1 = '_225x.jpg'
+    ext_2 = '_500x.jpg'
+    file0 = pathtofile + ".jpg"
+    file1 = pathtofile + ext_1
+    file2 = pathtofile + ext_2
 
-                return jsonify({"status": 'Success'})
-            else:
-                return jsonify({"error": 'No Images match description'})
-        else:
-            return jsonify({"error": 'Not Authorized'})
-    else:
-        return jsonify({"error": 'Large Error'})
+    if item.image_one_server == imagename:
+        try:
+            os.remove(file0)
+            os.remove(file1)
+            os.remove(file2)
+        except:
+            pass
+        item.image_one_server = None
+        item.image_one_url_250 = None
+        item.image_one_url_500 = None
+        db.session.add(item)
+        db.session.commit()
+    if item.image_two_server == imagename:
+        try:
+            os.remove(file0)
+            os.remove(file1)
+            os.remove(file2)
+        except:
+            pass
+        item.image_two_server = None
+        item.image_two_url_250 = None
+        item.image_two_url_500 = None
+        db.session.add(item)
+        db.session.commit()
+    if item.image_three_server == imagename:
+        try:
+            os.remove(file0)
+            os.remove(file1)
+            os.remove(file2)
+        except:
+            pass
+        item.image_three_server = None
+        item.image_three_url_250 = None
+        item.image_three_url_500 = None
+        db.session.add(item)
+        db.session.commit()
+    if item.image_four_server == imagename:
+        try:
+            os.remove(file0)
+            os.remove(file1)
+            os.remove(file2)
+        except:
+            pass
+        item.image_four_server = None
+        item.image_four_url_250 = None
+        item.image_four_url_500 = None
+        db.session.add(item)
+        db.session.commit()
+
+    return jsonify({"status": 'Success'})
 
 
 @vendorcreateitem.route('/create-item', methods=['POST'])
 @login_required
 def create_item():
-    if request.method == 'POST':
-        now = datetime.utcnow()
-        see_if_empty_item = db.session\
-            .query(Item_MarketItem)\
-            .filter(Item_MarketItem.vendor_id == current_user.id, Item_MarketItem.item_title == '')\
-            .first()
 
-        if see_if_empty_item:
-            return jsonify({"status": 'success',
-                            'item_id': see_if_empty_item.uuid})
-        else:
-            createnewitemtemp = Item_MarketItem(
-                created=now,
-                node=1,
+    now = datetime.utcnow()
+    see_if_empty_item = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.vendor_id == current_user.id, Item_MarketItem.item_title == '')\
+        .first()
 
-                vendor_name=current_user.username,
-                vendor_id=current_user.id,
-                vendor_uuid=current_user.uuid,
-                vendor_display_name=current_user.display_name,
+    if see_if_empty_item:
+        return jsonify({"status": 'success',
+                        'item_id': see_if_empty_item.uuid})
 
-                item_title='',
-                item_count=0,
-                item_description='',
-                item_condition=0,
-                keywords='',
-                category_name_0='',
-                category_id_0=0,
+    createnewitemtemp = Item_MarketItem(
+        created=now,
+        node=1,
 
-                price=0,
-                currency=current_user.currency,
-                currency_symbol='',
+        vendor_name=current_user.username,
+        vendor_id=current_user.id,
+        vendor_uuid=current_user.uuid,
+        vendor_display_name=current_user.display_name,
 
-                digital_currency_1=0,
-                digital_currency_2=0,
-                digital_currency_3=0,
+        item_title='',
+        item_count=0,
+        item_description='',
+        item_condition=0,
+        keywords='',
+        category_name_0='',
+        category_id_0=0,
 
-                shipping_free=False,
-                shipping_two=False,
-                shipping_three=False,
+        price=0,
+        currency=current_user.currency,
+        currency_symbol='',
 
-                shipping_day_0=0,
-                shipping_price_2=0,
-                shipping_day_2=0,
-                shipping_info_2='',
-                shipping_price_3=0,
-                shipping_info_3='',
-                shipping_day_3=0,
+        digital_currency_1=0,
+        digital_currency_2=0,
+        digital_currency_3=0,
 
-                image_one_url_250=None,
-                image_two_url_250=None,
-                image_three_url_250=None,
-                image_four_url_250=None,
+        shipping_free=False,
+        shipping_two=False,
+        shipping_three=False,
 
-                image_one_url_500=None,
-                image_two_url_500=None,
-                image_three_url_500=None,
-                image_four_url_500=None,
+        shipping_day_0=0,
+        shipping_price_2=0,
+        shipping_day_2=0,
+        shipping_info_2='',
+        shipping_price_3=0,
+        shipping_info_3='',
+        shipping_day_3=0,
 
-                image_one_server=None,
-                image_two_server=None,
-                image_three_server=None,
-                image_four_server=None,
+        image_one_url_250=None,
+        image_two_url_250=None,
+        image_three_url_250=None,
+        image_four_url_250=None,
 
-                origin_country=current_user.country,
-                origin_country_name='',
-                international=False,
+        image_one_url_500=None,
+        image_two_url_500=None,
+        image_three_url_500=None,
+        image_four_url_500=None,
 
-                view_count=0,
-                item_rating=0,
-                review_count=0,
-                online=0,
-                total_sold=0
-            )
-            db.session.add(createnewitemtemp)
-            db.session.commit()
+        image_one_server=None,
+        image_two_server=None,
+        image_three_server=None,
+        image_four_server=None,
 
-            getimagesubfolder = itemlocation(x=createnewitemtemp.id)
-            directoryifitemlisting = os.path.join(
-                UPLOADED_FILES_DEST_ITEM,
-                getimagesubfolder,
-                (str(createnewitemtemp.uuid))
-            )
-            mkdir_p(path=directoryifitemlisting)
+        origin_country=current_user.country,
+        origin_country_name='',
+        international=False,
 
-            return jsonify({"status": 'success',
-                            'item_id': createnewitemtemp.uuid})
+        view_count=0,
+        item_rating=0,
+        review_count=0,
+        online=0,
+        total_sold=0
+    )
+    db.session.add(createnewitemtemp)
+    db.session.commit()
+
+    getimagesubfolder = itemlocation(x=createnewitemtemp.id)
+    directoryifitemlisting = os.path.join(
+        UPLOADED_FILES_DEST_ITEM,
+        getimagesubfolder,
+        (str(createnewitemtemp.uuid))
+    )
+    mkdir_p(path=directoryifitemlisting)
+
+    return jsonify({"status": 'success',
+                    'item_id': createnewitemtemp.uuid})
+
 
 @vendorcreateitem.route('/get-fields/<string:uuid>', methods=['GET'])
 @login_required
@@ -462,40 +451,39 @@ def get_item_fields(uuid):
     :param uuid:
     :return:
     """
-    if request.method == 'GET':
-        item = db.session\
-            .query(Item_MarketItem)\
-            .filter_by(uuid=uuid)\
-            .first()
 
-        return jsonify({
-            'item_title': item.item_title,
-            'item_count': item.item_count,
-            'item_description': item.item_description,
-            'item_condition': item.item_condition,
-            'keywords': item.keywords,
-            'category_name_0': item.category_name_0,
-            'category_id_0': item.category_id_0,
-            'price': item.price,
-            'currency': item.currency,
-            'currency_symbol': item.currency_symbol,
-            'digital_currency_1': item.digital_currency_1,
-            'digital_currency_2': item.digital_currency_2,
-            'digital_currency_3': item.digital_currency_3,
-            'shipping_free': item.shipping_free,
-            'shipping_two': item.shipping_two,
-            'shipping_three': item.shipping_three,
-            'shipping_day_0': item.shipping_day_0,
-            'shipping_info_0': item.shipping_info_0,
-            'shipping_price_2': item.shipping_price_2,
-            'shipping_day_2': item.shipping_day_2,
-            'shipping_info_2': item.shipping_info_2,
-            'shipping_price_3': item.shipping_price_3,
-            'shipping_day_3': item.shipping_day_3,
-            'shipping_info_3': item.shipping_info_3,
-            'international': item.international,
+    item = db.session\
+        .query(Item_MarketItem)\
+        .filter_by(uuid=uuid)\
+        .first()
 
-        })
+    return jsonify({
+        'item_title': item.item_title,
+        'item_count': item.item_count,
+        'item_description': item.item_description,
+        'item_condition': item.item_condition,
+        'keywords': item.keywords,
+        'category_name_0': item.category_name_0,
+        'category_id_0': item.category_id_0,
+        'price': item.price,
+        'currency': item.currency,
+        'currency_symbol': item.currency_symbol,
+        'digital_currency_1': item.digital_currency_1,
+        'digital_currency_2': item.digital_currency_2,
+        'digital_currency_3': item.digital_currency_3,
+        'shipping_free': item.shipping_free,
+        'shipping_two': item.shipping_two,
+        'shipping_three': item.shipping_three,
+        'shipping_day_0': item.shipping_day_0,
+        'shipping_info_0': item.shipping_info_0,
+        'shipping_price_2': item.shipping_price_2,
+        'shipping_day_2': item.shipping_day_2,
+        'shipping_info_2': item.shipping_info_2,
+        'shipping_price_3': item.shipping_price_3,
+        'shipping_day_3': item.shipping_day_3,
+        'shipping_info_3': item.shipping_info_3,
+        'international': item.international,
+    })
 
 
 @vendorcreateitem.route('/query/country', methods=['GET'])
@@ -504,13 +492,12 @@ def vendorcreateitem_get_country_list():
     Returns list of Countrys
     :return:
     """
-    if request.method == 'GET':
-        country_list = db.session\
-            .query(Query_Country)\
-            .order_by(Query_Country.name.asc())\
-            .all()
-        country_schema = Query_Country_Schema(many=True)
-        return jsonify(country_schema.dump(country_list))
+    country_list = db.session\
+        .query(Query_Country)\
+        .order_by(Query_Country.name.asc())\
+        .all()
+    country_schema = Query_Country_Schema(many=True)
+    return jsonify(country_schema.dump(country_list))
 
 
 @vendorcreateitem.route('/query/currency', methods=['GET'])
@@ -519,14 +506,14 @@ def vendorcreateitem_get_currency_list():
     Returns list of currencys 
     :return:
     """
-    if request.method == 'GET':
-        currency_list = db.session\
-            .query(Query_CurrencyList)\
-            .order_by(Query_CurrencyList.value.asc())\
-            .all()
-        currency_schema = Query_CurrencyList_Schema(many=True)
 
-        return jsonify(currency_schema.dump(currency_list))
+    currency_list = db.session\
+        .query(Query_CurrencyList)\
+        .order_by(Query_CurrencyList.value.asc())\
+        .all()
+    currency_schema = Query_CurrencyList_Schema(many=True)
+
+    return jsonify(currency_schema.dump(currency_list))
 
 
 @vendorcreateitem.route('/query/condition', methods=['GET'])
@@ -535,15 +522,13 @@ def vendorcreateitem_get_item_condition_list():
     Returns list of item condition 
     :return:
     """
-    if request.method == 'GET':
+    condition_list = db.session\
+        .query(Query_ItemCondition)\
+        .order_by(Query_ItemCondition.value.asc())\
+        .all()
+    condition_schema = Query_ItemCondition_Schema(many=True)
 
-        condition_list = db.session\
-            .query(Query_ItemCondition)\
-            .order_by(Query_ItemCondition.value.asc())\
-            .all()
-        condition_schema = Query_ItemCondition_Schema(many=True)
-
-        return jsonify(condition_schema.dump(condition_list))
+    return jsonify(condition_schema.dump(condition_list))
 
 
 @vendorcreateitem.route('/query/category', methods=['GET'])
@@ -552,14 +537,14 @@ def vendorcreateitem_get_item_category_list():
     Returns list of item category 
     :return:
     """
-    if request.method == 'GET':
-        category_list = db.session\
-            .query(Category_Categories)\
-            .order_by(Category_Categories.name.asc())\
-            .all()
-        category_schema = Category_Categories_Schema(many=True)
 
-        return jsonify(category_schema.dump(category_list))
+    category_list = db.session\
+        .query(Category_Categories)\
+        .order_by(Category_Categories.name.asc())\
+        .all()
+    category_schema = Category_Categories_Schema(many=True)
+
+    return jsonify(category_schema.dump(category_list))
 
 
 @vendorcreateitem.route('/query/image/main/<string:itemuuid>', methods=['GET'])
@@ -568,13 +553,12 @@ def item_main_image_server(itemuuid):
     Returns list of item category 
     :return:
     """
-    if request.method == 'GET':
-        item_info = db.session\
-            .query(Item_MarketItem)\
-            .filter(Item_MarketItem.uuid == itemuuid)\
-            .first()
+    item_info = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == itemuuid)\
+        .first()
 
-        return jsonify({"status": item_info.image_one_server}), 200
+    return jsonify({"status": item_info.image_one_server}), 200
 
 
 @vendorcreateitem.route('/query/image/two/<string:itemuuid>', methods=['GET'])
@@ -583,14 +567,12 @@ def item_two_image_server(itemuuid):
     Returns list of item category 
     :return:
     """
-    if request.method == 'GET':
+    item_info = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == itemuuid)\
+        .first()
 
-        item_info = db.session\
-            .query(Item_MarketItem)\
-            .filter(Item_MarketItem.uuid == itemuuid)\
-            .first()
-
-        return jsonify({"status": item_info.image_two_server}), 200
+    return jsonify({"status": item_info.image_two_server}), 200
 
 
 @vendorcreateitem.route('/query/image/three/<string:itemuuid>', methods=['GET'])
@@ -599,14 +581,13 @@ def item_three_image_server(itemuuid):
     Returns list of item category 
     :return:
     """
-    if request.method == 'GET':
 
-        item_info = db.session\
-            .query(Item_MarketItem)\
-            .filter(Item_MarketItem.uuid == itemuuid)\
-            .first()
+    item_info = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == itemuuid)\
+        .first()
 
-        return jsonify({"status": item_info.image_three_server}), 200
+    return jsonify({"status": item_info.image_three_server}), 200
 
 
 @vendorcreateitem.route('/query/image/four/<string:itemuuid>', methods=['GET'])
@@ -615,14 +596,12 @@ def item_four_image_server(itemuuid):
     Returns list of item category 
     :return:
     """
-    if request.method == 'GET':
+    item_info = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == itemuuid)\
+        .first()
 
-        item_info = db.session\
-            .query(Item_MarketItem)\
-            .filter(Item_MarketItem.uuid == itemuuid)\
-            .first()
-
-        return jsonify({"status": item_info.image_four_server}), 200
+    return jsonify({"status": item_info.image_four_server}), 200
 
 
 @vendorcreateitem.route('/query/image/main/url/<string:itemuuid>', methods=['GET'])
@@ -631,13 +610,13 @@ def item_main_image_url(itemuuid):
     Returns list of item category 
     :return:
     """
-    if request.method == 'GET':
-        item_info = db.session\
-            .query(Item_MarketItem)\
-            .filter(Item_MarketItem.uuid == itemuuid)\
-            .first()
 
-        return jsonify({"status": item_info.image_one_url_250}), 200
+    item_info = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == itemuuid)\
+        .first()
+
+    return jsonify({"status": item_info.image_one_url_250}), 200
 
 
 @vendorcreateitem.route('/query/image/two/url/<string:itemuuid>', methods=['GET'])
@@ -646,14 +625,13 @@ def item_two_image_url(itemuuid):
     Returns list of item category 
     :return:
     """
-    if request.method == 'GET':
 
-        item_info = db.session\
-            .query(Item_MarketItem)\
-            .filter(Item_MarketItem.uuid == itemuuid)\
-            .first()
+    item_info = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == itemuuid)\
+        .first()
 
-        return jsonify({"status": item_info.image_two_url_250}), 200
+    return jsonify({"status": item_info.image_two_url_250}), 200
 
 
 @vendorcreateitem.route('/query/image/three/url/<string:itemuuid>', methods=['GET'])
@@ -662,14 +640,13 @@ def item_three_image_url(itemuuid):
     Returns list of item category 
     :return:
     """
-    if request.method == 'GET':
 
-        item_info = db.session\
-            .query(Item_MarketItem)\
-            .filter(Item_MarketItem.uuid == itemuuid)\
-            .first()
+    item_info = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == itemuuid)\
+        .first()
 
-        return jsonify({"status": item_info.image_three_url_250}), 200
+    return jsonify({"status": item_info.image_three_url_250}), 200
 
 
 @vendorcreateitem.route('/query/image/four/url/<string:itemuuid>', methods=['GET'])
@@ -678,11 +655,11 @@ def item_four_image_url(itemuuid):
     Returns list of item category 
     :return:
     """
-    if request.method == 'GET':
 
-        item_info = db.session\
-            .query(Item_MarketItem)\
-            .filter(Item_MarketItem.uuid == itemuuid)\
-            .first()
 
-        return jsonify({"status": item_info.image_four_url_250}), 200
+    item_info = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == itemuuid)\
+        .first()
+
+    return jsonify({"status": item_info.image_four_url_250}), 200

@@ -30,20 +30,19 @@ def bch_price_anonymous():
         .filter_by(currency_id=0)\
         .first()
 
-    if price_bch.price > 0:
-        try:
-            price_bch = str(price_bch.price)
-        except:
-            price_bch = 0
+    if price_bch.price <= 0:
+        return jsonify({
+            "error": 'Error:  No Price Found',
+        })
+    try:
+        price_bch = str(price_bch.price)
+    except:
+        price_bch = 0
 
-        return jsonify({
-            "bch_price": price_bch,
+    return jsonify({
+        "bch_price": price_bch,
         })
-    else:
-        return jsonify({
-            "bch_price": 'error',
-        })
-        
+
         
 @wallet_bch.route('/price', methods=['GET'])
 @login_required
@@ -52,25 +51,23 @@ def bch_price_for_user():
     Gets current price of bitcoin cash
     :return:
     """
-
     price_bch = db.session\
             .query(Bch_Prices)\
             .filter_by(currency_id=current_user.currency)\
             .first()
 
-    if price_bch.price > 0:
-        try:
-            price_bch = str(price_bch.price)
-        except:
-            price_bch = 0
+    if price_bch.price <= 0:
+        return jsonify({
+            "error": 'Error:  No Price Found',
+        })
+    try:
+        price_bch = str(price_bch.price)
+    except:
+        price_bch = 0
 
-        return jsonify({
-            "bch_price": price_bch,
-        })
-    else:
-        return jsonify({
-            "bch_price": 'error',
-        })
+    return jsonify({
+        "bch_price": price_bch,
+    })
 
 
 @wallet_bch.route('/balance', methods=['GET'])
@@ -126,6 +123,11 @@ def bch_receive():
 @wallet_bch.route('/send', methods=['POST'])
 @login_required
 def bch_send():
+    # form variables
+    send_to_address = request.json["send_to_address"]
+    comment_on_blockchain = request.json["comment_on_blockchain"]
+    amount = request.json["amount"]
+
     # Get wallet_btc
     user = db.session\
         .query(Auth_User)\
@@ -142,31 +144,30 @@ def bch_send():
         .first()
     wfee = Decimal(walletthefee.bch)
 
-    # form variables
-    send_to_address = request.json["send_to_address"]
-    comment_on_blockchain = request.json["comment_on_blockchain"]
-    amount = request.json["amount"]
+    if user.dispute != 0:
+        return jsonify({"error": f"Cannot withdraw amount less than wallet_btc fee: {str(wfee)}"}), 200
 
-    if user.dispute == 0:
-        # test wallet btc stuff for security
-        walbal = Decimal(wallet.currentbalance)
-        amount2withfee = Decimal(amount) + Decimal(wfee)
-        # greater than amount with fee
-        if floating_decimals(walbal, 8) >= floating_decimals(amount2withfee, 8):
-            # greater than fee
-            if Decimal(amount) > Decimal(wfee):
-                # add to wallet_btc work
-                bch_send_coin(
-                    user_id=current_user.id,
-                    sendto=send_to_address,
-                    amount=amount,
-                    comment=comment_on_blockchain
-                )
-                db.session.commit()
-                return jsonify({"status": "request sent to wallet"}), 200
-            else:
-                return jsonify({"error": f"Cannot withdraw amount less than wallet_btc fee: {str(wfee)}"}), 200
-        else:
-            return jsonify({"error": f"Cannot withdraw amount less than wallet_btc fee: {str(wfee)}"}), 200
+    # test wallet btc stuff for security
+    walbal = Decimal(wallet.currentbalance)
+    amount2withfee = Decimal(amount) + Decimal(wfee)
+    # greater than amount with fee
+    if floating_decimals(walbal, 8) <= floating_decimals(amount2withfee, 8):
+        return jsonify({"error": f"Cannot withdraw amount less than wallet_btc fee: {str(wfee)}"}), 200
+    # greater than fee
+    if Decimal(amount) < Decimal(wfee):
+        return jsonify({"error": f"Cannot withdraw amount less than wallet_btc fee: {str(wfee)}"}), 200
+    # add to wallet_btc work
+    bch_send_coin(
+        user_id=current_user.id,
+        sendto=send_to_address,
+        amount=amount,
+        comment=comment_on_blockchain
+    )
+    db.session.commit()
+    return jsonify({"status": "request sent to wallet"}), 200
+
+
+
+
     
 

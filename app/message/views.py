@@ -32,12 +32,9 @@ def message_markasread(post_id):
         .filter(Message_Chat.post_id == post_id) \
         .filter(Message_Chat.read == 1) \
         .first()
-    
 
     if get_msg_post:
-
         get_msg_post.read = 0
-
         db.session.add(get_msg_post)
         db.session.commit()
 
@@ -129,7 +126,7 @@ def message_msg_comments(post_id):
             .first()
             
     if get_msg_post is None:
-        return jsonify({"status": "unauthorized"})
+        return jsonify({"error": "Error: Unauthorized"})
     
     get_msg_post_comments = db.session \
         .query(Message_Chat) \
@@ -159,7 +156,7 @@ def message_msg_comments_orderuuid(order_uuid):
         .first()
 
     if get_msg_post is None:
-        return jsonify({"status": "Error finding chat message"}),200
+        return jsonify({"error": "Error:  Error finding chat message"}),200
     get_msg_post_comments = db.session \
         .query(Message_Chat) \
         .filter(Message_Chat.post_id == get_msg_post.post_id) \
@@ -298,7 +295,7 @@ def create_new_post_dispute(order_uuid):
         .first()
     # if no post exists
     if get_post is not None:
-        return jsonify({"status": "error"})
+        return jsonify({"error": "Error:  Couldnt find post"})
 
     generic_message = "A dispute has been issued for this item."
     get_order = db.session \

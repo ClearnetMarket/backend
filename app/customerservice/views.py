@@ -254,6 +254,7 @@ def vendor_topbar_get_issues_count():
         .filter(User_Orders.customer_id == user_id.id)\
         .filter(or_(User_Orders.disputed_order == 1, User_Orders.request_return == 2))\
         .count()
+
     return jsonify({"vendorissues": myorderscount})
 
 
@@ -271,6 +272,7 @@ def customer_topbar_get_issues_count():
         .filter(Service_Issue.status == 0)\
         .order_by(Service_Issue.timestamp.desc())\
         .count()
+
     return jsonify({ "serviceissues": service_issues })
     
     

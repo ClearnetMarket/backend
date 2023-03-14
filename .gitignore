@@ -133,3 +133,4 @@ updateolditemscrawler.py
 nginx.txt
 
 /settings_production.py
+/wordlist.py

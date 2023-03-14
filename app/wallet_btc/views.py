@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from app import db, bcrypt
+from app import db
 from app.wallet_btc import wallet_btc
 from app.wallet_btc.wallet_btc_work import btc_send_coin
 from flask_login import current_user
@@ -28,18 +28,19 @@ def btc_price_anonymous():
         .filter_by(currency_id=0)\
         .first()
 
-    if price_btc.price > 0:
-        try:
-            price_btc = str(price_btc.price)
-        except:
-            price_btc = 0
+    if price_btc.price < 0:
         return jsonify({
-            "btc_price": price_btc,
+            "error": 'Error:  No Price Found',
         })
-    else:
-        return jsonify({
-            "btc_price": 'error',
-        })
+    try:
+        price_btc = str(price_btc.price)
+    except:
+        price_btc = 0
+    return jsonify({
+        "btc_price": price_btc,
+    })
+
+
         
 @wallet_btc.route('/price', methods=['GET'])
 @login_required
@@ -53,19 +54,17 @@ def btc_price_for_user():
         .filter_by(currency_id=current_user.currency)\
         .first()
     
-    if price_btc.price > 0:
-        try:
-            price_btc = str(price_btc.price)
-        except:
-            price_btc = 0
+    if price_btc.price < 0:
         return jsonify({
-            "btc_price": price_btc,
+            "error": 'Error:  No Price Found',
         })
-    else:
-        return jsonify({
-            "btc_price": 'error',
-        })
-
+    try:
+        price_btc = str(price_btc.price)
+    except:
+        price_btc = 0
+    return jsonify({
+        "btc_price": price_btc,
+    })
 
 @wallet_btc.route('/balance', methods=['GET'])
 @login_required
@@ -136,30 +135,30 @@ def btc_send():
     wfee = Decimal(walletthefee.btc)
 
     # form variables
-    walletpin = request.json["walletpin"]
     send_to_address = request.json["send_to_address"]
     comment_on_blockchain = request.json["comment_on_blockchain"]
     amount = request.json["amount"]
 
-    if user.dispute == 0:
-    
-        # test wallet btc stuff for security
-        walbal = Decimal(userwallet.currentbalance)
-        amount2withfee = Decimal(amount) + Decimal(wfee)
-        # greater than amount with fee
-        if floating_decimals(walbal, 8) >= floating_decimals(amount2withfee, 8):
-            # greater than fee
-            if Decimal(amount) > Decimal(wfee):
-                # add to wallet work
-                btc_send_coin(
-                    user_id=user.id,
-                    sendto=send_to_address,
-                    amount=amount,
-                    comment=comment_on_blockchain
-                )
-                db.session.commit()
-                return jsonify({"status": "request sent to wallet"}), 200
-            else:
-                return jsonify({"error": f"Cannot withdraw amount less than wallet fee: {str(wfee)}"}), 200
-        else:
-            return jsonify({"error": f"Cannot withdraw amount less than wallet fee: {str(wfee)}"}), 200
+    if user.dispute != 0:
+        return jsonify({"error": "Cannot withdraw currently.  Account is locked"}), 200
+
+    # test wallet btc stuff for security
+    walbal = Decimal(userwallet.currentbalance)
+    amount2withfee = Decimal(amount) + Decimal(wfee)
+    # greater than amount with fee
+    if floating_decimals(walbal, 8) <= floating_decimals(amount2withfee, 8):
+        return jsonify({"error": f"Cannot withdraw amount less than wallet fee: {str(wfee)}"}), 200
+    # greater than fee
+    if Decimal(amount) < Decimal(wfee):
+        return jsonify({"error": f"Cannot withdraw amount less than wallet fee: {str(wfee)}"}), 200
+        # add to wallet work
+    btc_send_coin(
+        user_id=user.id,
+        sendto=send_to_address,
+        amount=amount,
+        comment=comment_on_blockchain
+    )
+    db.session.commit()
+    return jsonify({"status": "request sent to wallet"}), 200
+
+

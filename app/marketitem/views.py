@@ -20,7 +20,7 @@ def marketitem_item_main(item_id):
         .filter(Item_MarketItem.uuid == item_id)\
         .first()
     if not item_for_sale:
-        jsonify({"Error": "No Item exists"}), 200
+        jsonify({"error": "Error:  No Item exists"}), 200
     item_schema = Item_MarketItem_Schema()
     result = item_schema.dump(item_for_sale)
 
@@ -40,7 +40,7 @@ def marketitem_item_flagged(item_id):
         .filter_by(listingid=item_id)\
         .first()
     if not flagged_item:
-        jsonify({"Error": "No flagged items"}), 200
+        jsonify({"error": "Error: No flagged items"}), 200
     return jsonify({"item_id": flagged_item.listingid,
                     "item_id_number_reports": flagged_item.howmany,
                     })

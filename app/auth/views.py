@@ -48,7 +48,7 @@ def check_session():
     api_key = request.headers.get('Authorization')
  
     if not api_key:
-        return jsonify({"status": "error"}), 401
+        return jsonify({"error": "Error:  Could not Authorize User"}), 401
 
     api_key = api_key.replace('bearer ', '', 1)
 
@@ -57,7 +57,7 @@ def check_session():
                       .filter(Auth_User.api_key == api_key)\
                       .first() is not None
     if not user_exists:
-        return jsonify({"status": "error. user not found"}), 401
+        return jsonify({"error": "Error: User not found"}), 401
 
     user = db.session\
         .query(Auth_User)\
@@ -119,7 +119,6 @@ def login():
     Main post function to  a user
     """
 
-
     username = request.json["username"]
     password = request.json["password"]
 
@@ -128,7 +127,7 @@ def login():
                .filter_by(username=username)\
                .first() is not None
     if not user:
-        return jsonify({"error": "unauthorized"}), 200
+        return jsonify({"error": "Error: Unauthorized"}), 200
 
     user = db.session\
         .query(Auth_User)\
@@ -143,7 +142,7 @@ def login():
         db.session.add(user)
         db.session.commit()
 
-        return jsonify({"error": "unauthorized"}), 200
+        return jsonify({"error": "Error: Unauthorized."}), 200
 
     user.locked = 0
     user.fails = 0
@@ -194,14 +193,14 @@ def register_user():
         .filter_by(email=email)\
         .first() is not None
     if user_exists_email:
-        return jsonify({"error": "Email already exists"}), 200
+        return jsonify({"error": "Error: Email already exists"}), 200
 
     user_exists_username = db.session\
         .query(Auth_User)\
         .filter_by(username=username)\
         .first() is not None
     if user_exists_username:
-        return jsonify({"error": "User already exists"}), 200
+        return jsonify({"error": "Error: User already exists"}), 200
 
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
@@ -423,9 +422,9 @@ def confirm_seed():
     userseed = db.session\
                 .query(Auth_AccountSeedWords) \
                 .filter(Auth_AccountSeedWords.user_id == user.id)\
-                .first() is not None
-    if not userseed:
-        return jsonify({"error": "Seed does not exist"}), 200
+                .first()
+    if userseed is None:
+        return jsonify({"error": "Error: Seed does not exist"}), 200
 
     userseed = db.session\
         .query(Auth_AccountSeedWords) \
@@ -481,8 +480,8 @@ def retrieve_seed_to_unlock_account():
         .filter(Auth_AccountSeedWords.word05 == word5)\
         .first()
 
-    if userseed is  None:
-        return jsonify({'error': 'Incorrect Seed'}), 200
+    if userseed is None:
+        return jsonify({'error': 'Error: Incorrect Seed'}), 200
 
     user = db.session\
         .query(Auth_User)\
@@ -496,12 +495,14 @@ def retrieve_seed_to_unlock_account():
     login_user(user)
     current_user.is_authenticated()
     current_user.is_active()
-    return jsonify({'status': 'Account Unlocked'}), 200
+    return jsonify({'status': 'Error: Account Unlocked'}), 200
 
 
 @auth.route('/change-password', methods=['POST'])
 @login_required
 def change_password():
+
+
     new_password = request.json["password"]
     new_password_confirm = request.json["password_confirm"]
 
@@ -510,10 +511,8 @@ def change_password():
         .filter(Auth_User.id == current_user.id) \
         .first()
 
-
-
     if str(new_password) != str(new_password_confirm):
-        return jsonify({"error": "Incorrect Passwords"}), 200
+        return jsonify({"error": "Error: Incorrect Passwords"}), 200
 
     hashed_password = bcrypt.generate_password_hash(new_password)
     user.password_hash = hashed_password
@@ -566,7 +565,7 @@ def vacation_on():
         .filter(Item_MarketItem.vendor_id == user.id)\
         .all()
     if user.vacation != 0:
-        return jsonify({"error": "Vacation Mode already enabled"}), 200
+        return jsonify({"error": "Error: Vacation Mode already enabled"}), 200
     # Go into vacation mode
     user.vacation = 1
     db.session.add(user)
@@ -597,8 +596,6 @@ def vacation_off():
     db.session.commit()
 
     return jsonify({"status": "Vacation Mode Disabled"}), 200
-
-
 
 
 @auth.route('/query/country', methods=['GET'])
@@ -665,7 +662,7 @@ def create_profile_image(uuid):
 
     api_key_auth = request.headers.get('Authorization')
     if not api_key_auth:
-        return jsonify({"error": 'no_api_key'})
+        return jsonify({"error": 'Error: User is not Authorized'})
 
     api_key = api_key_auth.replace('bearer ', '', 1)
     user = db.session\
@@ -776,13 +773,6 @@ def user_image_url(uuid):
         .filter(Auth_User.uuid == uuid)\
         .first()
     return jsonify({"status": user_image.profileimage_url_250}), 200
-
-
-
-
-
-
-
 
 
 

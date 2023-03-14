@@ -18,8 +18,6 @@ from app.classes.item import Item_MarketItem, Item_MarketItem_Schema
 from app.classes.auth import Auth_User
 from app.classes.profile import Profile_StatisticsVendor
 
-# end models
-
 
 @vendor.route('/becomevendor', methods=['POST'])
 @login_required
@@ -84,13 +82,13 @@ def vendor_vendor_stats(vendor_id):
     Grabs stats of the vendor
     :return:
     """
-    if request.method == 'GET':
-        vendor_stats = db.session\
-            .query(Profile_StatisticsVendor) \
-            .filter_by(vendorid=vendor_id) \
-            .first()
-        vendor_schema = Profile_StatisticsVendor_Schema(many=True)
-        return jsonify(vendor_schema.dump(vendor_stats))
+
+    vendor_stats = db.session\
+        .query(Profile_StatisticsVendor) \
+        .filter_by(vendorid=vendor_id) \
+        .first()
+    vendor_schema = Profile_StatisticsVendor_Schema(many=True)
+    return jsonify(vendor_schema.dump(vendor_stats))
 
 
 @vendor.route('/vendor-feedback/<string:vendor_uuid>', methods=['GET'])
@@ -99,17 +97,17 @@ def vendor_vendor_feedback(vendor_uuid):
     Grabs feedback of the vendor
     :return:
     """
-    if request.method == 'GET':
-        vendor_feedback = db.session\
-            .query(Feedback_Feedback)\
-            .filter(Feedback_Feedback.vendor_uuid==vendor_uuid)\
-            .filter(Feedback_Feedback.type_of_feedback==1)\
-            .filter(Feedback_Feedback.author_uuid!=vendor_uuid)\
-            .order_by(Feedback_Feedback.timestamp.desc())\
-            .limit(25)
 
-        vendor_schema = Feedback_Feedback_Schema(many=True)
-        return jsonify(vendor_schema.dump(vendor_feedback))
+    vendor_feedback = db.session\
+        .query(Feedback_Feedback)\
+        .filter(Feedback_Feedback.vendor_uuid==vendor_uuid)\
+        .filter(Feedback_Feedback.type_of_feedback==1)\
+        .filter(Feedback_Feedback.author_uuid!=vendor_uuid)\
+        .order_by(Feedback_Feedback.timestamp.desc())\
+        .limit(25)
+
+    vendor_schema = Feedback_Feedback_Schema(many=True)
+    return jsonify(vendor_schema.dump(vendor_feedback))
 
 
 @vendor.route('/all-feedback/<string:vendor_uuid>', methods=['GET'])
@@ -118,132 +116,120 @@ def vendor_vendor_feedback_count(vendor_uuid):
     Grabs feedback of the vendor count for sidebar
     :return:
     """
-    if request.method == 'GET':
-        vendor_feedback = db.session\
-            .query(Feedback_Feedback)\
-            .filter(Feedback_Feedback.vendor_uuid==vendor_uuid)\
-            .filter(Feedback_Feedback.vendor_rating != None)\
-            .count()
-        if vendor_feedback == 0:
-            return jsonify({"total_feedback": 0,
-                            'feedback_one': 0,
-                            'feedback_two': 0,
-                            'feedback_three': 0,
-                            'feedback_four': 0,
-                            'feedback_five': 0,
-                            'feedback_six': 0,
-                            'feedback_seven': 0,
-                            'feedback_eight': 0,
-                            'feedback_nine': 0,
-                            'feedback_ten': 0,
-                            })
 
-        if vendor_feedback > 0:
-            vendor_feedback_one = db.session\
-                .query(Feedback_Feedback)\
-                .filter_by(vendor_uuid=vendor_uuid)\
-                .filter_by(vendor_rating=1)\
-                .count()
-            
-            vendor_feedback_one_percent = (
-                (int(vendor_feedback_one) / int(vendor_feedback))*100)
-
-            vendor_feedback_two = db.session\
-                .query(Feedback_Feedback)\
-                .filter_by(vendor_uuid=vendor_uuid)\
-                .filter_by(vendor_rating=2)\
-                .count()
-            vendor_feedback_two_percent = (
-                (int(vendor_feedback_two) / int(vendor_feedback))*100)
-
-            vendor_feedback_three = db.session\
-                .query(Feedback_Feedback)\
-                .filter_by(vendor_uuid=vendor_uuid)\
-                .filter_by(vendor_rating=3)\
-                .count()
-            vendor_feedback_three_percent = (
-                (int(vendor_feedback_three) / int(vendor_feedback))*100)
-
-            vendor_feedback_four = db.session\
-                .query(Feedback_Feedback)\
-                .filter_by(vendor_uuid=vendor_uuid)\
-                .filter_by(vendor_rating=4)\
-                .count()
-            vendor_feedback_four_percent = (
-                (int(vendor_feedback_four) / int(vendor_feedback))*100)
-
-            vendor_feedback_five = db.session\
-                .query(Feedback_Feedback)\
-                .filter_by(vendor_uuid=vendor_uuid)\
-                .filter_by(vendor_rating=5)\
-                .count()
-            vendor_feedback_five_percent = (
-                (int(vendor_feedback_five) / int(vendor_feedback))*100)
-
-            vendor_feedback_six = db.session\
-                .query(Feedback_Feedback)\
-                .filter_by(vendor_uuid=vendor_uuid)\
-                .filter_by(vendor_rating=6)\
-                .count()
-            vendor_feedback_six_percent = (
-                (int(vendor_feedback_six) / int(vendor_feedback))*100)
-
-            vendor_feedback_seven = db.session\
-                .query(Feedback_Feedback)\
-                .filter_by(vendor_uuid=vendor_uuid)\
-                .filter_by(vendor_rating=7)\
-                .count()
-            vendor_feedback_seven_percent = (
-                (int(vendor_feedback_seven) / int(vendor_feedback))*100)
-
-            vendor_feedback_eight = db.session\
-                .query(Feedback_Feedback)\
-                .filter_by(vendor_uuid=vendor_uuid)\
-                .filter_by(vendor_rating=8)\
-                .count()
-            vendor_feedback_eight_percent = (
-                (int(vendor_feedback_eight) / int(vendor_feedback))*100)
-
-            vendor_feedback_nine = db.session\
-                .query(Feedback_Feedback)\
-                .filter_by(vendor_uuid=vendor_uuid)\
-                .filter_by(vendor_rating=9)\
-                .count()
-            vendor_feedback_nine_percent = (
-                (int(vendor_feedback_nine) / int(vendor_feedback))*100)
-
-            vendor_feedback_ten = db.session\
-                .query(Feedback_Feedback)\
-                .filter_by(vendor_uuid=vendor_uuid)\
-                .filter_by(vendor_rating=10)\
-                .count()
-            vendor_feedback_ten_percent = (
-                (int(vendor_feedback_ten) / int(vendor_feedback))*100)
-
-        else:
-            vendor_feedback_one_percent = None
-            vendor_feedback_two_percent = None
-            vendor_feedback_three_percent = None
-            vendor_feedback_four_percent = None
-            vendor_feedback_five_percent = None
-            vendor_feedback_six_percent = None
-            vendor_feedback_seven_percent = None
-            vendor_feedback_eight_percent = None
-            vendor_feedback_nine_percent = None
-            vendor_feedback_ten_percent = None
-            
-        return jsonify({"total_feedback": vendor_feedback,
-                        'feedback_one': vendor_feedback_one_percent,
-                        'feedback_two': vendor_feedback_two_percent,
-                        'feedback_three': vendor_feedback_three_percent,
-                        'feedback_four': vendor_feedback_four_percent,
-                        'feedback_five': vendor_feedback_five_percent,
-                        'feedback_six': vendor_feedback_six_percent,
-                        'feedback_seven': vendor_feedback_seven_percent,
-                        'feedback_eight': vendor_feedback_eight_percent,
-                        'feedback_nine': vendor_feedback_nine_percent,
-                        'feedback_ten': vendor_feedback_ten_percent,
+    vendor_feedback = db.session\
+        .query(Feedback_Feedback)\
+        .filter(Feedback_Feedback.vendor_uuid==vendor_uuid)\
+        .filter(Feedback_Feedback.vendor_rating != None)\
+        .count()
+    if vendor_feedback == 0:
+        return jsonify({"total_feedback": 0,
+                        'feedback_one': 0,
+                        'feedback_two': 0,
+                        'feedback_three': 0,
+                        'feedback_four': 0,
+                        'feedback_five': 0,
+                        'feedback_six': 0,
+                        'feedback_seven': 0,
+                        'feedback_eight': 0,
+                        'feedback_nine': 0,
+                        'feedback_ten': 0,
                         })
+
+
+    vendor_feedback_one = db.session\
+        .query(Feedback_Feedback)\
+        .filter_by(vendor_uuid=vendor_uuid)\
+        .filter_by(vendor_rating=1)\
+        .count()
+
+    vendor_feedback_one_percent = (
+        (int(vendor_feedback_one) / int(vendor_feedback))*100)
+
+    vendor_feedback_two = db.session\
+        .query(Feedback_Feedback)\
+        .filter_by(vendor_uuid=vendor_uuid)\
+        .filter_by(vendor_rating=2)\
+        .count()
+    vendor_feedback_two_percent = (
+        (int(vendor_feedback_two) / int(vendor_feedback))*100)
+
+    vendor_feedback_three = db.session\
+        .query(Feedback_Feedback)\
+        .filter_by(vendor_uuid=vendor_uuid)\
+        .filter_by(vendor_rating=3)\
+        .count()
+    vendor_feedback_three_percent = (
+        (int(vendor_feedback_three) / int(vendor_feedback))*100)
+
+    vendor_feedback_four = db.session\
+        .query(Feedback_Feedback)\
+        .filter_by(vendor_uuid=vendor_uuid)\
+        .filter_by(vendor_rating=4)\
+        .count()
+    vendor_feedback_four_percent = (
+        (int(vendor_feedback_four) / int(vendor_feedback))*100)
+
+    vendor_feedback_five = db.session\
+        .query(Feedback_Feedback)\
+        .filter_by(vendor_uuid=vendor_uuid)\
+        .filter_by(vendor_rating=5)\
+        .count()
+    vendor_feedback_five_percent = (
+        (int(vendor_feedback_five) / int(vendor_feedback))*100)
+
+    vendor_feedback_six = db.session\
+        .query(Feedback_Feedback)\
+        .filter_by(vendor_uuid=vendor_uuid)\
+        .filter_by(vendor_rating=6)\
+        .count()
+    vendor_feedback_six_percent = (
+        (int(vendor_feedback_six) / int(vendor_feedback))*100)
+
+    vendor_feedback_seven = db.session\
+        .query(Feedback_Feedback)\
+        .filter_by(vendor_uuid=vendor_uuid)\
+        .filter_by(vendor_rating=7)\
+        .count()
+    vendor_feedback_seven_percent = (
+        (int(vendor_feedback_seven) / int(vendor_feedback))*100)
+
+    vendor_feedback_eight = db.session\
+        .query(Feedback_Feedback)\
+        .filter_by(vendor_uuid=vendor_uuid)\
+        .filter_by(vendor_rating=8)\
+        .count()
+    vendor_feedback_eight_percent = (
+        (int(vendor_feedback_eight) / int(vendor_feedback))*100)
+
+    vendor_feedback_nine = db.session\
+        .query(Feedback_Feedback)\
+        .filter_by(vendor_uuid=vendor_uuid)\
+        .filter_by(vendor_rating=9)\
+        .count()
+    vendor_feedback_nine_percent = (
+        (int(vendor_feedback_nine) / int(vendor_feedback))*100)
+
+    vendor_feedback_ten = db.session\
+        .query(Feedback_Feedback)\
+        .filter_by(vendor_uuid=vendor_uuid)\
+        .filter_by(vendor_rating=10)\
+        .count()
+    vendor_feedback_ten_percent = (
+        (int(vendor_feedback_ten) / int(vendor_feedback))*100)
+
+    return jsonify({"total_feedback": vendor_feedback,
+                    'feedback_one': vendor_feedback_one_percent,
+                    'feedback_two': vendor_feedback_two_percent,
+                    'feedback_three': vendor_feedback_three_percent,
+                    'feedback_four': vendor_feedback_four_percent,
+                    'feedback_five': vendor_feedback_five_percent,
+                    'feedback_six': vendor_feedback_six_percent,
+                    'feedback_seven': vendor_feedback_seven_percent,
+                    'feedback_eight': vendor_feedback_eight_percent,
+                    'feedback_nine': vendor_feedback_nine_percent,
+                    'feedback_ten': vendor_feedback_ten_percent,
+                    })
 
 
 @vendor.route('/new-orders-count', methods=['GET'])
@@ -357,8 +343,8 @@ def vendor_topbar_get_vendor_info(vendor_id):
         .query(Auth_User)\
         .filter(Auth_User.uuid == vendor_id)\
         .first()
-
     vendor_name = get_vendor.username
+
     vendor_stats = db.session\
         .query(Profile_StatisticsVendor)\
         .filter(Profile_StatisticsVendor.vendor_uuid == get_vendor.uuid)\
@@ -378,23 +364,22 @@ def vendor_topbar_get_vendor_info(vendor_id):
 @vendor.route('/get/defaultaddress/<string:vendoruuid>', methods=['GET'])
 def vendor_get_address(vendoruuid):
 
-    if request.method == 'GET':
-        vendor_address = db.session\
-            .query(Vendor_ExactAddress)\
-            .filter(Vendor_ExactAddress.uuid == vendoruuid)\
-            .first()
-        if vendor_address:
-            city = vendor_address.city
-            stateorprovence = vendor_address.state_or_provence
-            zipcode = vendor_address.zip_code
-        
-            return jsonify({
-                "city": city,
-                "stateorprovence": stateorprovence,
-                "zipcode": zipcode,
-            })
-        else:
-            return jsonify({"status": 'error'}), 200
+
+    vendor_address = db.session\
+        .query(Vendor_ExactAddress)\
+        .filter(Vendor_ExactAddress.uuid == vendoruuid)\
+        .first()
+    if vendor_address is None:
+        return jsonify({"error": 'Error: Vendor address not found'}), 200
+    city = vendor_address.city
+    stateorprovence = vendor_address.state_or_provence
+    zipcode = vendor_address.zip_code
+
+    return jsonify({
+        "city": city,
+        "stateorprovence": stateorprovence,
+        "zipcode": zipcode,
+    })
 
 
 @vendor.route('/update/defaultaddress', methods=['PUT'])
@@ -404,39 +389,38 @@ def vendor_update_address():
     Returns all info about a user
     :return:
     """
-    if request.method == 'PUT':
-        if current_user.admin_role >= 1:
-            vendor_address = db.session\
-                .query(Vendor_ExactAddress)\
-                .filter(Vendor_ExactAddress.uuid == current_user.uuid)\
-                .first()
-         
-            if vendor_address:
-     
-                if "city" in request.json:
-                    city = request.json["city"]
-                else:
-                    city = None
-                if "stateorprovence" in request.json:
-                    state_or_provence = request.json["stateorprovence"]
-                else:
-                    state_or_provence = None
-                if "zip" in request.json:
-                    zipcode = request.json["zip"]
-                else:
-                    zipcode = None        
-                vendor_address.country = current_user.country
-                vendor_address.city = city
-                vendor_address.state_or_provence = state_or_provence
-                vendor_address.zip_code = zipcode
-                db.session.add(vendor_address)
-                db.session.commit()
-                
-                return jsonify({"status": 'success'})
-            else:
-                return jsonify({"status": 'error'}), 200
-        else:
-            return jsonify({"status": 'error'}), 200
+
+    if current_user.admin_role <= 1:
+        return jsonify({"error": 'Error: Unauthorized'}), 200
+
+    vendor_address = db.session\
+        .query(Vendor_ExactAddress)\
+        .filter(Vendor_ExactAddress.uuid == current_user.uuid)\
+        .first()
+
+    if vendor_address is None:
+        return jsonify({"error": 'Error: Vendor Address is None'}), 200
+
+    if "city" in request.json:
+        city = request.json["city"]
+    else:
+        city = None
+    if "stateorprovence" in request.json:
+        state_or_provence = request.json["stateorprovence"]
+    else:
+        state_or_provence = None
+    if "zip" in request.json:
+        zipcode = request.json["zip"]
+    else:
+        zipcode = None
+    vendor_address.country = current_user.country
+    vendor_address.city = city
+    vendor_address.state_or_provence = state_or_provence
+    vendor_address.zip_code = zipcode
+    db.session.add(vendor_address)
+    db.session.commit()
+
+    return jsonify({"status": 'success'})
 
 
 @vendor.route('/itemsforsale/<string:vendor_uuid>', methods=['GET'])
@@ -445,11 +429,11 @@ def vendor_profile_itemsforsale(vendor_uuid):
     Grabs feedback of the vendor
     :return:
     """
-    if request.method == 'GET':
-        vendor_itemsforsale = db.session\
-            .query(Item_MarketItem)\
-            .filter(Item_MarketItem.vendor_uuid == vendor_uuid)\
-            .limit(25)
 
-        item_schema = Item_MarketItem_Schema(many=True)
-        return jsonify(item_schema.dump(vendor_itemsforsale))
+    vendor_itemsforsale = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.vendor_uuid == vendor_uuid)\
+        .limit(25)
+
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(vendor_itemsforsale))

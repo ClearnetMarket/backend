@@ -16,7 +16,6 @@ def get_categories_sidebar():
     :return:
     """
 
-
     get_cats = db.session\
         .query(Category_Categories)\
         .filter(Category_Categories.value != 0)\
@@ -55,7 +54,6 @@ def get_categories_apparal():
     Electronics
     :return:
     """
-
 
     electronicsfull = db.session \
         .query(Item_MarketItem) \

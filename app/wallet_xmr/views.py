@@ -28,19 +28,20 @@ def xmr_price_anonymous():
         .query(Xmr_Prices)\
         .filter_by(currency_id=0)\
         .first()
-    if price_xmr.price > 0:
-        try:
-            price_xmr = str(price_xmr.price)
-        except:
-            price_xmr = 0
+    if price_xmr.price < 0:
+        return jsonify({
+            "error": 'Error:  No Price Found',
+        })
+    try:
+        price_xmr = str(price_xmr.price)
+    except:
+        price_xmr = 0
 
-        return jsonify({
-            "price_xmr": price_xmr,
-        })
-    else:
-        return jsonify({
-            "price_xmr": 'error',
-        })
+    return jsonify({
+        "price_xmr": price_xmr,
+    })
+
+
         
 @wallet_xmr.route('/price', methods=['GET'])
 @login_required
@@ -53,19 +54,20 @@ def xmr_price_for_user():
         .query(Xmr_Prices)\
         .filter_by(currency_id=current_user.currency)\
         .first()
-    if price_xmr.price > 0:
-        try:
-            price_xmr = str(price_xmr.price)
-        except:
-            price_xmr = 0
+    if price_xmr.price < 0:
+        return jsonify({
+            "error": 'Error:  No Price Found',
+        })
+    try:
+        price_xmr = str(price_xmr.price)
+    except:
+        price_xmr = 0
 
-        return jsonify({
-            "price_xmr": price_xmr,
-        })
-    else:
-        return jsonify({
-            "price_xmr": 'error',
-        })
+    return jsonify({
+        "price_xmr": price_xmr,
+    })
+
+
 
 
 @wallet_xmr.route('/balance', methods=['GET'])
@@ -128,6 +130,13 @@ def xmr_receive():
 @login_required
 def xmr_send():
 
+
+    # form variables
+    walletpin = request.json["walletpin"]
+    send_to_address = request.json["send_to_address"]
+    amount = request.json["amount"]
+
+
     user = db.session\
         .query(Auth_User)\
         .filter_by(id=current_user.id)\
@@ -143,41 +152,35 @@ def xmr_send():
         .first()
     wfee = Decimal(walletthefee.xmr)
 
-    # form variables
-    walletpin = request.json["walletpin"]
-    send_to_address = request.json["send_to_address"]
-    amount = request.json["amount"]
-
-    if user.dispute == 0:
-        if bcrypt.check_password_hash(user.walletpin, walletpin):
-            # test wallet for security
-            walbal = Decimal(wallet.currentbalance)
-            amount2withfee = Decimal(amount) + Decimal(wfee)
-            # greater than amount with fee
-            if floating_decimals(walbal, 12) >= floating_decimals(amount2withfee, 12):
-                # greater than fee
-                if Decimal(amount) > Decimal(wfee):
-                    # add to wallet_xmr work
-                    xmr_send_coin(
-                        user_id=user.id,
-                        sendto=send_to_address,
-                        amount=amount,
-                    )
-                    db.session.commit()
-                    return jsonify({"status": "request sent to wallet"}), 200
-                else:
-                    return jsonify({"error": f"Cannot withdraw amount less than wallet fee: {str(wfee)}"}), 200
-            else:
-                return jsonify({"error": f"Cannot withdraw amount less than wallet fee: {str(wfee)}"}), 200
-        else:
-            current_fails = int(user.fails)
-            new_fail_amount = current_fails + 1
-            user.fails = new_fail_amount
-            db.session.add(user)
-            if int(user.fails) == 5:
-                user.locked = 1
-            db.session.add(user)
-            db.session.commit()
-            return jsonify({"error": "Unauthorized"}), 200
-    else:
+    if user.dispute != 0:
         return jsonify({"error": "Account is locked due to dispute"}), 200
+    if bcrypt.check_password_hash(user.walletpin, walletpin):
+        # test wallet for security
+        walbal = Decimal(wallet.currentbalance)
+        amount2withfee = Decimal(amount) + Decimal(wfee)
+        # greater than amount with fee
+        if floating_decimals(walbal, 12) <= floating_decimals(amount2withfee, 12):
+            return jsonify({"error": f"Cannot withdraw amount less than wallet fee: {str(wfee)}"}), 200
+            # greater than fee
+        if Decimal(amount) < Decimal(wfee):
+            return jsonify({"error": f"Cannot withdraw amount less than wallet fee: {str(wfee)}"}), 200
+            # add to wallet_xmr work
+        xmr_send_coin(
+            user_id=user.id,
+            sendto=send_to_address,
+            amount=amount,
+        )
+        db.session.commit()
+        return jsonify({"status": "request sent to wallet"}), 200
+    else:
+        current_fails = int(user.fails)
+        new_fail_amount = current_fails + 1
+        user.fails = new_fail_amount
+        db.session.add(user)
+        if int(user.fails) == 5:
+            user.locked = 1
+        db.session.add(user)
+        db.session.commit()
+        return jsonify({"error": "Unauthorized"}), 200
+
+

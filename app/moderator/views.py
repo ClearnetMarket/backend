@@ -198,7 +198,7 @@ def mark_dispute_cancelled_still_open(uuid):
         .first()
 
     if get_order.moderator_uuid != current_user.uuid:
-        return jsonify({"status": "error"})
+        return jsonify({"error": "Error: Incorrect User"})
 
     get_order.overall_status = 3
 
@@ -221,7 +221,7 @@ def mark_dispute_cancelled_still_closed(uuid):
         .filter(User_Orders.uuid == uuid) \
         .first()
     if get_order.moderator_uuid != current_user.uuid:
-        return jsonify({"status": "error"})
+        return jsonify({"error": "Error:  Incorrect User."})
 
     get_order.overall_status = 10
 
@@ -245,7 +245,7 @@ def extend_dispute_time(uuid):
         .filter(User_Orders.uuid == uuid) \
         .first()
     if get_order.moderator_uuid != current_user.uuid:
-        return jsonify({"status": "error"})
+        return jsonify({"error": "Error: Incorrect User."})
 
     get_order.extended_timer = 1
 
@@ -264,7 +264,7 @@ def add_message_after_dispute(uuid):
     """
    
     if current_user.admin_role < 2:
-        return jsonify({"status": "error"})
+        return jsonify({"error": "Error:  User not Authorized"})
     # get the generic user order model
     get_order = db.session \
         .query(User_Orders) \
@@ -291,7 +291,7 @@ def get_order_model(uuid):
     """
 
     if current_user.admin_role < 2:
-        return jsonify({"status": "error"})
+        return jsonify({"error": "Error:  User not authorized."})
     # get the generic user order model
     get_order = db.session \
         .query(User_Orders) \
@@ -312,7 +312,7 @@ def get_customer_ratings(uuid):
     """
 
     if current_user.admin_role < 2:
-        return jsonify({"status": "success"})
+        return jsonify({"error": "Error:  User not authorized."})
     # get customer ratings
     get_user_ratings = db.session\
         .query(Feedback_Feedback)\
@@ -335,7 +335,7 @@ def get_vendor_ratings(uuid):
     """
 
     if current_user.admin_role < 2:
-        return jsonify({"status": "success"})
+        return jsonify({"error": "Error: User not authorized."})
     # get vendor ratings
     get_user_ratings = db.session\
         .query(Feedback_Feedback)\
@@ -359,7 +359,7 @@ def become_mod_of_order(orderuuid):
     :return:
     """
     if current_user.admin_role < 2:
-        return jsonify({"status": "unauthorized"})
+        return jsonify({"error": "Error:  User not authorized."})
     else:
         # get the order from the uuid
         get_order = db.session \
@@ -406,7 +406,7 @@ def get_disputes_main_page_need_mod():
     """
 
     if current_user.admin_role < 2:
-        return jsonify({"status": "error"})
+        return jsonify({"error": "Error:  User not authorized"})
     # query the disputes
     get_disputes = db.session \
         .query(User_Orders) \
@@ -427,7 +427,7 @@ def get_disputes_main_page_has_mod():
 
     # see if current user is a mod
     if current_user.admin_role < 2:
-        return jsonify({"status": "error"})
+        return jsonify({"error": "Error: User not authorized"})
     # query the disputes
     get_disputes = db.session \
         .query(User_Orders) \
@@ -448,8 +448,8 @@ def ticket_stats():
     :return:
     """
 
-    if not current_user.admin_role == 10:
-        return jsonify({"status": "unauthorized"})
+    if current_user.admin_role != 10:
+        return jsonify({"error": "Error:  Unauthorized"})
 
     user_tickets_count = db.session \
         .query(Service_Ticket) \
@@ -482,7 +482,7 @@ def disputes_stats():
     :return:
     """
     if current_user.admin_role != 10:
-        return jsonify({"status": "unauthorized"})
+        return jsonify({"error": "Error:  Unauthorized"})
 
     user_disputes_count = db.session \
         .query(User_Orders) \
@@ -503,8 +503,8 @@ def get_all_tickets():
     :return:
     """
 
-    if not current_user.admin_role == 10:
-        return jsonify({"status": "unauthorized"})
+    if current_user.admin_role != 10:
+        return jsonify({"error": "Error:  Unauthorized"})
 
     user_tickets = db.session \
         .query(Service_Ticket) \
