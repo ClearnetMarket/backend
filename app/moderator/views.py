@@ -32,6 +32,11 @@ def create_comment_to_ticket():
     """
     now = datetime.utcnow()
 
+    # get the body of text for message
+    textbody = request.json["textbody"]
+    # get the txt id
+    ticket_uuid = request.json["ticketid"]
+
     user = db.session\
         .query(Auth_User) \
         .filter(Auth_User.id == current_user.id)\
@@ -40,11 +45,6 @@ def create_comment_to_ticket():
         adminrole = 1
     else:
         adminrole = 0
-
-    # get the body of text for message
-    textbody = request.json["textbody"]
-    # get the txt id
-    ticket_uuid = request.json["ticketid"]
 
     # get main ticket so we can update read status
     get_main_ticket = db.session\
@@ -124,6 +124,7 @@ def ticket_mark_closed(uuid):
         .query(Service_Ticket) \
         .filter(Service_Ticket.uuid == uuid) \
         .first()
+
     user_ticket.status = 0
     
     db.session.add(user_ticket)
@@ -144,39 +145,42 @@ def mark_dispute_finished(uuid):
         .filter(User_Orders.moderator_uuid == current_user.uuid) \
         .filter(User_Orders.uuid == uuid) \
         .first()
+
     if get_order.moderator_uuid != current_user.uuid:
         return jsonify({"status": "error"})
     
-    if "percenttovendor" in request.json:
-        percent_to_vendor_json = request.json["percenttovendor"]
-        percent_to_vendor = int(percent_to_vendor_json)
-    else:
+    if "percenttovendor" not in request.json:
         return jsonify({"status": "error"})
-    if "percenttocustomer" in request.json:
-        percent_to_customer_json = request.json["percenttocustomer"]
-        percent_to_customer = int(percent_to_customer_json)
-    
-    else:
+
+    percent_to_vendor_json = request.json["percenttovendor"]
+    percent_to_vendor = int(percent_to_vendor_json)
+
+    if "percenttocustomer" not in request.json:
         return jsonify({"status": "error"})
-    if get_order:
-        if get_order.digital_currency == 1:
-            finalize_order_dispute_btc(order_uuid=get_order.uuid,
-                                        percent_to_customer=percent_to_customer,
-                                        percent_to_vendor=percent_to_vendor)
-        if get_order.digital_currency == 2:
-            finalize_order_dispute_bch(order_uuid=get_order.uuid,
-                                        percent_to_customer=percent_to_customer,
-                                        percent_to_vendor=percent_to_vendor)
-        if get_order.digital_currency == 3:
-            finalize_order_dispute_xmr(order_uuid=get_order.uuid,
-                                        percent_to_customer=percent_to_customer,
-                                        percent_to_vendor=percent_to_vendor)
-        get_order.overall_status = 10
 
-        db.session.add(get_order)
-        db.session.commit()
+    percent_to_customer_json = request.json["percenttocustomer"]
+    percent_to_customer = int(percent_to_customer_json)
 
-        return jsonify({"status": "success"})
+    if not get_order:
+        return jsonify({"status": "Could find order"})
+    if get_order.digital_currency == 1:
+        finalize_order_dispute_btc(order_uuid=get_order.uuid,
+                                    percent_to_customer=percent_to_customer,
+                                    percent_to_vendor=percent_to_vendor)
+    if get_order.digital_currency == 2:
+        finalize_order_dispute_bch(order_uuid=get_order.uuid,
+                                    percent_to_customer=percent_to_customer,
+                                    percent_to_vendor=percent_to_vendor)
+    if get_order.digital_currency == 3:
+        finalize_order_dispute_xmr(order_uuid=get_order.uuid,
+                                    percent_to_customer=percent_to_customer,
+                                    percent_to_vendor=percent_to_vendor)
+    get_order.overall_status = 10
+
+    db.session.add(get_order)
+    db.session.commit()
+
+    return jsonify({"status": "success"})
 
 
 @moderator.route('/dispute/canceldispute/open/<string:uuid>', methods=['GET'])
@@ -192,6 +196,7 @@ def mark_dispute_cancelled_still_open(uuid):
         .filter(User_Orders.moderator_uuid == current_user.uuid) \
         .filter(User_Orders.uuid == uuid) \
         .first()
+
     if get_order.moderator_uuid != current_user.uuid:
         return jsonify({"status": "error"})
 
@@ -210,8 +215,6 @@ def mark_dispute_cancelled_still_closed(uuid):
     Brings an order to closed status
     :return:
     """
-
-
     get_order = db.session \
         .query(User_Orders) \
         .filter(User_Orders.moderator_uuid == current_user.uuid) \
@@ -260,22 +263,23 @@ def add_message_after_dispute(uuid):
     :return:
     """
    
-    if current_user.admin_role >= 2:
-        # get the generic user order model
-        get_order = db.session \
-            .query(User_Orders) \
-            .filter(User_Orders.moderator_uuid == current_user.uuid) \
-            .filter(User_Orders.uuid == uuid) \
-            .first()
-        if "textbody" in request.json:
-            msg_json = request.json["textbody"]
-            msg = str(msg_json)
-            get_order.msg = msg
+    if current_user.admin_role < 2:
+        return jsonify({"status": "error"})
+    # get the generic user order model
+    get_order = db.session \
+        .query(User_Orders) \
+        .filter(User_Orders.moderator_uuid == current_user.uuid) \
+        .filter(User_Orders.uuid == uuid) \
+        .first()
+    if "textbody" in request.json:
+        msg_json = request.json["textbody"]
+        msg = str(msg_json)
+        get_order.msg = msg
 
-        db.session.add(get_order)
-        db.session.commit()
+    db.session.add(get_order)
+    db.session.commit()
 
-        return jsonify({"status": "success"})
+    return jsonify({"status": "success"})
 
 
 @moderator.route('/orderinfo/<string:uuid>', methods=['GET'])
@@ -286,15 +290,16 @@ def get_order_model(uuid):
     :return:
     """
 
-    if current_user.admin_role >= 2:
-        # get the generic user order model
-        get_order = db.session \
-            .query(User_Orders) \
-            .filter(User_Orders.uuid == uuid) \
-            .first()
-        # return its json data
-        item_schema = User_Orders_Schema()
-        return jsonify(item_schema.dump(get_order))
+    if current_user.admin_role < 2:
+        return jsonify({"status": "error"})
+    # get the generic user order model
+    get_order = db.session \
+        .query(User_Orders) \
+        .filter(User_Orders.uuid == uuid) \
+        .first()
+    # return its json data
+    item_schema = User_Orders_Schema()
+    return jsonify(item_schema.dump(get_order))
 
 
 @moderator.route('/customer/ratings/<string:uuid>', methods=['GET'])
@@ -306,17 +311,18 @@ def get_customer_ratings(uuid):
     :return:
     """
 
-    if current_user.admin_role >= 2:
-        # get customer ratings
-        get_user_ratings = db.session\
-            .query(Feedback_Feedback)\
-            .filter(Feedback_Feedback.customer_uuid == uuid)\
-            .filter(Feedback_Feedback.type_of_feedback == 2)\
-            .order_by(Feedback_Feedback.timestamp.desc())\
-            .limit(20)
-        # return jsonify schema
-        feedback_schema = Feedback_Feedback_Schema(many=True)
-        return jsonify(feedback_schema.dump(get_user_ratings))
+    if current_user.admin_role < 2:
+        return jsonify({"status": "success"})
+    # get customer ratings
+    get_user_ratings = db.session\
+        .query(Feedback_Feedback)\
+        .filter(Feedback_Feedback.customer_uuid == uuid)\
+        .filter(Feedback_Feedback.type_of_feedback == 2)\
+        .order_by(Feedback_Feedback.timestamp.desc())\
+        .limit(20)
+    # return jsonify schema
+    feedback_schema = Feedback_Feedback_Schema(many=True)
+    return jsonify(feedback_schema.dump(get_user_ratings))
 
 
 @moderator.route('/vendor/ratings/<string:uuid>', methods=['GET'])
@@ -328,17 +334,18 @@ def get_vendor_ratings(uuid):
     :return:
     """
 
-    if current_user.admin_role >= 2:
-        # get vendor ratings
-        get_user_ratings = db.session\
-            .query(Feedback_Feedback)\
-            .filter(Feedback_Feedback.vendor_uuid == uuid)\
-            .filter(Feedback_Feedback.type_of_feedback == 1)\
-            .order_by(Feedback_Feedback.timestamp.desc())\
-            .limit(20)
-        # return jsonify scheme
-        feedback_schema = Feedback_Feedback_Schema(many=True)
-        return jsonify(feedback_schema.dump(get_user_ratings))
+    if current_user.admin_role < 2:
+        return jsonify({"status": "success"})
+    # get vendor ratings
+    get_user_ratings = db.session\
+        .query(Feedback_Feedback)\
+        .filter(Feedback_Feedback.vendor_uuid == uuid)\
+        .filter(Feedback_Feedback.type_of_feedback == 1)\
+        .order_by(Feedback_Feedback.timestamp.desc())\
+        .limit(20)
+    # return jsonify scheme
+    feedback_schema = Feedback_Feedback_Schema(many=True)
+    return jsonify(feedback_schema.dump(get_user_ratings))
 
 
 @moderator.route('/takeonmod/<string:orderuuid>', methods=['PUT'])
@@ -351,7 +358,7 @@ def become_mod_of_order(orderuuid):
     3 = mod
     :return:
     """
-    if current_user.admin_role <= 2:
+    if current_user.admin_role < 2:
         return jsonify({"status": "unauthorized"})
     else:
         # get the order from the uuid
@@ -376,8 +383,6 @@ def become_mod_of_order(orderuuid):
 @login_required
 def become_mod_of_postmsg(postid):
 
-
-
     get_message_post = db.session \
         .query(Message_Post) \
         .filter(Message_Post.id == postid) \
@@ -399,20 +404,17 @@ def get_disputes_main_page_need_mod():
     This gets currently open disputes that appears on the moderator home page
     :return:
     """
-   
 
-    # see if current user is a mod
-    if current_user.admin_role >= 2:
-        # query the disputes
-        get_disputes = db.session \
-            .query(User_Orders) \
-            .filter(User_Orders.overall_status == 8) \
-            .filter(User_Orders.moderator_uuid == None)\
-            .all()
-        disputes_schema = User_Orders_Schema(many=True)
-        return jsonify(disputes_schema.dump(get_disputes))
-    else:
+    if current_user.admin_role < 2:
         return jsonify({"status": "error"})
+    # query the disputes
+    get_disputes = db.session \
+        .query(User_Orders) \
+        .filter(User_Orders.overall_status == 8) \
+        .filter(User_Orders.moderator_uuid == None)\
+        .all()
+    disputes_schema = User_Orders_Schema(many=True)
+    return jsonify(disputes_schema.dump(get_disputes))
 
 
 @moderator.route('/disputes/modded', methods=['GET'])
@@ -422,20 +424,18 @@ def get_disputes_main_page_has_mod():
     This gets currently open disputes that appears on the moderator home page
     :return:
     """
- 
 
     # see if current user is a mod
-    if current_user.admin_role >= 2:
-        # query the disputes
-        get_disputes = db.session \
-            .query(User_Orders) \
-            .filter(User_Orders.overall_status == 8) \
-            .filter(User_Orders.moderator_uuid != None)\
-            .all()
-        disputes_schema = User_Orders_Schema(many=True)
-        return jsonify(disputes_schema.dump(get_disputes))
-    else:
+    if current_user.admin_role < 2:
         return jsonify({"status": "error"})
+    # query the disputes
+    get_disputes = db.session \
+        .query(User_Orders) \
+        .filter(User_Orders.overall_status == 8) \
+        .filter(User_Orders.moderator_uuid != None)\
+        .all()
+    disputes_schema = User_Orders_Schema(many=True)
+    return jsonify(disputes_schema.dump(get_disputes))
 
 
 # TICKETS
@@ -450,27 +450,27 @@ def ticket_stats():
 
     if not current_user.admin_role == 10:
         return jsonify({"status": "unauthorized"})
-    else:
-        user_tickets_count = db.session \
-            .query(Service_Ticket) \
-            .order_by(Service_Ticket.timestamp.desc())\
-            .count()
-        user_tickets_open = db.session \
-            .query(Service_Ticket) \
-            .filter(Service_Ticket.status == 1)\
-            .order_by(Service_Ticket.timestamp.desc())\
-            .count()
-        user_tickets_completed = db.session \
-            .query(Service_Ticket) \
-            .filter(Service_Ticket.status == 2)\
-            .order_by(Service_Ticket.timestamp.desc())\
-            .count()
 
-        return jsonify({
-            "count": user_tickets_count,
-            "open": user_tickets_open,
-            "completed": user_tickets_completed,
-        })
+    user_tickets_count = db.session \
+        .query(Service_Ticket) \
+        .order_by(Service_Ticket.timestamp.desc())\
+        .count()
+    user_tickets_open = db.session \
+        .query(Service_Ticket) \
+        .filter(Service_Ticket.status == 1)\
+        .order_by(Service_Ticket.timestamp.desc())\
+        .count()
+    user_tickets_completed = db.session \
+        .query(Service_Ticket) \
+        .filter(Service_Ticket.status == 2)\
+        .order_by(Service_Ticket.timestamp.desc())\
+        .count()
+
+    return jsonify({
+        "count": user_tickets_count,
+        "open": user_tickets_open,
+        "completed": user_tickets_completed,
+    })
 
 
 @moderator.route('/dispute/stats', methods=['GET'])
@@ -483,16 +483,15 @@ def disputes_stats():
     """
     if current_user.admin_role != 10:
         return jsonify({"status": "unauthorized"})
-    else:
-        user_disputes_count = db.session \
-            .query(User_Orders) \
-            .filter(User_Orders.overall_status == 8)\
-            .count()
 
-        return jsonify({
-            "count": user_disputes_count,
+    user_disputes_count = db.session \
+        .query(User_Orders) \
+        .filter(User_Orders.overall_status == 8)\
+        .count()
 
-        })
+    return jsonify({
+        "count": user_disputes_count,
+    })
 
 
 @moderator.route('/getalltickets', methods=['GET'])
@@ -503,15 +502,14 @@ def get_all_tickets():
     1 = vendor
     :return:
     """
-  
 
     if not current_user.admin_role == 10:
         return jsonify({"status": "unauthorized"})
-    else:
-        user_tickets = db.session \
-            .query(Service_Ticket) \
-            .order_by(Service_Ticket.timestamp.desc())\
-            .all()
 
-        comments_schema = Service_Ticket_Schema(many=True)
-        return jsonify(comments_schema.dump(user_tickets))
+    user_tickets = db.session \
+        .query(Service_Ticket) \
+        .order_by(Service_Ticket.timestamp.desc())\
+        .all()
+
+    comments_schema = Service_Ticket_Schema(many=True)
+    return jsonify(comments_schema.dump(user_tickets))

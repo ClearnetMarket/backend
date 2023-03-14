@@ -13,21 +13,20 @@ def image_forsale_file(uuid, filename):
     """
     Takes UUID of item and filename 
     """
-    try:
-        get_item_id = db.session\
-            .query(Item_MarketItem)\
-            .filter(Item_MarketItem.uuid == uuid)\
-            .first()
 
-        getimagesubfolder = itemlocation(x=get_item_id.id)
-    
-        directory_of_file = UPLOADED_FILES_DEST_ITEM
-       
-        thefile = os.path.join(getimagesubfolder, uuid, filename)
-      
-        return send_from_directory(directory=directory_of_file, path=thefile, as_attachment=False)
-    except Exception as e:
-        return str(e)
+    get_item_id = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == uuid)\
+        .first()
+
+    getimagesubfolder = itemlocation(x=get_item_id.id)
+
+    directory_of_file = UPLOADED_FILES_DEST_ITEM
+
+    thefile = os.path.join(getimagesubfolder, uuid, filename)
+
+    return send_from_directory(directory=directory_of_file, path=thefile, as_attachment=False)
+
 
 
 @common.route('/user/<string:uuid>/<path:filename>')
@@ -35,18 +34,16 @@ def image_user_profile_file(uuid, filename):
     """
     Takes UUID of User and  id
     """
-    try:
-        get_user_id = db.session\
-            .query(Auth_User)\
-            .filter(Auth_User.uuid == uuid)\
-            .first()
 
-        getimagesubfolder = itemlocation(x=get_user_id.id)
+    get_user_id = db.session\
+        .query(Auth_User)\
+        .filter(Auth_User.uuid == uuid)\
+        .first()
 
-        directory_of_file = UPLOADED_FILES_DEST_USER
+    getimagesubfolder = itemlocation(x=get_user_id.id)
 
-        thefile = os.path.join(getimagesubfolder, uuid, filename)
+    directory_of_file = UPLOADED_FILES_DEST_USER
 
-        return send_from_directory(directory=directory_of_file, path=thefile, as_attachment=False)
-    except Exception as e:
-        return str(e)
+    thefile = os.path.join(getimagesubfolder, uuid, filename)
+
+    return send_from_directory(directory=directory_of_file, path=thefile, as_attachment=False)

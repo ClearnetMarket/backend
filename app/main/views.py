@@ -2,8 +2,6 @@ from flask import jsonify, Response
 from app import app
 from flask_wtf.csrf import generate_csrf
 
-
-
 @app.route('/robots.txt')
 @app.route('/sitemap.xml')
 def static_from_root():

@@ -103,9 +103,6 @@ def message_msg(post_id):
     return jsonify(msg_schema.dump(get_msg_post))
 
 
-
-
-
 @message.route('/main/comment/<int:post_id>', methods=['GET'])
 @login_required
 def message_msg_comments(post_id):
@@ -161,15 +158,16 @@ def message_msg_comments_orderuuid(order_uuid):
         .filter(Message_Chat.order_uuid == order_uuid) \
         .first()
 
-    if get_msg_post is not None:
-        get_msg_post_comments = db.session \
-            .query(Message_Chat) \
-            .filter(Message_Chat.post_id == get_msg_post.post_id) \
-            .order_by(Message_Chat.timestamp.desc()) \
-            .all()
+    if get_msg_post is None:
+        return jsonify({"status": "Error finding chat message"}),200
+    get_msg_post_comments = db.session \
+        .query(Message_Chat) \
+        .filter(Message_Chat.post_id == get_msg_post.post_id) \
+        .order_by(Message_Chat.timestamp.desc()) \
+        .all()
 
-        comments_schema = Message_Chat_Schema(many=True)
-        return jsonify(comments_schema.dump(get_msg_post_comments))
+    comments_schema = Message_Chat_Schema(many=True)
+    return jsonify(comments_schema.dump(get_msg_post_comments))
 
 
 @message.route('/create/comment/<int:post_id>', methods=['POST'])
@@ -373,6 +371,7 @@ def message_create():
     now = datetime.utcnow()
   
     get_body = request.json["body"]
+
     if "item_uuid" in request.json:
         item_uuid = request.json["item_uuid"]
     else:
@@ -402,7 +401,7 @@ def message_create():
         get_post.read = 1
         db.session.add(get_post)
     else:
-        print("creating new post")
+
         # create a new post
         create_post = Message_Post(timestamp=now,
                                    user_one_uuid=get_market_item.vendor_uuid,

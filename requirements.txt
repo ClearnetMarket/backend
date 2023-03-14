@@ -1,4 +1,4 @@
-flask
+flask~=2.2.3
 flask_sqlalchemy
 flask_session
 flask-qrcode
@@ -16,6 +16,9 @@ psycopg2-binary
 qrcode[pil]
 qrcode
 redis
-sqlalchemy
+sqlalchemy~=2.0.5.post1
 flask_wtf
 flask_mail
+itsdangerous
+Werkzeug
+Pillow

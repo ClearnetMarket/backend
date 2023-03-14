@@ -1,5 +1,9 @@
 
 import redis
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 class ApplicationConfig:
     """
@@ -58,4 +62,16 @@ class ApplicationConfig:
     CORS_ORIGIN_WHITELIST = ['http://localhost', '*']
 
 
+
+    # Mail
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 465
+    MAIL_USERNAME = os.getenv('MAIL_USER')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_USE_SSL = True
+    MAIL_USE_TLS = False
+    MAIL_DEFAULT_SENDER = '"donotreply@freeport.cash" <donotreply@freeport.cash>'
+    MAIL_DEBUG = True
+    TESTING = False
+    MAIL_SUPPRESS_SEND = False
 

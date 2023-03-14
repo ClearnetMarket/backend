@@ -116,7 +116,6 @@ def ticket_issue_messages(ticketuuid):
 
     get_ticket = str(ticketuuid)
 
-
     user_tickets = db.session \
         .query(Service_Tickets_Comments) \
         .filter(Service_Tickets_Comments.uuid == get_ticket) \
@@ -134,15 +133,15 @@ def user_create_ticket():
     :return:
     """
     now = datetime.utcnow()
-    
-    user = db.session\
-        .query(Auth_User) \
-        .filter(Auth_User.id == current_user.id)\
-        .first()
 
     # get the body of text for message
     textbody = request.json["textbody"]
     subject = request.json["subject"]
+
+    user = db.session\
+        .query(Auth_User) \
+        .filter(Auth_User.id == current_user.id)\
+        .first()
 
     # create a new ticket
     user_ticket = Service_Ticket(
@@ -182,6 +181,11 @@ def create_comment_to_ticket():
     """
     now = datetime.utcnow()
 
+    # get the body of text for message
+    textbody = request.json["textbody"]
+    # get the txt id
+    ticket_uuid = request.json["ticketid"]
+
     user = db.session\
         .query(Auth_User) \
         .filter(Auth_User.id == current_user.id)\
@@ -190,13 +194,7 @@ def create_comment_to_ticket():
         adminrole = 1
     else:
         adminrole = 0
-        
-    # get the body of text for message
-    textbody = request.json["textbody"]
-   
-    # get the txt id
-    ticket_uuid = request.json["ticketid"]
-    
+
     # get main ticket so we can update read status
     get_main_ticket = db.session\
         .query(Service_Ticket)\
@@ -243,14 +241,6 @@ def get_ticket_count_warning_index():
     })
 
 
-
-    
-    
-    
-    
-    
-    
-    
 @customerservice.route('/vendor-topbar-get-issues-count', methods=['GET'])
 @login_required
 def vendor_topbar_get_issues_count():
@@ -264,9 +254,7 @@ def vendor_topbar_get_issues_count():
         .filter(User_Orders.customer_id == user_id.id)\
         .filter(or_(User_Orders.disputed_order == 1, User_Orders.request_return == 2))\
         .count()
-    return jsonify({
-        "vendorissues": myorderscount,
-    })
+    return jsonify({"vendorissues": myorderscount})
 
 
 @customerservice.route('/customer-topbar-get-issues-count', methods=['GET'])
@@ -283,9 +271,7 @@ def customer_topbar_get_issues_count():
         .filter(Service_Issue.status == 0)\
         .order_by(Service_Issue.timestamp.desc())\
         .count()
-    return jsonify({
-        "serviceissues": service_issues,
-    })
+    return jsonify({ "serviceissues": service_issues })
     
     
     

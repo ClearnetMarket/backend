@@ -3,7 +3,7 @@ from flask import Flask, jsonify, json
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
-
+from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from flask_login import LoginManager
@@ -73,7 +73,10 @@ db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 server_session = Session(app)
 ma = Marshmallow(app)
-#csrf = CSRFProtect(app)
+mail = Mail(app)
+if ApplicationConfig.CURRENT_SETTINGS == 'PRODUCTION':
+    csrf = CSRFProtect(app)
+
 
 login_manager = LoginManager(app)
 login_manager.session_protection = 'strong'
@@ -110,7 +113,10 @@ def load_user_from_request(request):
 api_main = {
     "origins": [ApplicationConfig.ORIGIN_URL],
     "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
-    "allow_headers": ['Authorization', 'application/json', 'authorization', 'Content-Type', 'Access-Control-Allow-Headers', 'Origin,Accept', 'X-Requested-With', 'Content-Type', 'Access-Control-Request-Method', 'Access-Control-Request-Headers']
+    "allow_headers": ['Authorization', 'application/json', 'authorization',
+                      'Content-Type', 'Access-Control-Allow-Headers',
+                      'Origin,Accept', 'X-Requested-With', 'Content-Type',
+                      'Access-Control-Request-Method', 'Access-Control-Request-Headers']
 }
 cors = CORS(app,  supports_credentials=True, resources={r'/*': api_main})
 

@@ -1,9 +1,9 @@
 
 from flask_login import UserMixin, AnonymousUserMixin
-from app import db, ma, login_manager
+from app import db, ma, login_manager, ApplicationConfig
 from datetime import datetime
 from uuid import uuid4
-
+from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 
 def get_uuid():
     return uuid4().hex
@@ -174,6 +174,38 @@ class Auth_User(UserMixin, db.Model):
     def get_id(self):
         return self.id
 
+    # email auth token
+    def generate_auth_token(self):
+        s = Serializer(ApplicationConfig.SECRET_KEY)
+
+        return s.dumps({'id': self.id}).decode('ascii')
+
+    def confirm(self, token):
+        s = Serializer(ApplicationConfig.SECRET_KEY)
+
+        try:
+            data = s.loads(token)
+        except Exception as e:
+            print(str(e))
+            return False
+        if data.get('confirm') != self.id:
+            return False
+
+        self.confirmed = True
+        db.session.add(self)
+
+        return True
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(ApplicationConfig.SECRET_KEY)
+
+        data = s.loads(token)
+
+        return Auth_User.query.get(data['id'])
+
+    def __repr__(self):
+        return '<User %r>' % self.user_name
 
 class Auth_User_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:

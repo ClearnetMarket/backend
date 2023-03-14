@@ -15,15 +15,15 @@ def get_categories_sidebar():
     Function grabs category for the sidebar
     :return:
     """
-    if request.method == 'GET':
 
-        get_cats = db.session\
-            .query(Category_Categories)\
-            .filter(Category_Categories.value != 0)\
-            .order_by(Category_Categories.name.asc())\
-            .all()
-        cats_schema = Category_Categories_Schema(many=True)
-        return jsonify(cats_schema.dump(get_cats))
+
+    get_cats = db.session\
+        .query(Category_Categories)\
+        .filter(Category_Categories.value != 0)\
+        .order_by(Category_Categories.name.asc())\
+        .all()
+    cats_schema = Category_Categories_Schema(many=True)
+    return jsonify(cats_schema.dump(get_cats))
 
 
 # Electronics
@@ -34,17 +34,17 @@ def get_categories_electronics():
     Electronics
     :return:
     """
-    if request.method == 'GET':
-   
-        electronicsfull = db.session \
-            .query(Item_MarketItem) \
-            .filter(Item_MarketItem.online == 1) \
-            .filter(Item_MarketItem.category_id_0 == 2) \
-            .order_by(func.random()) \
-            .limit(10)
 
-        item_schema = Item_MarketItem_Schema(many=True)
-        return jsonify(item_schema.dump(electronicsfull))
+
+    electronicsfull = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .filter(Item_MarketItem.category_id_0 == 2) \
+        .order_by(func.random()) \
+        .limit(10)
+
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(electronicsfull))
 
 
 # Apparal
@@ -55,17 +55,17 @@ def get_categories_apparal():
     Electronics
     :return:
     """
-    if request.method == 'GET':
 
-        electronicsfull = db.session \
-            .query(Item_MarketItem) \
-            .filter(Item_MarketItem.online == 1) \
-            .filter(Item_MarketItem.category_id_0 == 25) \
-            .order_by(func.random()) \
-            .limit(10)
 
-        item_schema = Item_MarketItem_Schema(many=True)
-        return jsonify(item_schema.dump(electronicsfull))
+    electronicsfull = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .filter(Item_MarketItem.category_id_0 == 25) \
+        .order_by(func.random()) \
+        .limit(10)
+
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(electronicsfull))
 
 
 # SmartPhones
@@ -76,17 +76,16 @@ def get_categories_smartphone():
     SmartPhones
     :return:
     """
-    if request.method == 'GET':
 
-        smartphones_full = db.session \
-            .query(Item_MarketItem) \
-            .filter(Item_MarketItem.online == 1) \
-            .filter(Item_MarketItem.category_id_0 == 4) \
-            .order_by(func.random()) \
-            .limit(10)
+    smartphones_full = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .filter(Item_MarketItem.category_id_0 == 4) \
+        .order_by(func.random()) \
+        .limit(10)
 
-        item_schema = Item_MarketItem_Schema(many=True)
-        return jsonify(item_schema.dump(smartphones_full))
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(smartphones_full))
 
 
 # Automotive
@@ -97,17 +96,17 @@ def get_categories_automotive():
     automotive
     :return:
     """
-    if request.method == 'GET':
 
-        automotive_full = db.session \
-            .query(Item_MarketItem) \
-            .filter(Item_MarketItem.online == 1) \
-            .filter(Item_MarketItem.category_id_0 == 9) \
-            .order_by(func.random()) \
-            .limit(10)
 
-        item_schema = Item_MarketItem_Schema(many=True)
-        return jsonify(item_schema.dump(automotive_full))
+    automotive_full = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .filter(Item_MarketItem.category_id_0 == 9) \
+        .order_by(func.random()) \
+        .limit(10)
+
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(automotive_full))
 
 
 # hobbies
@@ -118,17 +117,15 @@ def get_categories_hobbies():
     hobbies
     :return:
     """
-    if request.method == 'GET':
+    hobbies_full = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .filter(Item_MarketItem.category_id_0 == 8) \
+        .order_by(func.random()) \
+        .limit(10)
 
-        hobbies_full = db.session \
-            .query(Item_MarketItem) \
-            .filter(Item_MarketItem.online == 1) \
-            .filter(Item_MarketItem.category_id_0 == 8) \
-            .order_by(func.random()) \
-            .limit(10)
-
-        item_schema = Item_MarketItem_Schema(many=True)
-        return jsonify(item_schema.dump(hobbies_full))
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(hobbies_full))
 
 
 # gold
@@ -139,17 +136,15 @@ def get_categories_gold():
     gold and jewelry
     :return:
     """
-    if request.method == 'GET':
+    gold_full = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .filter(Item_MarketItem.category_id_0 == 22) \
+        .order_by(func.random()) \
+        .limit(10)
 
-        gold_full = db.session \
-            .query(Item_MarketItem) \
-            .filter(Item_MarketItem.online == 1) \
-            .filter(Item_MarketItem.category_id_0 == 22) \
-            .order_by(func.random()) \
-            .limit(10)
-
-        item_schema = Item_MarketItem_Schema(many=True)
-        return jsonify(item_schema.dump(gold_full))
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(gold_full))
 
 
 # home and garden
@@ -160,17 +155,16 @@ def get_categories_homegarden():
     home and garden
     :return:
     """
-    if request.method == 'GET':
 
-        home_full = db.session \
-            .query(Item_MarketItem) \
-            .filter(Item_MarketItem.online == 1) \
-            .filter(Item_MarketItem.category_id_0 == 10) \
-            .order_by(func.random()) \
-            .limit(10)
+    home_full = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .filter(Item_MarketItem.category_id_0 == 10) \
+        .order_by(func.random()) \
+        .limit(10)
 
-        item_schema = Item_MarketItem_Schema(many=True)
-        return jsonify(item_schema.dump(home_full))
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(home_full))
 
 
 # computers and parts
@@ -181,17 +175,16 @@ def get_categories_computers():
     computer
     :return:
     """
-    if request.method == 'GET':
 
-        computer_full = db.session \
-            .query(Item_MarketItem) \
-            .filter(Item_MarketItem.online == 1) \
-            .filter(Item_MarketItem.category_id_0 == 12) \
-            .order_by(func.random()) \
-            .limit(10)
+    computer_full = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .filter(Item_MarketItem.category_id_0 == 12) \
+        .order_by(func.random()) \
+        .limit(10)
 
-        item_schema = Item_MarketItem_Schema(many=True)
-        return jsonify(item_schema.dump(computer_full))
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(computer_full))
 
 
 # Book movies
@@ -202,17 +195,17 @@ def get_categories_books():
     books and movies
     :return:
     """
-    if request.method == 'GET':
 
-        booksandmovies_full = db.session \
-            .query(Item_MarketItem) \
-            .filter(Item_MarketItem.online == 1) \
-            .filter(Item_MarketItem.category_id_0 == 30) \
-            .order_by(func.random()) \
-            .limit(10)
 
-        item_schema = Item_MarketItem_Schema(many=True)
-        return jsonify(item_schema.dump(booksandmovies_full))
+    booksandmovies_full = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .filter(Item_MarketItem.category_id_0 == 30) \
+        .order_by(func.random()) \
+        .limit(10)
+
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(booksandmovies_full))
 
 
 # Digital Items
@@ -223,14 +216,13 @@ def get_categories_digital():
     digital items
     :return:
     """
-    if request.method == 'GET':
 
-        digital_full = db.session \
-            .query(Item_MarketItem) \
-            .filter(Item_MarketItem.online == 1) \
-            .filter(Item_MarketItem.category_id_0 == 100) \
-            .order_by(func.random()) \
-            .limit(10)
+    digital_full = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .filter(Item_MarketItem.category_id_0 == 100) \
+        .order_by(func.random()) \
+        .limit(10)
 
-        item_schema = Item_MarketItem_Schema(many=True)
-        return jsonify(item_schema.dump(digital_full))
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(digital_full))

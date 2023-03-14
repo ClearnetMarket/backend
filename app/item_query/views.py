@@ -13,18 +13,16 @@ def get_items_all():
     Used on index.  Grabs today's featured items
     :return:
     """
-    if request.method == 'GET':
+    todayfeaturedfull = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .filter(Item_MarketItem.image_one_server != '') \
+        .filter(Item_MarketItem.item_count != 0) \
+        .order_by(Item_MarketItem.created.desc()) \
+        .limit(10)
 
-        todayfeaturedfull = db.session \
-            .query(Item_MarketItem) \
-            .filter(Item_MarketItem.online == 1) \
-            .filter(Item_MarketItem.image_one_server != '') \
-            .filter(Item_MarketItem.item_count != 0) \
-            .order_by(Item_MarketItem.created.desc()) \
-            .limit(10)
-
-        item_schema = Item_MarketItem_Schema(many=True)
-        return jsonify(item_schema.dump(todayfeaturedfull))
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(todayfeaturedfull))
 
 
 @itemquery.route('/query/todayfeatured', methods=['GET'])
@@ -33,15 +31,13 @@ def get_items_today_featured():
     Used on index.  Grabs today's featured items
     :return:
     """
-    if request.method == 'GET':
+    todayfeaturedfull = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .filter(Item_MarketItem.image_one_server != '') \
+        .filter(Item_MarketItem.item_count != 0) \
+        .order_by(Item_MarketItem.created.desc()) \
+        .limit(10)
 
-        todayfeaturedfull = db.session \
-            .query(Item_MarketItem) \
-            .filter(Item_MarketItem.online == 1) \
-            .filter(Item_MarketItem.image_one_server != '') \
-            .filter(Item_MarketItem.item_count != 0) \
-            .order_by(Item_MarketItem.created.desc()) \
-            .limit(10)
-
-        item_schema = Item_MarketItem_Schema(many=True)
-        return jsonify(item_schema.dump(todayfeaturedfull))
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(todayfeaturedfull))
