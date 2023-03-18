@@ -38,6 +38,7 @@ def xmr_price_anonymous():
         price_xmr = 0
 
     return jsonify({
+        "success": "success",
         "price_xmr": price_xmr,
     })
 
@@ -64,6 +65,7 @@ def xmr_price_for_user():
         price_xmr = 0
 
     return jsonify({
+        "success": "success",
         "price_xmr": price_xmr,
     })
 
@@ -89,6 +91,7 @@ def xmr_balance_plus_unconfirmed():
         unconfirmed = 0
 
     return jsonify({
+        "success": "success",
         "xmr_balance": userbalance,
         "xmr_unconfirmed": unconfirmed,
     })
@@ -121,8 +124,10 @@ def xmr_receive():
     qr = wallet.address1 + '.png'
     wallet_qr_code = os.path.join(UPLOADED_FILES_DEST_USER, str(current_user.uuid), 'qr', qr)
     
-    return jsonify({"xmr_address": wallet.address1,
-                    "xmr_qr_code": wallet_qr_code
+    return jsonify({
+        "success": "success",
+        "xmr_address": wallet.address1,
+        "xmr_qr_code": wallet_qr_code
                         }), 200
 
 
@@ -171,7 +176,7 @@ def xmr_send():
             amount=amount,
         )
         db.session.commit()
-        return jsonify({"status": "request sent to wallet"}), 200
+        return jsonify({"success": "request sent to wallet"}), 200
     else:
         current_fails = int(user.fails)
         new_fail_amount = current_fails + 1

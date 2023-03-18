@@ -1,7 +1,6 @@
 from flask import request, jsonify
 from flask_login import current_user, login_required
-from app import db, bcrypt
-from datetime import datetime
+from app import db
 from app.wallet_bch import wallet_bch
 from app.wallet_bch.wallet_bch_work import bch_send_coin
 from app.common.functions import floating_decimals
@@ -40,6 +39,7 @@ def bch_price_anonymous():
         price_bch = 0
 
     return jsonify({
+        "success": "success",
         "bch_price": price_bch,
         })
 
@@ -66,6 +66,7 @@ def bch_price_for_user():
         price_bch = 0
 
     return jsonify({
+        "success": "success",
         "bch_price": price_bch,
     })
 
@@ -89,6 +90,7 @@ def bch_balance_plus_unconfirmed():
         unconfirmed = 0
 
     return jsonify({
+        "success": "success",
         "bch_balance": userbalance,
         "bch_unconfirmed": unconfirmed,
     })
@@ -117,7 +119,9 @@ def bch_receive():
         .query(Bch_Wallet)\
         .filter(Bch_Wallet.user_id == current_user.id)\
         .first()
-    return jsonify({"bch_address": wallet.address1}), 200
+    return jsonify({
+        "success": "success",
+        "bch_address": wallet.address1}), 200
 
 
 @wallet_bch.route('/send', methods=['POST'])
@@ -163,8 +167,9 @@ def bch_send():
         amount=amount,
         comment=comment_on_blockchain
     )
+
     db.session.commit()
-    return jsonify({"status": "request sent to wallet"}), 200
+    return jsonify({"success": "request sent to wallet"}), 200
 
 
 

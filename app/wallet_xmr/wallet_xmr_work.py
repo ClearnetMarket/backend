@@ -122,7 +122,9 @@ def xmr_send_coin(user_id, sendto, amount):
         .get(1)
     walletfee = getwallet.amount
     a = xmr_check_balance(user_id=user_id, amount=amount)
-    if a == 1:
+    if a != 1:
+        pass
+    else:
 
         timestamp = datetime.datetime.utcnow()
         userswallet = db.session\
@@ -150,8 +152,7 @@ def xmr_send_coin(user_id, sendto, amount):
         )
         db.session.add(wallet)
         db.session.add(userswallet)
-    else:
-        pass
+
 
 
 def xmr_send_coin_to_user_as_admin(amount, comment, user_id):
@@ -227,7 +228,9 @@ def xmr_send_coin_to_escrow(amount,  user_id, order_uuid):
     :return:
     """
     passed_balance_check = xmr_check_balance(user_id=user_id, amount=amount)
-    if passed_balance_check == 1:
+    if passed_balance_check != 1:
+        pass
+    else:
 
         type_transaction = 4
         userwallet =db.session\

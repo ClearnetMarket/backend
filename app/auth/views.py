@@ -65,6 +65,7 @@ def check_session():
         .first()
 
     return jsonify({
+
         "login": True,
         'user': {'user_id': user.uuid,
                  'user_name': user.display_name,
@@ -98,7 +99,9 @@ def check_confirmed():
     else:
         confirmed = True
 
-    return jsonify({"confirmed": confirmed}), 200
+    return jsonify({
+        "success": "success",
+        "status": confirmed}), 200
 
 
 @auth.route("/logout", methods=["POST"])
@@ -108,7 +111,7 @@ def logout():
     """
     try:
         logout_user()
-        return jsonify({'status': 'logged out'}), 200
+        return jsonify({'success': 'logged out'}), 200
     except:
         return jsonify({"error", 'error'}), 400
 
@@ -191,14 +194,15 @@ def register_user():
     user_exists_email = db.session\
         .query(Auth_User)\
         .filter_by(email=email)\
-        .first() is not None
+        .first()
+
     if user_exists_email:
         return jsonify({"error": "Error: Email already exists"}), 200
 
     user_exists_username = db.session\
         .query(Auth_User)\
         .filter_by(username=username)\
-        .first() is not None
+        .first()
     if user_exists_username:
         return jsonify({"error": "Error: User already exists"}), 200
 
@@ -373,12 +377,12 @@ def account_seed():
         for f in get_words:
             word_list.append(f.text)
 
-        word00 = str(word_list[0]).lower()
-        word01 = str(word_list[1]).lower()
-        word02 = str(word_list[2]).lower()
-        word03 = str(word_list[3]).lower()
-        word04 = str(word_list[4]).lower()
-        word05 = str(word_list[5]).lower()
+        word00 = str(word_list[0]).lower().replace(" ", "")
+        word01 = str(word_list[1]).lower().replace(" ", "")
+        word02 = str(word_list[2]).lower().replace(" ", "")
+        word03 = str(word_list[3]).lower().replace(" ", "")
+        word04 = str(word_list[4]).lower().replace(" ", "")
+        word05 = str(word_list[5]).lower().replace(" ", "")
 
         addseedtodb = Auth_AccountSeedWords(user_id=current_user.id,
                                             word00=word00,
@@ -400,6 +404,7 @@ def account_seed():
         word05 = userseed.word05
 
     return jsonify({
+        "success": "success",
         'word1': word00,
         'word2': word01,
         'word3': word02,
@@ -423,13 +428,11 @@ def confirm_seed():
                 .query(Auth_AccountSeedWords) \
                 .filter(Auth_AccountSeedWords.user_id == user.id)\
                 .first()
+
     if userseed is None:
         return jsonify({"error": "Error: Seed does not exist"}), 200
 
-    userseed = db.session\
-        .query(Auth_AccountSeedWords) \
-        .filter(Auth_AccountSeedWords.user_id == user.id)\
-        .first()
+
     word0 = str(request.json["word0"]).replace(" ", "")
     word1 = str(request.json["word1"]).replace(" ", "")
     word2 = str(request.json["word2"]).replace(" ", "")
@@ -438,11 +441,11 @@ def confirm_seed():
     word5 = str(request.json["word5"]).replace(" ", "")
 
     if word0 != userseed.word00:
-        return jsonify({"error 1": "Seed does not match"}), 200
+        return jsonify({"error": "Seed does not match"}), 200
     if word1 != userseed.word01:
-        return jsonify({"error 2": "Seed does not match"}), 200
+        return jsonify({"error": "Seed does not match"}), 200
     if word2 != userseed.word02:
-        return jsonify({"error 3": "Seed does not match"}), 200
+        return jsonify({"error": "Seed does not match"}), 200
     if word3 != userseed.word03:
         return jsonify({"error": "Seed does not match 4"}), 200
     if word4 != userseed.word04:
@@ -455,7 +458,7 @@ def confirm_seed():
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({'status': 'success'}), 200
+    return jsonify({'success': 'success'}), 200
 
 
 @auth.route('/unlock-account', methods=['POST'])
@@ -495,7 +498,7 @@ def retrieve_seed_to_unlock_account():
     login_user(user)
     current_user.is_authenticated()
     current_user.is_active()
-    return jsonify({'status': 'Error: Account Unlocked'}), 200
+    return jsonify({'success': 'Error: Account Unlocked'}), 200
 
 
 @auth.route('/change-password', methods=['POST'])
@@ -519,7 +522,7 @@ def change_password():
     user.passwordpinallowed = 0
     db.session.add(user)
     db.session.commit()
-    return jsonify({"status": "success"}), 200
+    return jsonify({"success": "success"}), 200
 
 @auth.route('/change-pin', methods=['POST'])
 @login_required
@@ -547,7 +550,7 @@ def change_pin():
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"status": "success"}), 200
+    return jsonify({"success": "success"}), 200
 
 
 @auth.route("/vacation-on", methods=["POST"])
@@ -574,7 +577,7 @@ def vacation_on():
             a.online = 0
             db.session.add(a)
     db.session.commit()
-    return jsonify({"status": "Vacation Mode Enabled"}), 200
+    return jsonify({"success": "Vacation Mode Enabled"}), 200
 
 
 @auth.route("/vacation-off", methods=["POST"])
@@ -595,7 +598,7 @@ def vacation_off():
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"status": "Vacation Mode Disabled"}), 200
+    return jsonify({"success": "Vacation Mode Disabled"}), 200
 
 
 @auth.route('/query/country', methods=['GET'])
@@ -641,7 +644,7 @@ def change_profile_info():
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"status": "Success"}), 200
+    return jsonify({"success": "Success"}), 200
 
 @auth.route('/userbio', methods=['GET'])
 @login_required
@@ -654,7 +657,9 @@ def user_profile_info():
 
     new_bio = user.bio
 
-    return jsonify({"bio": new_bio}), 200
+    return jsonify({
+        "success": "success",
+        "bio": new_bio}), 200
 
 
 @auth.route('/create-profile-image/<string:uuid>', methods=['POST', 'OPTIONS'])
@@ -691,7 +696,7 @@ def create_profile_image(uuid):
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"status": 'success'})
+    return jsonify({"success": 'success'})
 
 
 
@@ -743,7 +748,7 @@ def delete_item_images(uuid, imagename):
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"status": 'Success'}), 200
+    return jsonify({"success": 'Success'}), 200
 
 
 @auth.route('/query/profileimage/server/<string:uuid>', methods=['GET'])
@@ -758,7 +763,11 @@ def user_image_server(uuid):
         .filter(Auth_User.uuid == uuid)\
         .first()
 
-    return jsonify({"status": user_image.profileimage}), 200
+    return jsonify(
+        {"success": "success",
+        "status": user_image.profileimage
+        }
+    ), 200
 
 
 @auth.route('/query/profileimage/url/<string:uuid>', methods=['GET'])
@@ -772,9 +781,9 @@ def user_image_url(uuid):
         .query(Auth_User)\
         .filter(Auth_User.uuid == uuid)\
         .first()
-    return jsonify({"status": user_image.profileimage_url_250}), 200
-
-
+    return jsonify({
+        "success": "success",
+        "status": user_image.profileimage_url_250}), 200
 
 
 
@@ -812,10 +821,10 @@ def retrievepassword():
         .filter_by(email=email) \
         .first()
     if not user:
-        return jsonify({"status": 'iF email exists a password has been sent.'}), 200
+        return jsonify({"success": 'iF email exists a password has been sent.'}), 200
 
     send_password_reset_email(user_email=user.email)
-    return jsonify({"status": 'If email exists a password has been sent.'}), 200
+    return jsonify({"success": 'If email exists a password has been sent.'}), 200
 
 @auth.route('/resetpassword/<token>', methods=[ "POST"])
 def reset_with_token(token):
@@ -849,7 +858,11 @@ def reset_with_token(token):
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"status": token}), 200
+    return jsonify(
+        {
+            "success": "success",
+            "status": token
+         }), 200
 
 
 @auth.route('/unlock/<token>', methods=["POST"])
@@ -870,7 +883,9 @@ def unlock_with_token(token):
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"status": token}), 200
+    return jsonify({
+        "success": "success",
+        "status": token}), 200
 
 
 @auth.route('/confirm/<token>', methods=["POST"])
@@ -885,15 +900,14 @@ def confirm_account_with_token(token):
         .first()
 
     if user.confirmed != 0:
-        return jsonify({"status": "Account is confirmed"}), 200
-
+        return jsonify({"success": "Account is confirmed"}), 200
 
     user.locked = 0
     user.fails = 0
     user.confirmed = 1
     db.session.add(user)
     db.session.commit()
-    return jsonify({"status": "Account is confirmed"}), 200
+    return jsonify({"success": "Account is confirmed"}), 200
 
 @auth.route('/confirm/<token>', methods=["POST"])
 def reconfirm_account_with_token(token):
@@ -914,7 +928,7 @@ def reconfirm_account_with_token(token):
     user.confirmed = 1
     db.session.add(user)
     db.session.commit()
-    return jsonify({"status": "Account is confirmed"}), 200
+    return jsonify({"success": "Account is confirmed"}), 200
 
 
 @auth.route('/resend', methods=['GET'])
@@ -949,4 +963,6 @@ def resendconfirmation():
                                  now=now,
                                  password_reset_url=confirm_account_url)
     send_email('Welcome to Freeport! ', [user.email], '', accountreg)
-    return jsonify({"status": confirm_account_url}), 200
+    return jsonify({
+        "success": "success",
+        "status": confirm_account_url}), 200

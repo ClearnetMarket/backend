@@ -183,7 +183,9 @@ def bch_send_coin(user_id, sendto, amount, comment):
         .first()
     walletfee = getwallet.btc
     a = bch_check_balance(user_id=user_id, amount=amount)
-    if a == 1:
+    if a != 1:
+        pass
+    else:
         strcomment = str(comment)
         type_transaction = 2
         userswallet = db.session\
@@ -215,8 +217,7 @@ def bch_send_coin(user_id, sendto, amount, comment):
         # set balance as new amount
         userswallet.currentbalance = floating_decimals(amountfromfee, 8)
         db.session.add(userswallet)
-    else:
-        pass
+
 
 
 def bch_send_coin_to_user_as_admin(amount, comment, user_id, order_uuid):
@@ -296,32 +297,31 @@ def bch_send_coin_to_escrow(amount, user_id, order_uuid):
     :return:
     """
     a = bch_check_balance(user_id=user_id, amount=amount)
-    if a == 1:
-        try:
-            type_transaction = 4
-            userswallet = db.session\
-                .query(Bch_Wallet)\
-                .filter_by(user_id=user_id)\
-                .first()
-            curbal = Decimal(userswallet.currentbalance)
-            amounttomod = Decimal(amount)
-            newbalance = Decimal(curbal) - Decimal(amounttomod)
-            userswallet.currentbalance = newbalance
-            db.session.add(userswallet)
-            
-            bch_add_transaction(category=type_transaction,
-                                amount=amount,
-                                user_id=user_id,
-                                comment='Sent Coin To Escrow',
-                                balance=newbalance,
-                                order_uuid=order_uuid,
-                                item_uuid=None
-                                )
-        except Exception as e:
-            print(str(e))
-            pass
-    else:
+    if a != 1:
         pass
+    else:
+
+        type_transaction = 4
+        userswallet = db.session\
+            .query(Bch_Wallet)\
+            .filter_by(user_id=user_id)\
+            .first()
+        curbal = Decimal(userswallet.currentbalance)
+        amounttomod = Decimal(amount)
+        newbalance = Decimal(curbal) - Decimal(amounttomod)
+        userswallet.currentbalance = newbalance
+        db.session.add(userswallet)
+
+        bch_add_transaction(category=type_transaction,
+                            amount=amount,
+                            user_id=user_id,
+                            comment='Sent Coin To Escrow',
+                            balance=newbalance,
+                            order_uuid=order_uuid,
+                            item_uuid=None
+                            )
+
+
 
 
 def bch_send_coin_to_user(amount, user_id, order_uuid):

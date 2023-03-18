@@ -19,6 +19,7 @@ def message_new():
         .count()
 
     return jsonify({
+        "success": "success",
         "count": gnotifications,
     })
 
@@ -41,6 +42,6 @@ def message_new_markasread():
     db.session.commit()
   
     return jsonify({
-        "status": "success",
+        "success": "success",
     })
 

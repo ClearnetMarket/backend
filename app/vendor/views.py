@@ -65,7 +65,9 @@ def vendor_signup():
     db.session.add(current_user)
     db.session.commit()
 
-    return jsonify({'user': {'user_id': current_user.uuid,
+    return jsonify(
+            {"success": "success",
+            'user': {'user_id': current_user.uuid,
                              'user_name': current_user.username,
                              'user_email': current_user.email,
                              'profile_image': current_user.profileimage,
@@ -123,7 +125,9 @@ def vendor_vendor_feedback_count(vendor_uuid):
         .filter(Feedback_Feedback.vendor_rating != None)\
         .count()
     if vendor_feedback == 0:
-        return jsonify({"total_feedback": 0,
+        return jsonify({
+                        "success": "success",
+                        "total_feedback": 0,
                         'feedback_one': 0,
                         'feedback_two': 0,
                         'feedback_three': 0,
@@ -218,7 +222,9 @@ def vendor_vendor_feedback_count(vendor_uuid):
     vendor_feedback_ten_percent = (
         (int(vendor_feedback_ten) / int(vendor_feedback))*100)
 
-    return jsonify({"total_feedback": vendor_feedback,
+    return jsonify({
+                    "success": "success",
+                    "total_feedback": vendor_feedback,
                     'feedback_one': vendor_feedback_one_percent,
                     'feedback_two': vendor_feedback_two_percent,
                     'feedback_three': vendor_feedback_three_percent,
@@ -244,7 +250,9 @@ def vendor_topbar_get_orders_count():
         .filter(Vendor_Notification.new_orders != 0)\
         .filter(Vendor_Notification.user_id == current_user.id)\
         .count()
-    return jsonify({"count": new_orders})
+    return jsonify({
+        "success": "success",
+        "count": new_orders})
 
 
 @vendor.route('/new-orders-count/markasread', methods=['DELETE'])
@@ -262,7 +270,7 @@ def vendor_topbar_get_orders_markasread():
     for f in new_orders:
         db.session.delete(f)
     db.session.commit()
-    return jsonify({"status": 'success'})
+    return jsonify({"success": 'success'})
 
 
 @vendor.route('/new-disputes-count', methods=['GET'])
@@ -278,7 +286,9 @@ def vendor_topbar_get_disputes_count():
         .filter(Vendor_Notification.user_id == current_user.id)\
         .count()
   
-    return jsonify({"count": new_disputes})
+    return jsonify({
+        "success": "success",
+        "count": new_disputes})
 
 
 @vendor.route('/new-disputes-count/markasread', methods=['DELETE'])
@@ -296,7 +306,7 @@ def vendor_topbar_get_disputes_markasread():
     for f in new_disputes:
         db.session.delete(f)
     db.session.commit()
-    return jsonify({"status": 'success'})
+    return jsonify({"success": 'success'})
 
 
 @vendor.route('/new-feedback-count', methods=['GET'])
@@ -311,7 +321,9 @@ def vendor_topbar_get_feedback_count():
         .filter(Vendor_Notification.new_feedback == 1)\
         .filter(Vendor_Notification.user_id == current_user.id)\
         .count()
-    return jsonify({"count": new_feedback})
+    return jsonify({
+        "success": "success",
+        "count": new_feedback})
 
 
 @vendor.route('/new-feedback-count/markasread', methods=['DELETE'])
@@ -329,7 +341,7 @@ def vendor_topbar_get_feedback_markasread():
     for f in new_feedback:
         db.session.delete(f)
     db.session.commit()
-    return jsonify({"status": 'success'})
+    return jsonify({"success": 'success'})
 
 
 @vendor.route('/vendor-info/<string:vendor_id>', methods=['GET'])
@@ -353,7 +365,9 @@ def vendor_topbar_get_vendor_info(vendor_id):
     vendor_rating = vendor_stats.avg_item_rating
     vendor_total_sales = vendor_stats.total_sales
     vendor_uuid = vendor_stats.vendor_uuid
+
     return jsonify({
+        "success": "success",
         "vendorname": vendor_name,
         "vendoruuid": vendor_uuid,
         "vendorrating": vendor_rating,
@@ -376,6 +390,7 @@ def vendor_get_address(vendoruuid):
     zipcode = vendor_address.zip_code
 
     return jsonify({
+        "success": "success",
         "city": city,
         "stateorprovence": stateorprovence,
         "zipcode": zipcode,
@@ -413,14 +428,16 @@ def vendor_update_address():
         zipcode = request.json["zip"]
     else:
         zipcode = None
+
     vendor_address.country = current_user.country
     vendor_address.city = city
     vendor_address.state_or_provence = state_or_provence
     vendor_address.zip_code = zipcode
+
     db.session.add(vendor_address)
     db.session.commit()
 
-    return jsonify({"status": 'success'})
+    return jsonify({"success": 'success'})
 
 
 @vendor.route('/itemsforsale/<string:vendor_uuid>', methods=['GET'])

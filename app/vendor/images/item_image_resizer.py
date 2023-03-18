@@ -18,7 +18,6 @@ def testsize(pathofimage):
         else:
             return 0
 
-
 def convertimage(thefile, pathoffile, directoryofimage):
     print("File format incorrect ...")
     filename, exti = os.path.splitext(thefile)
@@ -46,7 +45,6 @@ def convertimage_225(newfullpathfilename, root, file):
     else:
         # creates new basename
         print("")
-
         print("*"*10)
         print("name: ", newfullpathfilename)
         print("format:", img.format)

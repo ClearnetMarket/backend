@@ -19,7 +19,7 @@ def static_from_root():
 @app.route('/index', methods=['GET'])
 @app.route('/', methods=['GET'])
 def index():
-    return jsonify({"Status": "Api is online"}), 200
+    return jsonify({"success": "Api is online"}), 200
 
 
 @app.route('/csrf', methods=['GET'])

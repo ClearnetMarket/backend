@@ -4,6 +4,7 @@ from flask import request, jsonify
 from flask_login import login_required, current_user
 from app.moderator import moderator
 from app import db
+from app.notification import notification
 from app.classes.user_orders import\
     User_Orders,\
     User_Orders_Schema
@@ -67,10 +68,17 @@ def create_comment_to_ticket():
         text_body=textbody,
     )
 
+    notification(username=get_main_ticket.author,
+                 user_uuid=get_main_ticket.author_uuid,
+                 msg="You have a new comment on a ticket."
+                 )
+
     db.session.add(user_ticket_comment)
     db.session.commit()
 
-    return jsonify({"ticket": user_ticket_comment.uuid})
+    return jsonify({
+        "success": "success",
+        "ticket": user_ticket_comment.uuid})
 
 
 @moderator.route('/ticket/<string:ticketuuid>', methods=['GET'])
@@ -126,11 +134,14 @@ def ticket_mark_closed(uuid):
         .first()
 
     user_ticket.status = 0
-    
+    notification(username=user_ticket.author,
+                 user_uuid=user_ticket.author_uuid,
+                 msg="Your ticket has been marked as resolved by a mod."
+                 )
     db.session.add(user_ticket)
     db.session.commit()
         
-    return jsonify({"status": "success"})
+    return jsonify({"success": "success"})
 
 
 @moderator.route('/dispute/settle/<string:uuid>', methods=['POST'])
@@ -147,22 +158,22 @@ def mark_dispute_finished(uuid):
         .first()
 
     if get_order.moderator_uuid != current_user.uuid:
-        return jsonify({"status": "error"})
+        return jsonify({"error": "User Error"})
     
     if "percenttovendor" not in request.json:
-        return jsonify({"status": "error"})
+        return jsonify({"error": "User Error"})
 
     percent_to_vendor_json = request.json["percenttovendor"]
     percent_to_vendor = int(percent_to_vendor_json)
 
     if "percenttocustomer" not in request.json:
-        return jsonify({"status": "error"})
+        return jsonify({"error": "User Error"})
 
     percent_to_customer_json = request.json["percenttocustomer"]
     percent_to_customer = int(percent_to_customer_json)
 
     if not get_order:
-        return jsonify({"status": "Could find order"})
+        return jsonify({"error": "Could find order"})
     if get_order.digital_currency == 1:
         finalize_order_dispute_btc(order_uuid=get_order.uuid,
                                     percent_to_customer=percent_to_customer,
@@ -177,10 +188,20 @@ def mark_dispute_finished(uuid):
                                     percent_to_vendor=percent_to_vendor)
     get_order.overall_status = 10
 
+    notification(username=get_order.customer_user_name,
+                 user_uuid=get_order.customer_uuid,
+                 msg="Your dispute has been marked as resolved."
+                 )
+
+    notification(username=get_order.vendor_user_name,
+                 user_uuid=get_order.vendor_uuid,
+                 msg="Your dispute has been marked as resolved."
+                 )
+
     db.session.add(get_order)
     db.session.commit()
 
-    return jsonify({"status": "success"})
+    return jsonify({"success": "Dispute marked as finished"})
 
 
 @moderator.route('/dispute/canceldispute/open/<string:uuid>', methods=['GET'])
@@ -202,10 +223,20 @@ def mark_dispute_cancelled_still_open(uuid):
 
     get_order.overall_status = 3
 
+    notification(username=get_order.customer_user_name,
+                 user_uuid=get_order.customer_uuid,
+                 msg="Your order has been updated by a moderator."
+                 )
+
+    notification(username=get_order.vendor_user_name,
+                 user_uuid=get_order.vendor_uuid,
+                 msg="Your order has been updated by a moderator."
+                 )
+
     db.session.add(get_order)
     db.session.commit()
 
-    return jsonify({"status": "success"})
+    return jsonify({"success": "success"})
 
 
 @moderator.route('/dispute/canceldispute/closed/<string:uuid>', methods=['GET'])
@@ -225,10 +256,20 @@ def mark_dispute_cancelled_still_closed(uuid):
 
     get_order.overall_status = 10
 
+    notification(username=get_order.customer_user_name,
+                 user_uuid=get_order.customer_uuid,
+                 msg="Your order has been updated to closed by a moderator."
+                 )
+
+    notification(username=get_order.vendor_user_name,
+                 user_uuid=get_order.vendor_uuid,
+                 msg="Your order has been updated to closed by a moderator."
+                 )
+
     db.session.add(get_order)
     db.session.commit()
 
-    return jsonify({"status": "success"})
+    return jsonify({"success": "success"})
 
 
 @moderator.route('/dispute/extend/<string:uuid>', methods=['GET'])
@@ -249,10 +290,20 @@ def extend_dispute_time(uuid):
 
     get_order.extended_timer = 1
 
+    notification(username=get_order.customer_user_name,
+                 user_uuid=get_order.customer_uuid,
+                 msg="Your order autocompletion has been extended in time."
+                 )
+
+    notification(username=get_order.vendor_user_name,
+                 user_uuid=get_order.vendor_uuid,
+                 msg="Your order autocompletion has been extended in time."
+                 )
+
     db.session.add(get_order)
     db.session.commit()
 
-    return jsonify({"status": "success"})
+    return jsonify({"success": "success"})
 
 
 @moderator.route('/postdisputemsg/<string:uuid>', methods=['POST'])
@@ -276,10 +327,19 @@ def add_message_after_dispute(uuid):
         msg = str(msg_json)
         get_order.msg = msg
 
+    notification(username=get_order.customer_user_name,
+                 user_uuid=get_order.customer_uuid,
+                 msg="Your order has a message added by a mod."
+                 )
+
+    notification(username=get_order.vendor_user_name,
+                 user_uuid=get_order.vendor_uuid,
+                 msg="Your order has a message added by a mod."
+                 )
     db.session.add(get_order)
     db.session.commit()
 
-    return jsonify({"status": "success"})
+    return jsonify({"success": "success"})
 
 
 @moderator.route('/orderinfo/<string:uuid>', methods=['GET'])
@@ -360,23 +420,33 @@ def become_mod_of_order(orderuuid):
     """
     if current_user.admin_role < 2:
         return jsonify({"error": "Error:  User not authorized."})
-    else:
-        # get the order from the uuid
-        get_order = db.session \
-            .query(User_Orders) \
-            .filter(User_Orders.uuid == orderuuid) \
-            .first()
 
-        # set current moderator as mod
-        get_order.moderator_uuid = current_user.uuid
-        get_order.moderator_user_name = current_user.display_name
+    # get the order from the uuid
+    get_order = db.session \
+        .query(User_Orders) \
+        .filter(User_Orders.uuid == orderuuid) \
+        .first()
 
-        # add to db
-        db.session.add(get_order)
+    # set current moderator as mod
+    get_order.moderator_uuid = current_user.uuid
+    get_order.moderator_user_name = current_user.display_name
 
-        db.session.commit()
+    notification(username=get_order.customer_user_name,
+                 user_uuid=get_order.customer_uuid,
+                 msg="Your order has a moderator added."
+                 )
 
-        return jsonify({"status": "success"})
+    notification(username=get_order.vendor_user_name,
+                 user_uuid=get_order.vendor_uuid,
+                 msg="Your order has a moderator added."
+                 )
+
+    # add to db
+    db.session.add(get_order)
+
+    db.session.commit()
+
+    return jsonify({"success": "success"})
 
 
 @moderator.route('/takeonmod/msg/<int:postid>', methods=['PUT'])
@@ -394,7 +464,7 @@ def become_mod_of_postmsg(postid):
     db.session.add(get_message_post)
     db.session.commit()
 
-    return jsonify({"status": "success"})
+    return jsonify({"success": "success"})
 
 
 @moderator.route('/disputes/available', methods=['GET'])
@@ -467,6 +537,7 @@ def ticket_stats():
         .count()
 
     return jsonify({
+        "success": "success",
         "count": user_tickets_count,
         "open": user_tickets_open,
         "completed": user_tickets_completed,
@@ -490,6 +561,7 @@ def disputes_stats():
         .count()
 
     return jsonify({
+        "success": "success",
         "count": user_disputes_count,
     })
 

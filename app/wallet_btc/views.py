@@ -37,7 +37,7 @@ def btc_price_anonymous():
     except:
         price_btc = 0
     return jsonify({
-        "btc_price": price_btc,
+        "success": price_btc,
     })
 
 
@@ -63,7 +63,8 @@ def btc_price_for_user():
     except:
         price_btc = 0
     return jsonify({
-        "btc_price": price_btc,
+        "success": "success",
+        "status": price_btc,
     })
 
 @wallet_btc.route('/balance', methods=['GET'])
@@ -85,6 +86,7 @@ def btc_balance_plus_unconfirmed():
         unconfirmed = 0
 
     return jsonify({
+        "success": "success",
         "btc_balance": userbalance,
         "btc_unconfirmed": unconfirmed,
     })
@@ -112,7 +114,7 @@ def btc_receive():
         .query(Btc_Wallet)\
         .filter(Btc_Wallet.user_id == current_user.id)\
         .first()
-    return jsonify({"btc_address": userwallet.address1}), 200
+    return jsonify({"success": userwallet.address1}), 200
 
 
 @wallet_btc.route('/send', methods=['POST'])
@@ -159,6 +161,6 @@ def btc_send():
         comment=comment_on_blockchain
     )
     db.session.commit()
-    return jsonify({"status": "request sent to wallet"}), 200
+    return jsonify({"success": "request sent to wallet"}), 200
 
 

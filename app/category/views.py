@@ -1,4 +1,4 @@
-from flask import request,  jsonify
+from flask import jsonify
 from sqlalchemy import func
 from app.category import category
 from app import db
@@ -6,7 +6,6 @@ from app import db
 # models
 from app.classes.category import Category_Categories, Category_Categories_Schema
 from app.classes.item import Item_MarketItem, Item_MarketItem_Schema
-
 
 
 @category.route('/sidebar', methods=['GET'])

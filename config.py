@@ -10,7 +10,6 @@ def load_config(mode=os.environ.get('MODE')):
         elif mode == 'DEVELOPMENT':
             from settings_local import ApplicationConfig
             return ApplicationConfig
-
         else:
             pass
 

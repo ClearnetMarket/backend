@@ -5,9 +5,13 @@ from flask_login import current_user
 from app.classes.item import Item_MarketItem
 from app.vendororders import vendororders
 from app import db
+from app.notification import notification
 from sqlalchemy import or_
 from app.common.decorators import login_required
-from app.classes.user_orders import User_Orders, User_Orders_Schema, User_Orders_Tracking
+from app.classes.user_orders import \
+    User_Orders,\
+    User_Orders_Schema,\
+    User_Orders_Tracking
 from app.classes.feedback import Feedback_Feedback
 from app.wallet_bch.wallet_bch_work import bch_refund_rejected_user
 from app.wallet_btc.wallet_btc_work import btc_refund_rejected_user
@@ -30,7 +34,7 @@ def vendor_orders_count():
         .filter_by(vendor_id=current_user.id) \
         .filter_by(overall_status=2) \
         .count()
-    vendor_orders_shipped = db.session\
+    vendor_orders_shipped_out = db.session\
         .query(User_Orders) \
         .filter_by(vendor_id=current_user.id) \
         .filter_by(overall_status=3) \
@@ -40,7 +44,7 @@ def vendor_orders_count():
         .filter_by(vendor_id=current_user.id) \
         .filter_by(overall_status=4) \
         .count()
-    vendor_orders_finalized = db.session\
+    vendor_orders_finalized_done = db.session\
         .query(User_Orders) \
         .filter_by(vendor_id=current_user.id) \
         .filter_by(overall_status=10) \
@@ -61,10 +65,11 @@ def vendor_orders_count():
         .filter_by(overall_status=8) \
         .count()
     return jsonify({
+        "success": "success",
         'vendor_orders_new': vendor_orders_new,
         'vendor_orders_accepted': vendor_orders_accepted,
-        'vendor_orders_shipped': vendor_orders_shipped,
-        'vendor_orders_finalized': vendor_orders_finalized,
+        'vendor_orders_shipped': vendor_orders_shipped_out,
+        'vendor_orders_finalized': vendor_orders_finalized_done,
         'vendor_orders_delivered': vendor_orders_delivered,
         'vendor_orders_request_cancel': vendor_orders_request_cancel,
         'vendor_orders_cancelled': vendor_orders_cancelled,
@@ -99,7 +104,7 @@ def vendor_orders_new_accept(orderuuid):
     vendor_order.overall_status = 2
     db.session.add(vendor_order)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'success'})
 
 
 @vendororders.route('/new/reject/<string:orderuuid>', methods=['POST'])
@@ -132,8 +137,13 @@ def vendor_orders_reject(orderuuid):
             user_id=vendor_order.customer_id,
             order_uuid=vendor_order.uuid
              )
+    notification(username=vendor_order.customer_user_name,
+                 user_uuid=vendor_order.customer_uuid,
+                 msg="Your order has been rejected by the vendor."
+                 )
+
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'success'})
 
 
 @vendororders.route('/waiting', methods=['GET'])
@@ -162,9 +172,14 @@ def vendor_orders_mark_as_shipped(orderuuid):
     vendor_order.overall_status=3
     vendor_order.date_shipped = datetime.utcnow()
 
+    notification(username=vendor_order.customer_user_name,
+                 user_uuid=vendor_order.customer_uuid,
+                 msg="Your order has been marked as shipped by the vendor."
+                 )
+
     db.session.add(vendor_order)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'success'})
 
 
 @vendororders.route('/shipped', methods=['GET'])
@@ -244,6 +259,13 @@ def vendor_orders_add_tracking():
         .query(User_Orders_Tracking)\
         .filter(User_Orders_Tracking.order_uuid == order_uuid, User_Orders_Tracking.vendor_uuid == current_user.uuid)\
         .first()
+
+    notification(username=see_if_order_exists.customer_user_name,
+                 user_uuid=see_if_order_exists.customer_uuid,
+                 msg="Your order has tracking added by the vendor."
+                 )
+
+
     if see_if_tracking_exists is None:
         add_new_tracking = User_Orders_Tracking(
             created=now,
@@ -260,7 +282,7 @@ def vendor_orders_add_tracking():
         db.session.add(see_if_tracking_exists)
         db.session.commit()
 
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'success'})
 
 
 @vendororders.route('/tracking/get/<string:order_uuid>', methods=['GET'])
@@ -278,6 +300,7 @@ def vendor_orders_get_tracking(order_uuid):
         return jsonify({'error': "Error:  Could not find tracking"})
 
     return jsonify({
+        "success": "success",
         'tracking_number': tracking_data.tracking_number,
         'carrier_name': tracking_data.carrier,
     })
@@ -291,6 +314,9 @@ def vendor_orders_add_vendor_feedback(order_uuid):
     - vendor gives a review for the customer
     """
 
+    get_item_rating = request.json["item_rating"]
+    get_vendor_rating_for_customer = request.json["vendor_rating"]
+
     see_if_feedback_exists = db.session\
                                  .query(User_Orders)\
                                  .filter(vendor_feedback=1)\
@@ -298,8 +324,6 @@ def vendor_orders_add_vendor_feedback(order_uuid):
                                  .filter(customer_uuid=current_user.uuid)\
                                  .first() is not None
 
-    get_item_rating = request.json["item_rating"]
-    get_vendor_rating_for_customer = request.json["vendor_rating"]
     if see_if_feedback_exists is None:
         return jsonify({'error': "Error:  Could not find feedback"})
     # get the feedback based on order uuid
@@ -312,10 +336,15 @@ def vendor_orders_add_vendor_feedback(order_uuid):
     get_feedback.customer_rating = get_vendor_rating_for_customer
     get_feedback.item_rating = get_item_rating
 
+    notification(username=see_if_feedback_exists.customer_user_name,
+                 user_uuid=see_if_feedback_exists.customer_uuid,
+                 msg="You have feedback from a vendor on an order."
+                 )
+
     db.session.add(get_feedback)
     db.session.commit()
 
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'success'})
 
 
 @vendororders.route('/online/<string:uuid>', methods=['GET'])
@@ -332,13 +361,16 @@ def vendor_orders_put_online(uuid):
         .first()
     check_if_allowed = put_online_allowed(item=get_item)
     if check_if_allowed is not True:
-        return jsonify({'status': check_if_allowed})
+        return jsonify({
+            'success': "Info success",
+            'status': check_if_allowed
+        })
 
     get_item.online = 1
 
     db.session.add(get_item)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'success'})
 
 
 @vendororders.route('/offline/<string:uuid>', methods=['GET'])
@@ -359,7 +391,7 @@ def vendor_orders_put_offline(uuid):
     db.session.add(get_item)
     db.session.commit()
 
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'success'})
 
 
 @vendororders.route('/notification/dispute/<string:uuid>', methods=['POST'])
@@ -387,6 +419,6 @@ def vendor_notification_dispute(uuid):
         )
         db.session.add(create_new_notification)
         db.session.commit()
-        return jsonify({'status': 'successfully created notification'})
+        return jsonify({'success': 'successfully created notification'})
     else:
-        return jsonify({'status': 'Error: Failed to create notification'})
+        return jsonify({'error': 'Error: Failed to create notification'})

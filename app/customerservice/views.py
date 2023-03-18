@@ -41,7 +41,7 @@ def ticket_mark_as_read(ticketuuid):
     db.session.add(user_tickets)
     db.session.commit()
     
-    return jsonify({"status": "success"})
+    return jsonify({"success": "success"})
 
 
 @customerservice.route('/tickets', methods=['GET'])
@@ -77,7 +77,9 @@ def user_get_ticket_count():
         .filter(Service_Ticket.status == 1) \
         .count()
 
-    return jsonify({"tickets": user_tickets})
+    return jsonify({
+        "success": "success",
+        "tickets": user_tickets})
     
 
 @customerservice.route('/ticket/<string:ticketuuid>', methods=['POST'])
@@ -169,7 +171,9 @@ def user_create_ticket():
     db.session.add(user_ticket_comment)
     db.session.commit()
         
-    return jsonify({"ticket": user_ticket.uuid})
+    return jsonify({
+        "success": "success",
+        "ticket": user_ticket.uuid})
     
     
 @customerservice.route('/create/ticket/comment', methods=['POST'])
@@ -219,7 +223,9 @@ def create_comment_to_ticket():
     db.session.add(user_ticket_comment)
     db.session.commit()
 
-    return jsonify({"ticket": user_ticket_comment.uuid})
+    return jsonify({
+        "success": "success",
+        "ticket": user_ticket_comment.uuid})
 
 
 @customerservice.route('/newticket', methods=['GET'])
@@ -237,6 +243,7 @@ def get_ticket_count_warning_index():
         .count()
   
     return jsonify({
+        "success": "success",
         "count": get_main_ticket,
     })
 
@@ -255,7 +262,9 @@ def vendor_topbar_get_issues_count():
         .filter(or_(User_Orders.disputed_order == 1, User_Orders.request_return == 2))\
         .count()
 
-    return jsonify({"vendorissues": myorderscount})
+    return jsonify({
+        "success": "success",
+        "vendorissues": myorderscount})
 
 
 @customerservice.route('/customer-topbar-get-issues-count', methods=['GET'])
@@ -273,7 +282,9 @@ def customer_topbar_get_issues_count():
         .order_by(Service_Issue.timestamp.desc())\
         .count()
 
-    return jsonify({ "serviceissues": service_issues })
+    return jsonify({
+        "success": "success",
+        "serviceissues": service_issues })
     
     
     

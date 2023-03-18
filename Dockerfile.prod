@@ -1,7 +1,7 @@
 FROM python:3.11-rc-bullseye
 
-
 RUN mkdir -p /app
+
 RUN mkdir -p /data
 
 WORKDIR /app

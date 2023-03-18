@@ -140,7 +140,6 @@ def create_item_main(uuid):
         .first()
     item_country_name = currency_list.name
 
-
     item = db.session\
         .query(Item_MarketItem)\
         .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == current_user.id)\
@@ -188,7 +187,7 @@ def create_item_main(uuid):
                                           (str(item.uuid))
                                           )
     mkdir_p(directoryifitemlisting)
-    return jsonify({"status": 'success'}), 200
+    return jsonify({"success": 'success'}), 200
 
 
 @vendorcreateitem.route('/create-item-images/<string:uuid>', methods=['POST', 'OPTIONS'])
@@ -258,7 +257,7 @@ def create_item_images(uuid):
     db.session.add(item)
     db.session.commit()
 
-    return jsonify({"status": 'success'})
+    return jsonify({"success": 'success'})
 
 
 @vendorcreateitem.route('/delete-image/<string:uuid>/<string:imagename>', methods=['DELETE'])
@@ -349,7 +348,7 @@ def delete_item_images(uuid, imagename):
         db.session.add(item)
         db.session.commit()
 
-    return jsonify({"status": 'Success'})
+    return jsonify({"success": 'Success'})
 
 
 @vendorcreateitem.route('/create-item', methods=['POST'])
@@ -363,7 +362,7 @@ def create_item():
         .first()
 
     if see_if_empty_item:
-        return jsonify({"status": 'success',
+        return jsonify({"success": 'success',
                         'item_id': see_if_empty_item.uuid})
 
     createnewitemtemp = Item_MarketItem(
@@ -374,7 +373,6 @@ def create_item():
         vendor_id=current_user.id,
         vendor_uuid=current_user.uuid,
         vendor_display_name=current_user.display_name,
-
         item_title='',
         item_count=0,
         item_description='',
@@ -382,19 +380,15 @@ def create_item():
         keywords='',
         category_name_0='',
         category_id_0=0,
-
         price=0,
         currency=current_user.currency,
         currency_symbol='',
-
         digital_currency_1=0,
         digital_currency_2=0,
         digital_currency_3=0,
-
         shipping_free=False,
         shipping_two=False,
         shipping_three=False,
-
         shipping_day_0=0,
         shipping_price_2=0,
         shipping_day_2=0,
@@ -402,26 +396,21 @@ def create_item():
         shipping_price_3=0,
         shipping_info_3='',
         shipping_day_3=0,
-
         image_one_url_250=None,
         image_two_url_250=None,
         image_three_url_250=None,
         image_four_url_250=None,
-
         image_one_url_500=None,
         image_two_url_500=None,
         image_three_url_500=None,
         image_four_url_500=None,
-
         image_one_server=None,
         image_two_server=None,
         image_three_server=None,
         image_four_server=None,
-
         origin_country=current_user.country,
         origin_country_name='',
         international=False,
-
         view_count=0,
         item_rating=0,
         review_count=0,
@@ -439,7 +428,7 @@ def create_item():
     )
     mkdir_p(path=directoryifitemlisting)
 
-    return jsonify({"status": 'success',
+    return jsonify({"success": 'success',
                     'item_id': createnewitemtemp.uuid})
 
 
@@ -558,7 +547,10 @@ def item_main_image_server(itemuuid):
         .filter(Item_MarketItem.uuid == itemuuid)\
         .first()
 
-    return jsonify({"status": item_info.image_one_server}), 200
+    return jsonify({
+        "success": "success",
+        "status": item_info.image_one_server
+    }), 200
 
 
 @vendorcreateitem.route('/query/image/two/<string:itemuuid>', methods=['GET'])
@@ -572,7 +564,9 @@ def item_two_image_server(itemuuid):
         .filter(Item_MarketItem.uuid == itemuuid)\
         .first()
 
-    return jsonify({"status": item_info.image_two_server}), 200
+    return jsonify({
+        "success": "success",
+        "status": item_info.image_two_server}), 200
 
 
 @vendorcreateitem.route('/query/image/three/<string:itemuuid>', methods=['GET'])
@@ -587,7 +581,9 @@ def item_three_image_server(itemuuid):
         .filter(Item_MarketItem.uuid == itemuuid)\
         .first()
 
-    return jsonify({"status": item_info.image_three_server}), 200
+    return jsonify({
+        "success": "success",
+        "status": item_info.image_three_server}), 200
 
 
 @vendorcreateitem.route('/query/image/four/<string:itemuuid>', methods=['GET'])
@@ -601,7 +597,9 @@ def item_four_image_server(itemuuid):
         .filter(Item_MarketItem.uuid == itemuuid)\
         .first()
 
-    return jsonify({"status": item_info.image_four_server}), 200
+    return jsonify({
+        "success": "success",
+        "status": item_info.image_four_server}), 200
 
 
 @vendorcreateitem.route('/query/image/main/url/<string:itemuuid>', methods=['GET'])
@@ -616,7 +614,9 @@ def item_main_image_url(itemuuid):
         .filter(Item_MarketItem.uuid == itemuuid)\
         .first()
 
-    return jsonify({"status": item_info.image_one_url_250}), 200
+    return jsonify({
+        "success": "success",
+        "status": item_info.image_one_url_250}), 200
 
 
 @vendorcreateitem.route('/query/image/two/url/<string:itemuuid>', methods=['GET'])
@@ -631,7 +631,9 @@ def item_two_image_url(itemuuid):
         .filter(Item_MarketItem.uuid == itemuuid)\
         .first()
 
-    return jsonify({"status": item_info.image_two_url_250}), 200
+    return jsonify({
+        "success": "success",
+        "status": item_info.image_two_url_250}), 200
 
 
 @vendorcreateitem.route('/query/image/three/url/<string:itemuuid>', methods=['GET'])
@@ -646,7 +648,9 @@ def item_three_image_url(itemuuid):
         .filter(Item_MarketItem.uuid == itemuuid)\
         .first()
 
-    return jsonify({"status": item_info.image_three_url_250}), 200
+    return jsonify({
+        "success": "success",
+        "status": item_info.image_three_url_250}), 200
 
 
 @vendorcreateitem.route('/query/image/four/url/<string:itemuuid>', methods=['GET'])
@@ -662,4 +666,6 @@ def item_four_image_url(itemuuid):
         .filter(Item_MarketItem.uuid == itemuuid)\
         .first()
 
-    return jsonify({"status": item_info.image_four_url_250}), 200
+    return jsonify({
+        "success": "success",
+        "status": item_info.image_four_url_250}), 200

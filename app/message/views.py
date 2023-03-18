@@ -1,9 +1,7 @@
 
-
 from datetime import datetime
 from flask import jsonify, request
 from flask_login import current_user, login_required
-
 from app.message import message
 from app import db
 from sqlalchemy import or_
@@ -13,7 +11,7 @@ from app.classes.message import \
     Message_Chat, \
     Message_Chat_Schema, \
     Message_Post
-from app.classes.notifications import Message_Notifications
+from app.notification import notification
 from app.classes.item import Item_MarketItem
 
 
@@ -39,7 +37,7 @@ def message_markasread(post_id):
         db.session.commit()
 
     return jsonify({
-        "status": 'success',
+        "success": 'success',
     })
 
 
@@ -253,28 +251,24 @@ def message_comment(post_id):
         read=1,
         who_commented=whocommented,
     )
-    create_new_notification_vendor = Message_Notifications(
-        type_of_notification=1,
-        username=get_user_one.uuid,
-        user_uuid=get_user_one.display_name,
-        timestamp=now,
-        read=1,
-    )
-    create_new_notification_customer = Message_Notifications(
-        type_of_notification=1,
-        username=get_user_two.display_name,
-        user_uuid=get_user_two.uuid,
-        timestamp=now,
-        read=1,
-    )
+
+    notification(username=get_user_one.display_name,
+                 user_uuid=get_user_one.uuid,
+                 msg="You have a new comment on a message."
+                 )
+
+    notification(username=get_user_one.display_name,
+                 user_uuid=get_user_one.uuid,
+                 msg="You have a new comment on a message."
+                 )
+
     # commit to db
-    db.session.add(create_new_notification_vendor)
-    db.session.add(create_new_notification_customer)
+
     db.session.add(get_post)
     db.session.add(create_new_comment)
     db.session.commit()
 
-    return jsonify({"status": "Success"})
+    return jsonify({"success": "Success"})
 
 
 @message.route('/create/dispute/<string:order_uuid>', methods=['POST'])
@@ -330,20 +324,14 @@ def create_new_post_dispute(order_uuid):
         who_commented=0
     )
 
-    create_new_notification_vendor = Message_Notifications(
-        type_of_notification=1,
-        username=get_order.vendor_user_name,
-        user_uuid=get_order.vendor_uuid,
-        timestamp=now,
-        read=1,
-    )
-    create_new_notification_customer = Message_Notifications(
-        type_of_notification=1,
-        username=get_order.customer_user_name,
-        user_uuid=get_order.customer_uuid,
-        timestamp=now,
-        read=1,
-    )
+    notification(username=get_order.vendor_user_name,
+                 user_uuid=get_order.vendor_uuid,
+                 msg="A dispute has been issued on an order."
+                 )
+    notification(username=get_order.customer_user_name,
+                 user_uuid=get_order.customer_uuid,
+                 msg="A dispute has been issued on an order."
+                 )
     # update order to reflect post id and timer
     get_order.dispute_post_id = get_post.id
 
@@ -351,12 +339,10 @@ def create_new_post_dispute(order_uuid):
     get_order.disputed_timer = now
 
     # commit to database
-    db.session.add(create_new_notification_customer)
-    db.session.add(create_new_notification_vendor)
     db.session.add(get_order)
     db.session.add(create_new_message)
     db.session.commit()
-    return jsonify({"status": "Success"})
+    return jsonify({"success": "Success"})
 
 
 @message.route('/create/item', methods=['POST'])
@@ -426,16 +412,13 @@ def message_create():
         who_commented=2
     )
 
-    create_new_notification = Message_Notifications(
-        type_of_notification=1,
-        username=get_market_item.vendor_display_name,
-        user_uuid=get_market_item.vendor_uuid,
-        timestamp=now,
-        read=1,
-    )
+    notification(username=get_market_item.vendor_display_name,
+                 user_uuid=get_market_item.vendor_uuid,
+                 msg="You have a new message from a customer."
+                 )
 
-    db.session.add(create_new_notification)
+
     db.session.add(create_new_message)
     db.session.commit()
         
-    return jsonify({"status": "Success"})
+    return jsonify({"success": "Success"})

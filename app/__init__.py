@@ -13,9 +13,7 @@ import decimal
 from flask_wtf.csrf import CSRFProtect
 from config import load_config
 
-
 ApplicationConfig = load_config()
-
 
 
 app = Flask(__name__,

@@ -9,13 +9,10 @@ class Notification_Notifications(db.Model):
     id = db.Column(db.Integer,
                    primary_key=True,
                    autoincrement=True)
-    type_of_notification = db.Column(db.INTEGER)
     username = db.Column(db.VARCHAR(40))
     user_uuid = db.Column(db.VARCHAR(40))
     timestamp = db.Column(db.TIMESTAMP())
     message = db.Column(db.VARCHAR(400))
-    url = db.Column(db.VARCHAR(100))
-    params = db.Column(db.VARCHAR(100))
     read = db.Column(db.INTEGER)
 
 class Notification_Notifications_Schema(ma.SQLAlchemyAutoSchema):

@@ -205,7 +205,7 @@ class Auth_User(UserMixin, db.Model):
         return Auth_User.query.get(data['id'])
 
     def __repr__(self):
-        return '<User %r>' % self.user_name
+        return '<User %r>' % self.uuid
 
 class Auth_User_Schema(ma.SQLAlchemyAutoSchema):
     class Meta:

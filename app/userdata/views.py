@@ -10,11 +10,11 @@ from app.classes.models import Query_Country, Query_Currency
 from app.classes.checkout import Checkout_CheckoutShoppingCart
 from app.classes.userdata import UserData_DefaultAddress
 from app.classes.feedback import Feedback_Feedback,\
-Feedback_Feedback_Schema
+    Feedback_Feedback_Schema
 from app.classes.profile import Profile_StatisticsUser,\
-Profile_StatisticsUser_Schema,\
-Profile_StatisticsVendor_Schema,\
-Profile_StatisticsVendor
+    Profile_StatisticsUser_Schema,\
+    Profile_StatisticsVendor_Schema,\
+    Profile_StatisticsVendor
 # end models
 
 
@@ -25,16 +25,17 @@ def userdata_get_shopping_cart_count():
     Returns how many items are in a users count
     :return:
     """
-
     shopping_cart_count = db.session\
         .query(Checkout_CheckoutShoppingCart)\
         .filter(Checkout_CheckoutShoppingCart.customer_id == current_user.id)\
         .count()
 
     if shopping_cart_count is None:
-        return jsonify({'status': '0'})
+        return jsonify({'success': '0'})
 
-    return jsonify({'status': shopping_cart_count})
+    return jsonify({'success': "Got amount successfully",
+                    'status': shopping_cart_count
+                })
 
 
 @userdata.route('/country-currency', methods=['GET'])
@@ -44,7 +45,6 @@ def userdata_country_currency():
     Returns all info about a user
     :return:
     """
-
     currency = db.session\
         .query(Query_Currency)\
         .filter(current_user.currency == Query_Currency.value)\
@@ -59,7 +59,8 @@ def userdata_country_currency():
     if currency is None:
         return jsonify({'error': 'Error: Country not Found'})
     countryname = country.name
-    return jsonify({'country': countryname,
+    return jsonify({'success': "Info success",
+                    'country': countryname,
                     'currency': currency_name
                     })
 
@@ -70,7 +71,6 @@ def userdata_home(user_uuid):
     Returns all info about a user
     :return:
     """
-
     userdata_user = db.session\
         .query(Auth_User)\
         .filter(Auth_User.uuid == user_uuid)\
@@ -110,9 +110,9 @@ def userdata_update():
         db.session.add(userdata)
         db.session.commit()
 
-        return jsonify({"status": 'success'})
+        return jsonify({"success": 'Updated userprofile'})
     else:
-        return jsonify({"status": 'error'})
+        return jsonify({"error": 'Error:  Couldnt update profile'})
 
 
 @userdata.route('/defaultaddress', methods=['PUT'])
@@ -185,7 +185,7 @@ def userdata_update_address():
         )
         db.session.add(new_address)
     db.session.commit()
-    return jsonify({"status": 'success'})
+    return jsonify({"success": 'Updated address'})
 
 
 @userdata.route('/getdefaultaddress', methods=['GET'])
@@ -195,7 +195,6 @@ def userdata_get_address():
     Returns all info about a user
     :return:
     """
-
     user_address = db.session\
         .query(UserData_DefaultAddress)\
         .filter(UserData_DefaultAddress.uuid == current_user.uuid)\
@@ -204,6 +203,7 @@ def userdata_get_address():
         return jsonify(({'error': "Error:  Address not found"}))
 
     return jsonify({
+        "success": "success",
         'address_name': user_address.address_name,
         'address': user_address.address,
         'apt': user_address.apt,
@@ -221,7 +221,6 @@ def userdata_get_all_feedback(user_uuid):
     Grabs all feedback from a user
     :return:
     """
-
     user_feedback = db.session\
         .query(Feedback_Feedback)\
         .filter_by(customer_uuid=user_uuid)\
@@ -247,7 +246,9 @@ def userdata_get_stats_feedback(user_uuid):
         .count()
 
     if user_feedback == 0:
-        return jsonify({"total_feedback": 0,
+        return jsonify({
+                        "success": "success",
+                        "total_feedback": 0,
                         'feedback_one': 0,
                         'feedback_two': 0,
                         'feedback_three': 0,
@@ -369,7 +370,9 @@ def userdata_get_stats_feedback(user_uuid):
             (int(user_feedback_ten) / int(user_feedback))*100)
     else:
         user_feedback_ten_percent = 0
-    return jsonify({"total_feedback": floating_decimals(user_feedback, 2),
+    return jsonify({
+                    "success": "success",
+                    "total_feedback": floating_decimals(user_feedback, 2),
                     'feedback_one': floating_decimals(user_feedback_one_percent, 2),
                     'feedback_two': floating_decimals(user_feedback_two_percent, 2),
                     'feedback_three': floating_decimals(user_feedback_three_percent, 2),

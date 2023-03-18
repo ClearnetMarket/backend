@@ -11,7 +11,6 @@ from app.classes.checkout import \
     Checkout_CheckoutShoppingCart, \
     Checkout_ShoppingCartTotal, \
     carts_schema
-
 from app.classes.auth import \
     Auth_User, \
     Auth_UserFees
@@ -454,14 +453,10 @@ def checkoutput_item_offline(itemid):
         db.session.add(getitem)
 
         # send notification to vendor saying its all sold out
-        notification(type=9,
-                     username=getitem.vendor_name,
-                     user_id=getitem.vendor_id,
-                     salenumber=getitem.id,
-                     bitcoin=0,
-                     bitcoincash=0,
-                     monero=0)
-
+        notification(username=getitem.vendor_name,
+                     user_uuid=getitem.vendor_uuid,
+                     msg="Your item has been sold out and is has been put offline."
+                     )
 
 # updates pricing and quanity of items in shopping cart
 @checkout.route('/update/price', methods=['GET'])
@@ -493,7 +488,7 @@ def checkout_update_cart_information():
 
     if new_amount > 0:
         db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'Got cat information'})
 
 
 # updates pricing for the user
@@ -506,7 +501,7 @@ def checkout_update_payment_information():
     cart_calculate_item_shipping_and_price_all(current_user.id)
     cart_calculate_total_price(current_user.id)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'Updated payment information'})
 
 
 @checkout.route('/add/<string:itemuuid>', methods=['POST'])
@@ -521,16 +516,16 @@ def cart_add_to_shopping_cart(itemuuid):
         .filter_by(uuid=itemuuid) \
         .first()
     if get_item_for_sale.vendor_uuid == current_user.uuid:
-
         return jsonify({'error': 'Error:  Can not buy your own item.'}), 200
     # see if in shopping cart
 
     see_if_item_in_cart = db.session \
         .query(Checkout_CheckoutShoppingCart) \
         .filter(Checkout_CheckoutShoppingCart.item_uuid == itemuuid) \
-        .first() is not None
+        .filter(Checkout_CheckoutShoppingCart.customer_uuid == current_user.uuid) \
+        .first()
 
-    if see_if_item_in_cart is True:
+    if see_if_item_in_cart:
         return jsonify({'error': 'Error: Item is in cart already.'}), 200
 
 
@@ -601,7 +596,7 @@ def cart_add_to_shopping_cart(itemuuid):
     cart_calculate_item_shipping_and_price_cart(new_shopping_cart_item.id)
     cart_calculate_total_price(new_shopping_cart_item.customer_id)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'Added to cart'})
 
 
 
@@ -648,7 +643,10 @@ def data_shopping_cart_in_cart_count():
                 Checkout_CheckoutShoppingCart.saved_for_later == 0) \
         .count()
 
-    return jsonify({"cart_count": cart_items}), 200
+    return jsonify(
+        {"success": "Got cart count successfully",
+         "cart_count": cart_items }
+    ), 200
 
 
 @checkout.route('/data/saved', methods=['GET'])
@@ -705,6 +703,7 @@ def data_shopping_cart_total():
 
     total = (total_shipping_price_of_items_with_quantity + total_price_of_items_with_quantity)
     return jsonify({
+        'success': 'Got shopping cart total',
         'total_items': total_items_in_cart,
         'total_shipping': total_shipping_price_of_items_with_quantity,
         'total_price_before_shipping': total_price_of_items_with_quantity,
@@ -725,6 +724,7 @@ def data_checkout_total():
         .first()
 
     return jsonify({
+        'success': 'Got checkout cart total',
         'btc_sum_of_item': total_cart.btc_sum_of_item,
         'btc_price': total_cart.btc_price,
         'btc_shipping_price': total_cart.btc_shipping_price,
@@ -763,19 +763,19 @@ def cart_update_shipping_option(cartid):
     new_shipping = int(new_shipping)
     if new_shipping == 1:
         if getitem.shipping_free is False:
-            return jsonify({'status': 'error'})
+            return jsonify({'error': 'error'})
         else:
             cartitem.selected_shipping = new_shipping
             cartitem.selected_shipping_description = getitem.shipping_info_0
     if new_shipping == 2:
         if getitem.shipping_two is False:
-            return jsonify({'status': 'error'})
+            return jsonify({'error': 'error'})
         else:
             cartitem.selected_shipping = new_shipping
             cartitem.selected_shipping_description = getitem.shipping_info_2
     if new_shipping == 3:
         if getitem.shipping_three is False:
-            return jsonify({'status': 'error'})
+            return jsonify({'error': 'error'})
         else:
             cartitem.selected_shipping = new_shipping
             cartitem.selected_shipping_description = getitem.shipping_info_3
@@ -784,7 +784,7 @@ def cart_update_shipping_option(cartid):
     cart_calculate_item_shipping_and_price_cart(cartitem.id)
     cart_calculate_total_price(cartitem.customer_id)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'Updating shipping option'})
 
 
 @checkout.route('/currentquantity/<int:cartid>', methods=['GET'])
@@ -797,7 +797,10 @@ def cart_current_quantity(cartid):
         .query(Checkout_CheckoutShoppingCart) \
         .filter(Checkout_CheckoutShoppingCart.id == cartid) \
         .first()
-    return jsonify({'amount': the_cart_item.quantity_of_item})
+    return jsonify({
+        'success': 'Got cart quanitity',
+        'amount': the_cart_item.quantity_of_item
+    })
 
 
 @checkout.route('/movecartitem/<int:cartid>', methods=['PUT'])
@@ -820,7 +823,7 @@ def cart_move_cart_item(cartid):
     cart_calculate_total_price(the_cart_item.customer_id)
 
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'Moved item Successfully'})
 
 
 @checkout.route('/saveforlater/<int:cartid>', methods=['PUT'])
@@ -838,7 +841,7 @@ def cart_save_for_later(cartid):
     cartitem.saved_for_later = 1
     db.session.add(cartitem)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'Saved item for later'})
 
 
 @checkout.route('/changepaymentoption/<int:cartid>', methods=['POST'])
@@ -879,7 +882,7 @@ def cart_update_payment_option(cartid):
 
     db.session.add(the_cart_item)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'Updated payment option'})
 
 
 @checkout.route('/updateamount/<int:cartid>', methods=['PUT'])
@@ -906,7 +909,7 @@ def cart_update_quantity(cartid):
     cart_calculate_total_price(the_cart_item.customer_id)
     db.session.add(the_cart_item)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'Updated quantity'})
 
 
 @checkout.route('/delete/<int:cartid>', methods=['DELETE'])
@@ -925,7 +928,7 @@ def cart_delete_item(cartid):
 
     db.session.delete(the_cart_item)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'Deleted item.'})
 
 
 @checkout.route('/setamount/one', methods=['POST'])
@@ -942,7 +945,7 @@ def cart_set_quantity_initial_amount():
         f.quantity_of_item = 1
         db.session.add(f)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'Set Quantity'})
 
 
 @checkout.route('/info/delete/<string:itemid>', methods=['POST'])
@@ -975,7 +978,7 @@ def checkout_delete_secret_info(itemid):
         .first()
     db.session.delete(msg)
     db.session.commit()
-    return jsonify({'status': 'success'})
+    return jsonify({'success': 'success'})
 
 
 @checkout.route('/info/add/<string:itemid>', methods=['POST'])
@@ -1000,7 +1003,7 @@ def checkout_add_secret_info(itemid):
         db.session.add(addmsg)
         db.session.commit()
 
-        return jsonify({'status': 'success'})
+        return jsonify({'success': 'Added information'})
 
 
 def checkout_check_address():
@@ -1012,7 +1015,7 @@ def checkout_check_address():
         .filter(UserData_DefaultAddress.uuid == Checkout_CheckoutShoppingCart.customer_uuid) \
         .first()
     if get_customer_shipping:
-        return jsonify({'status': 'No Shipping Address provided for vendor'}), 200
+        return jsonify({'error': 'No Shipping Address provided for vendor'})
     # check if Address
     if len(get_customer_shipping.address) >=5:
         pass
@@ -1050,24 +1053,22 @@ def finalize():
     # check  if address
     see_if_address = checkout_check_address()
     if see_if_address is not True:
-        return jsonify({'status': see_if_address}), 200
+        return jsonify({'success': see_if_address}), 200
 
     # make order
     create_order = checkout_make_order()
     if create_order is not True:
-        return jsonify({'status': 'Error Creating Order'}), 200
+        return jsonify({'success': 'Error Creating Order'}), 200
 
     # send coin painment
     check_payment = checkout_make_payment()
     if check_payment is not True:
-        return jsonify({'status': 'Error with Payment.  Insuffied Funds.'}), 200
+        return jsonify({'success': 'Error with Payment.  Insuffied Funds.'}), 200
 
     checkout_clear_shopping_cart(current_user.id)
     db.session.commit()
 
-    return jsonify({'status': 'success'}), 200
-
-
+    return jsonify({'success': 'Finalized payment'}), 200
 
 
 def checkout_make_order():

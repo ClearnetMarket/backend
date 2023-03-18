@@ -1,4 +1,4 @@
-from flask import request,  jsonify
+from flask import jsonify
 from app.item_query import itemquery
 from app import db
 # models

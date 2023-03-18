@@ -1,14 +1,13 @@
 
 from decimal import Decimal
 from operator import or_
-
 from flask import request, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import or_
 from datetime import  timedelta
 from app.orders import orders
 from app import db
-
+from app.notification import notification
 # models
 from app.classes.user_orders import User_Orders, User_Orders_Schema
 from app.classes.feedback import Feedback_Feedback
@@ -79,7 +78,9 @@ def get_order_autofinalize_time(uuid):
     whenbought = get_order.created
     twentydaysfromorder = (whenbought + timedelta(days=20))
 
-    return jsonify({"status":twentydaysfromorder})
+    return jsonify({
+        "success": "success",
+        "status":twentydaysfromorder})
 
 
 @orders.route('/count', methods=['GET'])
@@ -173,7 +174,7 @@ def order_feedback_score(uuid):
 
     db.session.commit()
 
-    return jsonify({"status": "success"})
+    return jsonify({"success": "success"})
 
 
 @orders.route('/feedback/review/<string:uuid>', methods=['POST'])
@@ -230,9 +231,7 @@ def order_feedback_review(uuid):
 
     db.session.commit()
 
-    return jsonify({"status": "success"})
-
-
+    return jsonify({"success": "success"})
 
 
 @orders.route('/vendor/feedback/score/<string:uuid>', methods=['POST'])
@@ -249,7 +248,7 @@ def order_vendor_feedback_score(uuid):
     if request.json["rating"]:
         customer_rating = request.json["rating"]
     else:
-        return jsonify({"status": "error"}), 200
+        return jsonify({"error": "error getting rating"}), 200
 
     get_order = db.session \
         .query(User_Orders) \
@@ -296,13 +295,19 @@ def order_vendor_feedback_score(uuid):
     # if both conditions are met set it as review added
     # this ensures proper review is added not just half
 
+
+    notification(username=get_order.vendor_user_name,
+                 user_uuid=get_order.vendor_uuid,
+                 msg="Your have a new feedback."
+                 )
+
     if get_feedback.review_of_customer is not None\
         and get_feedback.customer_rating is not None:
         get_order.user_feedback = 1
         db.session.add(get_order)
     db.session.commit()
 
-    return jsonify({"status": "success"})
+    return jsonify({"success": "success"})
 
 
 
@@ -367,10 +372,7 @@ def order_vendor_feedback_review(uuid):
 
     db.session.commit()
 
-    return jsonify({"status": "success"})
-
-
-
+    return jsonify({"success": "success"})
 
 
 @orders.route('/feedback/get/<string:uuid>', methods=['GET'])
@@ -399,15 +401,11 @@ def get_order_feedback(uuid):
         return jsonify({"error": 'Error: Feedback not found'})
 
     return jsonify({
-        "status": 'success',
+        "success": 'success',
         "item_rating": get_feedback.item_rating,
         "vendor_rating": get_feedback.vendor_rating,
         "review": get_feedback.review_of_vendor,
     })
-
-
-
-
 
 
 @orders.route('/feedback/get/vendor/<string:uuid>', methods=['GET'])
@@ -429,7 +427,7 @@ def get_order_feedback_vendor(uuid):
         .filter(Feedback_Feedback.order_uuid == uuid) \
         .first()
     if get_order is None:
-        return jsonify({"status": "Error: Order not Found"}), 200
+        return jsonify({"error": "Error: Order not Found"}), 200
 
     if get_feedback is None:
         return jsonify({"error": 'Error: Feedback not found'})
@@ -440,7 +438,7 @@ def get_order_feedback_vendor(uuid):
         rated = 'success'
 
     return jsonify({
-        "status": rated,
+        "success": rated,
         "customer_rating": get_feedback.customer_rating,
         "review": get_feedback.review_of_customer,
     })
@@ -450,7 +448,7 @@ def get_order_feedback_vendor(uuid):
 @login_required
 def mark_order_disputed(uuid):
     """
-    Used on index.  Grabs today's featured items
+
     :return:
     """
 
@@ -463,9 +461,15 @@ def mark_order_disputed(uuid):
         return jsonify({"error": "Error: Order not found"}), 200
 
     get_order.overall_status = 8
+
+    notification(username=get_order.vendor_user_name,
+                 user_uuid=get_order.vendor_uuid,
+                 msg="You have a new dispute on an order."
+                 )
+
     db.session.add(get_order)
     db.session.commit()
-    return jsonify({"status": "Success: Order marked as disputed"})
+    return jsonify({"success": "Success: Order marked as disputed"})
 
 
 @orders.route('/mark/delivered/<string:uuid>', methods=['GET'])
@@ -483,12 +487,17 @@ def mark_order_delivered(uuid):
     if get_order is None:
         return jsonify({"error": "Error: Order not found"}), 200
 
+    notification(username=get_order.vendor_user_name,
+                 user_uuid=get_order.vendor_uuid,
+                 msg="Your order has been marked as delivered."
+                 )
+
     get_order.overall_status = 4
 
     db.session.add(get_order)
     db.session.commit()
 
-    return jsonify({"status": "Success: Order marked as delivered"})
+    return jsonify({"success": "Success: Order marked as delivered"})
 
 
 
@@ -517,10 +526,15 @@ def mark_order_finalized(uuid):
 
     get_order.overall_status = 10
 
+    notification(username=get_order.vendor_user_name,
+                 user_uuid=get_order.vendor_uuid,
+                 msg="Your order has been marked as finalized."
+                 )
+
     db.session.add(get_order)
     db.session.commit()
 
-    return jsonify({"status": "Success: Order marked as finalized"})
+    return jsonify({"success": "Success: Order marked as finalized"})
 
 
 @orders.route('/request/cancel/<string:uuid>', methods=['GET'])
@@ -542,7 +556,12 @@ def mark_order_request_cancel(uuid):
 
     get_order.overall_status = 6
 
+    notification(username=get_order.vendor_user_name,
+                 user_uuid=get_order.vendor_uuid,
+                 msg="A customer has requested to cancel an order."
+                 )
+
     db.session.add(get_order)
     db.session.commit()
 
-    return jsonify({"status": "Success: Order marked as cancelled"})
+    return jsonify({"success": "Success: Order marked as cancelled"})

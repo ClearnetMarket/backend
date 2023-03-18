@@ -33,4 +33,6 @@ def main_search_results_count(searchstring):
                                 .filter(Item_MarketItem.item_title.ilike(search_string))\
                                 .count()
 
-    return jsonify({"count": get_market_items_count})
+    return jsonify({
+        "success": "success",
+        "count": get_market_items_count})

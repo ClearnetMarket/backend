@@ -2,7 +2,7 @@ from flask import  jsonify
 from flask_login import current_user
 from app.vendorcreate import vendorcreate
 from app import db, UPLOADED_FILES_DEST_ITEM
-import os, shutil
+import os
 from uuid import uuid4
 from app.common.functions import mkdir_p
 from app.common.decorators import login_required
@@ -45,26 +45,24 @@ def vendorcreate_clone_item(uuid):
     :param uuid:
     :return:
     """
-
     # get item we are cloning
     vendoritem = db.session\
         .query(Item_MarketItem)\
         .filter(Item_MarketItem.uuid == uuid)\
         .first()
     if vendoritem is None:
-        return jsonify({'status': 'Error: Could not find Vendor Item.'})
+        return jsonify({'error': 'Error: Could not find Vendor Item.'})
     get_uuid_item = uuid4().hex
 
-
     if vendoritem.vendor_id != current_user.id:
-        return jsonify({'status': 'Error: Incorrect Item Found.'})
+        return jsonify({'error': 'Error: Incorrect Item Found.'})
     # make sure user doesn't have to many listings
     vendoritem_count = db.session\
         .query(Item_MarketItem)\
         .filter_by(vendor_id=current_user.id)\
         .count()
     if vendoritem_count > 100:
-        return jsonify({'status': 'Error: Max Items reached.  Please create a ticket to allow for more items.'})
+        return jsonify({'error': 'Error: Max Items reached.  Please create a ticket to allow for more items.'})
 
     item = Item_MarketItem(
         uuid=get_uuid_item,
@@ -142,7 +140,7 @@ def vendorcreate_clone_item(uuid):
     # commit to db
     db.session.add(item)
     db.session.commit()
-    return jsonify({'status': 'Success'})
+    return jsonify({'success': 'Success'})
 
 
 @vendorcreate.route('/delete-item/<string:uuid>', methods=['DELETE'])
@@ -251,5 +249,5 @@ def vendorcreate_delete_item(uuid):
         pass
     db.session.delete(vendoritem)
     db.session.commit()
-    return jsonify({'status': 'Deleted Item Successfully'})
+    return jsonify({'success': 'Deleted Item Successfully'})
 
