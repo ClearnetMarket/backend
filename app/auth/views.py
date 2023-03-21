@@ -249,6 +249,8 @@ def register_user():
         total_btc_recieved=0,
         total_bch_spent=0,
         total_bch_recieved=0,
+        total_xmr_spent=0,
+        total_xmr_recieved=0,
         total_reviews=0,
         started_buying=now,
         diff_partners=0,

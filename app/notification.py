@@ -1,10 +1,8 @@
+from app import db
+from app.classes.notifications import Notification_Notifications
+from datetime import datetime
 
-
-def notification(username, user_uuid, msg):
-    from app import db
-    from app.classes.notifications import Notification_Notifications
-    from datetime import datetime
-
+def create_notification(username, user_uuid, msg):
 
     now = datetime.utcnow()
 

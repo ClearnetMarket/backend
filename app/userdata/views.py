@@ -31,10 +31,10 @@ def userdata_get_shopping_cart_count():
         .count()
 
     if shopping_cart_count is None:
-        return jsonify({'success': '0'})
+        return jsonify({'amount': '0'})
 
     return jsonify({'success': "Got amount successfully",
-                    'status': shopping_cart_count
+                    'amount': shopping_cart_count
                 })
 
 

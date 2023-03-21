@@ -5,7 +5,7 @@ from flask_login import current_user
 from app.classes.item import Item_MarketItem
 from app.vendororders import vendororders
 from app import db
-from app.notification import notification
+from app.common.notification import create_notification
 from sqlalchemy import or_
 from app.common.decorators import login_required
 from app.classes.user_orders import \
@@ -137,7 +137,7 @@ def vendor_orders_reject(orderuuid):
             user_id=vendor_order.customer_id,
             order_uuid=vendor_order.uuid
              )
-    notification(username=vendor_order.customer_user_name,
+    create_notification(username=vendor_order.customer_user_name,
                  user_uuid=vendor_order.customer_uuid,
                  msg="Your order has been rejected by the vendor."
                  )
@@ -172,7 +172,7 @@ def vendor_orders_mark_as_shipped(orderuuid):
     vendor_order.overall_status=3
     vendor_order.date_shipped = datetime.utcnow()
 
-    notification(username=vendor_order.customer_user_name,
+    create_notification(username=vendor_order.customer_user_name,
                  user_uuid=vendor_order.customer_uuid,
                  msg="Your order has been marked as shipped by the vendor."
                  )
@@ -260,7 +260,7 @@ def vendor_orders_add_tracking():
         .filter(User_Orders_Tracking.order_uuid == order_uuid, User_Orders_Tracking.vendor_uuid == current_user.uuid)\
         .first()
 
-    notification(username=see_if_order_exists.customer_user_name,
+    create_notification(username=see_if_order_exists.customer_user_name,
                  user_uuid=see_if_order_exists.customer_uuid,
                  msg="Your order has tracking added by the vendor."
                  )
@@ -336,7 +336,7 @@ def vendor_orders_add_vendor_feedback(order_uuid):
     get_feedback.customer_rating = get_vendor_rating_for_customer
     get_feedback.item_rating = get_item_rating
 
-    notification(username=see_if_feedback_exists.customer_user_name,
+    create_notification(username=see_if_feedback_exists.customer_user_name,
                  user_uuid=see_if_feedback_exists.customer_uuid,
                  msg="You have feedback from a vendor on an order."
                  )

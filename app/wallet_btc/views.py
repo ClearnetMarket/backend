@@ -37,7 +37,8 @@ def btc_price_anonymous():
     except:
         price_btc = 0
     return jsonify({
-        "success": price_btc,
+        "success": "success",
+        "btc_price": price_btc,
     })
 
 
@@ -64,7 +65,7 @@ def btc_price_for_user():
         price_btc = 0
     return jsonify({
         "success": "success",
-        "status": price_btc,
+        "btc_price": price_btc,
     })
 
 @wallet_btc.route('/balance', methods=['GET'])

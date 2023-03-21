@@ -12,6 +12,8 @@ from werkzeug.routing import BaseConverter
 import decimal
 from flask_wtf.csrf import CSRFProtect
 from config import load_config
+from datetime import datetime
+
 
 ApplicationConfig = load_config()
 
@@ -119,6 +121,10 @@ api_main = {
 cors = CORS(app,  supports_credentials=True, resources={r'/*': api_main})
 
 
+
+
+
+
 # bind a function after each request, even if an exception is encountered.
 @app.teardown_request
 def teardown_request(response_or_exc):
@@ -203,9 +209,6 @@ app.register_blueprint(userdata_blueprint, url_prefix='/info')
 from .message import message as message_blueprint
 app.register_blueprint(message_blueprint, url_prefix='/msg')
 
-from .notification import notification as notification_blueprint
-app.register_blueprint(notification_blueprint, url_prefix='/notification')
-
 from .checkout import checkout as checkout_blueprint
 app.register_blueprint(checkout_blueprint, url_prefix='/checkout')
 
@@ -220,6 +223,9 @@ app.register_blueprint(vendororders_blueprint, url_prefix='/vendororders')
 
 from .item_query import itemquery as itemquery_blueprint
 app.register_blueprint(itemquery_blueprint, url_prefix='/itemquery')
+
+from .notification import notification as notification_blueprint
+app.register_blueprint(notification_blueprint, url_prefix='/notification')
 
 from .vendor import vendor as vendor_blueprint
 app.register_blueprint(vendor_blueprint, url_prefix='/vendor')
@@ -241,6 +247,7 @@ app.register_blueprint(wallet_xmr_blueprint, url_prefix='/xmr')
 
 
 with app.app_context():
+
     db.configure_mappers()
     db.create_all()
     db.session.commit()

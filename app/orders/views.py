@@ -7,7 +7,7 @@ from sqlalchemy import or_
 from datetime import  timedelta
 from app.orders import orders
 from app import db
-from app.notification import notification
+from app.common.notification import create_notification
 # models
 from app.classes.user_orders import User_Orders, User_Orders_Schema
 from app.classes.feedback import Feedback_Feedback
@@ -296,7 +296,7 @@ def order_vendor_feedback_score(uuid):
     # this ensures proper review is added not just half
 
 
-    notification(username=get_order.vendor_user_name,
+    create_notification(username=get_order.vendor_user_name,
                  user_uuid=get_order.vendor_uuid,
                  msg="Your have a new feedback."
                  )
@@ -462,7 +462,7 @@ def mark_order_disputed(uuid):
 
     get_order.overall_status = 8
 
-    notification(username=get_order.vendor_user_name,
+    create_notification(username=get_order.vendor_user_name,
                  user_uuid=get_order.vendor_uuid,
                  msg="You have a new dispute on an order."
                  )
@@ -487,7 +487,7 @@ def mark_order_delivered(uuid):
     if get_order is None:
         return jsonify({"error": "Error: Order not found"}), 200
 
-    notification(username=get_order.vendor_user_name,
+    create_notification(username=get_order.vendor_user_name,
                  user_uuid=get_order.vendor_uuid,
                  msg="Your order has been marked as delivered."
                  )

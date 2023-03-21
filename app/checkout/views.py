@@ -2,7 +2,7 @@ from flask import jsonify, request
 from flask_login import current_user, login_required
 from app.checkout import checkout
 from app import db
-from app.notification import notification
+from app.common.notification import create_notification
 from datetime import datetime
 from decimal import Decimal
 
@@ -453,7 +453,7 @@ def checkoutput_item_offline(itemid):
         db.session.add(getitem)
 
         # send notification to vendor saying its all sold out
-        notification(username=getitem.vendor_name,
+        create_notification(username=getitem.vendor_name,
                      user_uuid=getitem.vendor_uuid,
                      msg="Your item has been sold out and is has been put offline."
                      )
@@ -1014,7 +1014,8 @@ def checkout_check_address():
         .query(UserData_DefaultAddress) \
         .filter(UserData_DefaultAddress.uuid == Checkout_CheckoutShoppingCart.customer_uuid) \
         .first()
-    if get_customer_shipping:
+
+    if get_customer_shipping is None:
         return jsonify({'error': 'No Shipping Address provided for vendor'})
     # check if Address
     if len(get_customer_shipping.address) >=5:
@@ -1051,20 +1052,22 @@ def finalize():
     # PAYMENT STUFF once you click payment button
     """
     # check  if address
-    see_if_address = checkout_check_address()
-    if see_if_address is not True:
-        return jsonify({'success': see_if_address}), 200
 
+    see_if_address = checkout_check_address()
+
+    if see_if_address is not True:
+        return jsonify({'error': see_if_address}), 200
+    print("1111")
     # make order
     create_order = checkout_make_order()
     if create_order is not True:
-        return jsonify({'success': 'Error Creating Order'}), 200
-
+        return jsonify({'error': 'Error Creating Order'}), 200
+    print("22222")
     # send coin painment
     check_payment = checkout_make_payment()
     if check_payment is not True:
-        return jsonify({'success': 'Error with Payment.  Insuffied Funds.'}), 200
-
+        return jsonify({'error': 'Error with Payment. Not enough Funds.'}), 200
+    print("3333")
     checkout_clear_shopping_cart(current_user.id)
     db.session.commit()
 
@@ -1244,16 +1247,19 @@ def checkout_make_payment():
     current_cart_total_bch = Decimal(cart_total.bch_total_price)
     if current_cart_total_bch > 0:
         if Decimal(userwallet_bch.currentbalance) <= current_cart_total_bch:
+            print("123213*********")
             return False
 
     current_cart_total_btc = Decimal(cart_total.btc_total_price)
     if current_cart_total_btc > 0:
         if Decimal(userwallet_btc.currentbalance) <= current_cart_total_btc:
+            print("4444*********")
             return False
 
     current_cart_total_xmr = Decimal(cart_total.xmr_total_price)
     if current_cart_total_xmr > 0:
         if Decimal(userwallet_xmr.currentbalance) <= current_cart_total_xmr:
+            print("22*********")
             return False
 
     # get the orders
@@ -1302,12 +1308,14 @@ def checkout_make_payment():
             .query(Profile_StatisticsUser)\
             .filter(Profile_StatisticsUser.user_uuid == current_user.uuid)\
             .first()
+
+
         # VENDOR Stats
         get_stats_vendor = db.session\
             .query(Profile_StatisticsVendor)\
-            .filter(Profile_StatisticsVendor.vendor_uuid == current_user.uuid)\
+            .filter(Profile_StatisticsVendor.vendor_uuid == Item_MarketItem.vendor_uuid)\
             .first()
-            
+
         # add total items bought
         buyer_current_bought = get_stats_buyer.total_items_bought 
         buyer_new_bought = buyer_current_bought + order.quantity

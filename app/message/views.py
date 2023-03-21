@@ -11,7 +11,7 @@ from app.classes.message import \
     Message_Chat, \
     Message_Chat_Schema, \
     Message_Post
-from app.notification import notification
+from app.common.notification import create_notification
 from app.classes.item import Item_MarketItem
 
 
@@ -252,12 +252,12 @@ def message_comment(post_id):
         who_commented=whocommented,
     )
 
-    notification(username=get_user_one.display_name,
+    create_notification(username=get_user_one.display_name,
                  user_uuid=get_user_one.uuid,
                  msg="You have a new comment on a message."
                  )
 
-    notification(username=get_user_one.display_name,
+    create_notification(username=get_user_one.display_name,
                  user_uuid=get_user_one.uuid,
                  msg="You have a new comment on a message."
                  )
@@ -324,11 +324,11 @@ def create_new_post_dispute(order_uuid):
         who_commented=0
     )
 
-    notification(username=get_order.vendor_user_name,
+    create_notification(username=get_order.vendor_user_name,
                  user_uuid=get_order.vendor_uuid,
                  msg="A dispute has been issued on an order."
                  )
-    notification(username=get_order.customer_user_name,
+    create_notification(username=get_order.customer_user_name,
                  user_uuid=get_order.customer_uuid,
                  msg="A dispute has been issued on an order."
                  )
@@ -412,7 +412,7 @@ def message_create():
         who_commented=2
     )
 
-    notification(username=get_market_item.vendor_display_name,
+    create_notification(username=get_market_item.vendor_display_name,
                  user_uuid=get_market_item.vendor_uuid,
                  msg="You have a new message from a customer."
                  )

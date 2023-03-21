@@ -4,7 +4,7 @@ from flask import request, jsonify
 from flask_login import login_required, current_user
 from app.moderator import moderator
 from app import db
-from app.notification import notification
+from app.common.notification import create_notification
 from app.classes.user_orders import\
     User_Orders,\
     User_Orders_Schema
@@ -68,7 +68,7 @@ def create_comment_to_ticket():
         text_body=textbody,
     )
 
-    notification(username=get_main_ticket.author,
+    create_notification(username=get_main_ticket.author,
                  user_uuid=get_main_ticket.author_uuid,
                  msg="You have a new comment on a ticket."
                  )
@@ -134,7 +134,7 @@ def ticket_mark_closed(uuid):
         .first()
 
     user_ticket.status = 0
-    notification(username=user_ticket.author,
+    create_notification(username=user_ticket.author,
                  user_uuid=user_ticket.author_uuid,
                  msg="Your ticket has been marked as resolved by a mod."
                  )
@@ -188,12 +188,12 @@ def mark_dispute_finished(uuid):
                                     percent_to_vendor=percent_to_vendor)
     get_order.overall_status = 10
 
-    notification(username=get_order.customer_user_name,
+    create_notification(username=get_order.customer_user_name,
                  user_uuid=get_order.customer_uuid,
                  msg="Your dispute has been marked as resolved."
                  )
 
-    notification(username=get_order.vendor_user_name,
+    create_notification(username=get_order.vendor_user_name,
                  user_uuid=get_order.vendor_uuid,
                  msg="Your dispute has been marked as resolved."
                  )
@@ -223,12 +223,12 @@ def mark_dispute_cancelled_still_open(uuid):
 
     get_order.overall_status = 3
 
-    notification(username=get_order.customer_user_name,
+    create_notification(username=get_order.customer_user_name,
                  user_uuid=get_order.customer_uuid,
                  msg="Your order has been updated by a moderator."
                  )
 
-    notification(username=get_order.vendor_user_name,
+    create_notification(username=get_order.vendor_user_name,
                  user_uuid=get_order.vendor_uuid,
                  msg="Your order has been updated by a moderator."
                  )
@@ -256,12 +256,12 @@ def mark_dispute_cancelled_still_closed(uuid):
 
     get_order.overall_status = 10
 
-    notification(username=get_order.customer_user_name,
+    create_notification(username=get_order.customer_user_name,
                  user_uuid=get_order.customer_uuid,
                  msg="Your order has been updated to closed by a moderator."
                  )
 
-    notification(username=get_order.vendor_user_name,
+    create_notification(username=get_order.vendor_user_name,
                  user_uuid=get_order.vendor_uuid,
                  msg="Your order has been updated to closed by a moderator."
                  )
@@ -290,12 +290,12 @@ def extend_dispute_time(uuid):
 
     get_order.extended_timer = 1
 
-    notification(username=get_order.customer_user_name,
+    create_notification(username=get_order.customer_user_name,
                  user_uuid=get_order.customer_uuid,
                  msg="Your order autocompletion has been extended in time."
                  )
 
-    notification(username=get_order.vendor_user_name,
+    create_notification(username=get_order.vendor_user_name,
                  user_uuid=get_order.vendor_uuid,
                  msg="Your order autocompletion has been extended in time."
                  )
@@ -327,12 +327,12 @@ def add_message_after_dispute(uuid):
         msg = str(msg_json)
         get_order.msg = msg
 
-    notification(username=get_order.customer_user_name,
+    create_notification(username=get_order.customer_user_name,
                  user_uuid=get_order.customer_uuid,
                  msg="Your order has a message added by a mod."
                  )
 
-    notification(username=get_order.vendor_user_name,
+    create_notification(username=get_order.vendor_user_name,
                  user_uuid=get_order.vendor_uuid,
                  msg="Your order has a message added by a mod."
                  )
@@ -431,12 +431,12 @@ def become_mod_of_order(orderuuid):
     get_order.moderator_uuid = current_user.uuid
     get_order.moderator_user_name = current_user.display_name
 
-    notification(username=get_order.customer_user_name,
+    create_notification(username=get_order.customer_user_name,
                  user_uuid=get_order.customer_uuid,
                  msg="Your order has a moderator added."
                  )
 
-    notification(username=get_order.vendor_user_name,
+    create_notification(username=get_order.vendor_user_name,
                  user_uuid=get_order.vendor_uuid,
                  msg="Your order has a moderator added."
                  )
