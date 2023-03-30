@@ -4,8 +4,12 @@ from app.category import category
 from app import db
 
 # models
-from app.classes.category import Category_Categories, Category_Categories_Schema
-from app.classes.item import Item_MarketItem, Item_MarketItem_Schema
+from app.classes.category import\
+Category_Categories,\
+    Category_Categories_Schema
+from app.classes.item import \
+    Item_MarketItem,\
+    Item_MarketItem_Schema
 
 
 @category.route('/sidebar', methods=['GET'])
@@ -23,6 +27,23 @@ def get_categories_sidebar():
     cats_schema = Category_Categories_Schema(many=True)
     return jsonify(cats_schema.dump(get_cats))
 
+# All
+@category.route('/query/index/all', methods=['GET'])
+def get_categories_all():
+    """
+    Grabs a category for front page
+    Electronics
+    :return:
+    """
+
+    allitems = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .order_by(func.random()) \
+        .limit(50)
+
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(allitems))
 
 # Electronics
 @category.route('/query/index/electronics', methods=['GET'])
@@ -32,7 +53,6 @@ def get_categories_electronics():
     Electronics
     :return:
     """
-
 
     electronicsfull = db.session \
         .query(Item_MarketItem) \

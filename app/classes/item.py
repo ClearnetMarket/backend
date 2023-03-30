@@ -116,7 +116,8 @@ class Item_MarketItem_Schema(ma.SQLAlchemyAutoSchema):
         model = Item_MarketItem
 
         fields = (
-                    'uuid', 'online', 'created', 'price', 'vendor_name', 'node_id', 'vendor_uuid',
+                    'id','uuid', 'online', 'created', 'price',
+                    'vendor_name', 'node_id', 'vendor_uuid',
                     'origin_country_name', 'currency_symbol',
                     'item_title', 'item_count', 'item_description', 'currency', 'category_name_0',
                     'item_condition', 'keywords', 'price',

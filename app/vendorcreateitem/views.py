@@ -216,6 +216,7 @@ def create_item_images(uuid):
         .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == get_user.id) \
         .first()
 
+
     # node location
     getimagesubfolder = itemlocation(x=item.id)
     item.node = getimagesubfolder
@@ -229,28 +230,33 @@ def create_item_images(uuid):
     try:
         mkdir_p(directoryifitemlisting)
     except:
+        print("error1")
         pass
     try:
         image_main = request.files['image_main']
-        image1(formdata=image_main, item=item,
+        image1(formdata=image_main,
+               item=item,
                directoryifitemlisting=directoryifitemlisting)
     except:
         pass
     try:
         image_two = request.files['image_two']
-        image2(formdata=image_two, item=item,
+        image2(formdata=image_two,
+               item=item,
                directoryifitemlisting=directoryifitemlisting)
     except:
         pass
     try:
         image_three = request.files['image_three']
-        image3(formdata=image_three, item=item,
+        image3(formdata=image_three,
+               item=item,
                directoryifitemlisting=directoryifitemlisting)
     except:
         pass
     try:
         image_four = request.files['image_four']
-        image4(formdata=image_four,  item=item,
+        image4(formdata=image_four,
+               item=item,
                directoryifitemlisting=directoryifitemlisting)
     except:
         pass

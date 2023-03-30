@@ -11,6 +11,33 @@ import shutil
 from app.vendor.item_management.check_online import put_online_allowed
 
 
+@vendorcreate.route('/itemsforsale/<int:page>', methods=['GET'])
+@login_required
+def vendorcreate_items_for_sale_query(page):
+    """
+    Provides the vendors item list.
+    :return:
+    """
+    per_page_amount = 10
+    if page is None:
+        offset_limit = 0
+        page = 1
+    elif page == 1:
+        offset_limit = 0
+        page = 1
+    else:
+        offset_limit = (per_page_amount * page) - per_page_amount
+        page = int(page)
+        
+    forsale = db.session\
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.vendor_id == current_user.id)\
+        .order_by(Item_MarketItem.id.asc())\
+        .limit(per_page_amount).offset(offset_limit)
+    for f in forsale:
+        print(f.id)
+    return items_schema.jsonify(forsale)
+
 @vendorcreate.route('/itemsforsale', methods=['GET'])
 @login_required
 def vendorcreate_items_for_sale():
@@ -35,6 +62,26 @@ def vendorcreate_items_for_sale():
     if change_status is True:
         db.session.commit()
     return items_schema.jsonify(forsale)
+
+@vendorcreate.route('/itemsforsale/count', methods=['GET'])
+@login_required
+def vendorcreate_items_for_sale_count():
+    """
+    Provides the vendors item list.
+    :return:
+    """
+
+    for_sale_count = db.session\
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.vendor_id == current_user.id)\
+        .order_by(Item_MarketItem.id.desc())\
+        .count()
+    if for_sale_count is None:
+        return jsonify({'error': 'Error: Could not find Vendor Item.'})
+
+    return jsonify({
+        "success": "success",
+        'count': for_sale_count})
 
 
 @vendorcreate.route('/clone-item/<string:uuid>', methods=['GET'])

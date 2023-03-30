@@ -253,9 +253,9 @@ def message_comment(post_id):
     )
 
     create_notification(username=get_user_one.display_name,
-                 user_uuid=get_user_one.uuid,
-                 msg="You have a new comment on a message."
-                 )
+             user_uuid=get_user_one.uuid,
+             msg="You have a new comment on a message."
+             )
 
     create_notification(username=get_user_one.display_name,
                  user_uuid=get_user_one.uuid,
@@ -413,9 +413,9 @@ def message_create():
     )
 
     create_notification(username=get_market_item.vendor_display_name,
-                 user_uuid=get_market_item.vendor_uuid,
-                 msg="You have a new message from a customer."
-                 )
+                         user_uuid=get_market_item.vendor_uuid,
+                         msg="You have a new message from a customer."
+                         )
 
 
     db.session.add(create_new_message)
