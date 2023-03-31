@@ -45,6 +45,59 @@ def get_categories_all():
     item_schema = Item_MarketItem_Schema(many=True)
     return jsonify(item_schema.dump(allitems))
 
+
+
+@category.route('/all/<int:categoryid>/<int:page>', methods=['GET'])
+def get_categories_by_id(categoryid, page):
+    """
+    Grabs a category for front page
+    Electronics
+    :return:
+    """
+    per_page_amount = 10
+    if page is None:
+        offset_limit = 0
+        page = 1
+    elif page == 1:
+        offset_limit = 0
+        page = 1
+    else:
+        offset_limit = (per_page_amount * page) - per_page_amount
+        page = int(page)
+
+    all_category_items = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .filter(Item_MarketItem.category_id_0 == categoryid) \
+        .order_by(func.random()) \
+        .limit(per_page_amount).offset(offset_limit)
+
+    item_schema = Item_MarketItem_Schema(many=True)
+    return jsonify(item_schema.dump(all_category_items))
+
+
+@category.route('/all/count/<int:categoryid>', methods=['GET'])
+def get_categories_by_id_count(categoryid):
+    """
+    Grabs a category for front page
+    Electronics
+    :return:
+    """
+
+
+    all_category_items = db.session \
+        .query(Item_MarketItem) \
+        .filter(Item_MarketItem.online == 1) \
+        .filter(Item_MarketItem.category_id_0 == categoryid) \
+        .count()
+    print(all_category_items)
+    return jsonify(
+        {"success": "Got cart count successfully",
+         "count": all_category_items}
+    ), 200
+
+
+
 # Electronics
 @category.route('/query/index/electronics', methods=['GET'])
 def get_categories_electronics():

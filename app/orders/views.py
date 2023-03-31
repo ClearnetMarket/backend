@@ -17,21 +17,34 @@ from app.wallet_bch.wallet_bch_work import finalize_order_bch
 from app.wallet_xmr.wallet_xmr_work import finalize_order_xmr
 
 
-@orders.route('', methods=['GET'])
+@orders.route('/<int:page>', methods=['GET'])
 @login_required
-def get_user_orders():
+def get_user_orders(page):
     """
     Used on index.  Grabs today's featured items
     :return:
     """
+    per_page_amount = 20
+    if page is None:
+        offset_limit = 0
+        page = 1
+    elif page == 1:
+        offset_limit = 0
+        page = 1
+    else:
+        offset_limit = (per_page_amount * page) - per_page_amount
+        page = int(page)
+        
+        
     user_orders = db.session \
         .query(User_Orders) \
         .filter(User_Orders.customer_id == current_user.id) \
-        .order_by(User_Orders.created.desc()) \
-        .limit(10)
+        .order_by(User_Orders.created.asc()) \
+        .limit(per_page_amount).offset(offset_limit)
 
     item_schema = User_Orders_Schema(many=True)
     return jsonify(item_schema.dump(user_orders))
+
 
 @orders.route('/<string:uuid>', methods=['GET'])
 @login_required

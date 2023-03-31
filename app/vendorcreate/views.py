@@ -34,8 +34,7 @@ def vendorcreate_items_for_sale_query(page):
         .filter(Item_MarketItem.vendor_id == current_user.id)\
         .order_by(Item_MarketItem.id.asc())\
         .limit(per_page_amount).offset(offset_limit)
-    for f in forsale:
-        print(f.id)
+
     return items_schema.jsonify(forsale)
 
 @vendorcreate.route('/itemsforsale', methods=['GET'])

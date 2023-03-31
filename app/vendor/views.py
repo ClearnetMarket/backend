@@ -93,27 +93,59 @@ def vendor_vendor_stats(vendor_id):
     return jsonify(vendor_schema.dump(vendor_stats))
 
 
-@vendor.route('/vendor-feedback/<string:vendor_uuid>', methods=['GET'])
-def vendor_vendor_feedback(vendor_uuid):
+@vendor.route('/vendor-feedback/<string:vendor_uuid>/<int:page>', methods=['GET'])
+def vendor_vendor_feedback(vendor_uuid, page):
     """
     Grabs feedback of the vendor
     :return:
     """
-
+    per_page_amount = 10
+    if page is None:
+        offset_limit = 0
+        page = 1
+    elif page == 1:
+        offset_limit = 0
+        page = 1
+    else:
+        offset_limit = (per_page_amount * page) - per_page_amount
+        page = int(page)
+        
+        
     vendor_feedback = db.session\
         .query(Feedback_Feedback)\
         .filter(Feedback_Feedback.vendor_uuid==vendor_uuid)\
         .filter(Feedback_Feedback.type_of_feedback==1)\
         .filter(Feedback_Feedback.author_uuid!=vendor_uuid)\
-        .order_by(Feedback_Feedback.timestamp.desc())\
-        .limit(25)
+        .order_by(Feedback_Feedback.timestamp.asc())\
+        .limit(per_page_amount).offset(offset_limit)
 
     vendor_schema = Feedback_Feedback_Schema(many=True)
     return jsonify(vendor_schema.dump(vendor_feedback))
 
 
-@vendor.route('/all-feedback/<string:vendor_uuid>', methods=['GET'])
+@vendor.route('/vendor-feedback/count/<string:vendor_uuid>', methods=['GET'])
 def vendor_vendor_feedback_count(vendor_uuid):
+    """
+    Grabs feedback of the vendor
+    :return:
+    """
+ 
+    vendor_feedback_count = db.session\
+        .query(Feedback_Feedback)\
+        .filter(Feedback_Feedback.vendor_uuid == vendor_uuid)\
+        .filter(Feedback_Feedback.type_of_feedback == 1)\
+        .filter(Feedback_Feedback.author_uuid != vendor_uuid)\
+        .count()
+
+
+    return jsonify({
+        "success": "success",
+        "count": vendor_feedback_count,
+    })
+
+
+@vendor.route('/all-feedback/<string:vendor_uuid>', methods=['GET'])
+def vendor_vendor_feedback_totals(vendor_uuid):
     """
     Grabs feedback of the vendor count for sidebar
     :return:
