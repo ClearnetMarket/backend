@@ -34,7 +34,7 @@ def notification_notification_new():
         .query(Notification_Notifications) \
         .filter(Notification_Notifications.user_uuid == current_user.uuid) \
         .order_by(Notification_Notifications.timestamp.desc())\
-        .limit(25)
+        .limit(10)
     msg_schema = Notification_Notifications_Schema(many=True)
     return jsonify(msg_schema.dump(gnotifications))
 

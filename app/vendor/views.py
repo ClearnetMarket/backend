@@ -17,7 +17,7 @@ from app.classes.vendor import \
 from app.classes.item import Item_MarketItem, Item_MarketItem_Schema
 from app.classes.auth import Auth_User
 from app.classes.profile import Profile_StatisticsVendor
-
+from app.common.convert_prices import floating_decimals
 
 @vendor.route('/becomevendor', methods=['POST'])
 @login_required
@@ -181,6 +181,8 @@ def vendor_vendor_feedback_totals(vendor_uuid):
 
     vendor_feedback_one_percent = (
         (int(vendor_feedback_one) / int(vendor_feedback))*100)
+    vendor_feedback_one_percent = floating_decimals(
+        vendor_feedback_one_percent, 2)
 
     vendor_feedback_two = db.session\
         .query(Feedback_Feedback)\
@@ -189,6 +191,9 @@ def vendor_vendor_feedback_totals(vendor_uuid):
         .count()
     vendor_feedback_two_percent = (
         (int(vendor_feedback_two) / int(vendor_feedback))*100)
+    vendor_feedback_two_percent = floating_decimals(
+        vendor_feedback_two_percent, 2)
+
 
     vendor_feedback_three = db.session\
         .query(Feedback_Feedback)\
@@ -197,15 +202,20 @@ def vendor_vendor_feedback_totals(vendor_uuid):
         .count()
     vendor_feedback_three_percent = (
         (int(vendor_feedback_three) / int(vendor_feedback))*100)
+    vendor_feedback_three_percent = floating_decimals(
+        vendor_feedback_three_percent, 2)
+    
+    
 
     vendor_feedback_four = db.session\
         .query(Feedback_Feedback)\
         .filter_by(vendor_uuid=vendor_uuid)\
         .filter_by(vendor_rating=4)\
         .count()
-    vendor_feedback_four_percent = (
-        (int(vendor_feedback_four) / int(vendor_feedback))*100)
-
+    vendor_feedback_four_percent = ((int(vendor_feedback_four) / int(vendor_feedback))*100)
+    vendor_feedback_four_percent = floating_decimals(vendor_feedback_four_percent, 2)
+    
+    
     vendor_feedback_five = db.session\
         .query(Feedback_Feedback)\
         .filter_by(vendor_uuid=vendor_uuid)\
@@ -213,6 +223,8 @@ def vendor_vendor_feedback_totals(vendor_uuid):
         .count()
     vendor_feedback_five_percent = (
         (int(vendor_feedback_five) / int(vendor_feedback))*100)
+    vendor_feedback_five_percent = floating_decimals(
+        vendor_feedback_five_percent, 2)
 
     vendor_feedback_six = db.session\
         .query(Feedback_Feedback)\
@@ -221,14 +233,18 @@ def vendor_vendor_feedback_totals(vendor_uuid):
         .count()
     vendor_feedback_six_percent = (
         (int(vendor_feedback_six) / int(vendor_feedback))*100)
+    vendor_feedback_six_percent = floating_decimals(
+        vendor_feedback_six_percent, 2)
+
 
     vendor_feedback_seven = db.session\
         .query(Feedback_Feedback)\
         .filter_by(vendor_uuid=vendor_uuid)\
         .filter_by(vendor_rating=7)\
         .count()
-    vendor_feedback_seven_percent = (
-        (int(vendor_feedback_seven) / int(vendor_feedback))*100)
+    vendor_feedback_seven_percent = ((int(vendor_feedback_seven) / int(vendor_feedback))*100)
+    vendor_feedback_seven_percent = floating_decimals(
+        vendor_feedback_seven_percent, 2)
 
     vendor_feedback_eight = db.session\
         .query(Feedback_Feedback)\
@@ -237,6 +253,8 @@ def vendor_vendor_feedback_totals(vendor_uuid):
         .count()
     vendor_feedback_eight_percent = (
         (int(vendor_feedback_eight) / int(vendor_feedback))*100)
+    vendor_feedback_eight_percent = floating_decimals(
+        vendor_feedback_eight_percent, 2)
 
     vendor_feedback_nine = db.session\
         .query(Feedback_Feedback)\
@@ -245,6 +263,8 @@ def vendor_vendor_feedback_totals(vendor_uuid):
         .count()
     vendor_feedback_nine_percent = (
         (int(vendor_feedback_nine) / int(vendor_feedback))*100)
+    vendor_feedback_nine_percent = floating_decimals(
+        vendor_feedback_nine_percent, 2)
 
     vendor_feedback_ten = db.session\
         .query(Feedback_Feedback)\
@@ -253,6 +273,8 @@ def vendor_vendor_feedback_totals(vendor_uuid):
         .count()
     vendor_feedback_ten_percent = (
         (int(vendor_feedback_ten) / int(vendor_feedback))*100)
+    vendor_feedback_ten_percent = floating_decimals(
+        vendor_feedback_ten_percent, 2)
 
     return jsonify({
                     "success": "success",

@@ -1,6 +1,8 @@
 from flask import jsonify
+from sqlalchemy import func
 from app.item_query import itemquery
 from app import db
+
 # models
 from app.classes.item import Item_MarketItem, Item_MarketItem_Schema
 
@@ -8,16 +10,14 @@ from app.classes.item import Item_MarketItem, Item_MarketItem_Schema
 @itemquery.route('/query/all', methods=['GET'])
 def get_items_all():
     """
-    Used on index.  Grabs today's featured items
+    Used on index.  Grabs All items randomly
     :return:
     """
     todayfeaturedfull = db.session \
         .query(Item_MarketItem) \
         .filter(Item_MarketItem.online == 1) \
-        .filter(Item_MarketItem.image_one_server != '') \
-        .filter(Item_MarketItem.item_count != 0) \
-        .order_by(Item_MarketItem.created.desc()) \
-        .limit(10)
+        .order_by(func.random()) \
+        .limit(50)
 
     item_schema = Item_MarketItem_Schema(many=True)
     return jsonify(item_schema.dump(todayfeaturedfull))
@@ -32,8 +32,6 @@ def get_items_today_featured():
     todayfeaturedfull = db.session \
         .query(Item_MarketItem) \
         .filter(Item_MarketItem.online == 1) \
-        .filter(Item_MarketItem.image_one_server != '') \
-        .filter(Item_MarketItem.item_count != 0) \
         .order_by(Item_MarketItem.created.desc()) \
         .limit(10)
 

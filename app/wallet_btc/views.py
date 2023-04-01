@@ -93,9 +93,37 @@ def btc_balance_plus_unconfirmed():
     })
 
 
-@wallet_btc.route('/transactions', methods=['GET'])
+@wallet_btc.route('/transactions/<int:page>', methods=['GET'])
 @login_required
-def btc_transactions():
+def btc_transactions(page):
+
+    per_page_amount = 50
+    if page is None:
+        offset_limit = 0
+        page = 1
+    elif page == 1:
+        offset_limit = 0
+        page = 1
+    else:
+        offset_limit = (per_page_amount * page) - per_page_amount
+        page = int(page)
+        
+        
+    # Get Transaction history
+    transactfull = db.session\
+        .query(Btc_TransactionsBtc)\
+        .filter(Btc_TransactionsBtc.user_id == current_user.id)\
+        .order_by(Btc_TransactionsBtc.id.desc())\
+        .limit(per_page_amount).offset(offset_limit)
+
+    transactions_list = Btc_TransactionsBtc_Schema(many=True)
+    return jsonify(transactions_list.dump(transactfull)), 200
+
+
+
+@wallet_btc.route('/transactions/count', methods=['GET'])
+@login_required
+def btc_transactions_count():
 
     # Get Transaction history
     transactfull = db.session\

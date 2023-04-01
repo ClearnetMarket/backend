@@ -96,16 +96,45 @@ def bch_balance_plus_unconfirmed():
     })
 
 
-@wallet_bch.route('/transactions', methods=['GET'])
+@wallet_bch.route('/transactions/<int:page>', methods=['GET'])
 @login_required
-def bch_transactions():
-    
+def bch_transactions(page):
+
+    per_page_amount = 50
+    if page is None:
+        offset_limit = 0
+        page = 1
+    elif page == 1:
+        offset_limit = 0
+        page = 1
+    else:
+        offset_limit = (per_page_amount * page) - per_page_amount
+        page = int(page)
+
+
+
     # Get Transaction history
     transactfull = db.session\
         .query(Bch_WalletTransactions)\
         .filter(Bch_WalletTransactions.user_id == current_user.id)\
         .order_by(Bch_WalletTransactions.id.desc())\
-        .limit(50)
+        .limit(per_page_amount).offset(offset_limit)
+
+    transactions_list = Bch_WalletTransactions_Schema(many=True)
+    return jsonify(transactions_list.dump(transactfull)), 200
+
+
+@wallet_bch.route('/transactions/count', methods=['GET'])
+@login_required
+def bch_transactions_count():
+
+
+    # Get Transaction history
+    transactfull = db.session\
+        .query(Bch_WalletTransactions)\
+        .filter(Bch_WalletTransactions.user_id == current_user.id)\
+        .order_by(Bch_WalletTransactions.id.desc())\
+        .count()
 
     transactions_list = Bch_WalletTransactions_Schema(many=True)
     return jsonify(transactions_list.dump(transactfull)), 200

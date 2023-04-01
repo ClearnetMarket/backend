@@ -97,19 +97,53 @@ def xmr_balance_plus_unconfirmed():
     })
 
 
-@wallet_xmr.route('/transactions', methods=['GET'])
+@wallet_xmr.route('/transactions/<int:page>', methods=['GET'])
 @login_required
-def xmr_transactions():
-
+def xmr_transactions(page):
+    per_page_amount = 50
+    if page is None:
+        offset_limit = 0
+        page = 1
+    elif page == 1:
+        offset_limit = 0
+        page = 1
+    else:
+        offset_limit = (per_page_amount * page) - per_page_amount
+        page = int(page)
     # Get Transaction history
     transactfull = db.session\
         .query(Xmr_Transactions)\
         .filter(Xmr_Transactions.user_id == current_user.id)\
         .order_by(Xmr_Transactions.id.desc())\
-        .limit(50)
+        .limit(per_page_amount).offset(offset_limit)
 
     transactions_list = Xmr_Transactions_Schema(many=True)
     return jsonify(transactions_list.dump(transactfull)), 200
+
+
+@wallet_xmr.route('/transactions/count', methods=['GET'])
+@login_required
+def xmr_transactions_count():
+    per_page_amount = 50
+    if page is None:
+        offset_limit = 0
+        page = 1
+    elif page == 1:
+        offset_limit = 0
+        page = 1
+    else:
+        offset_limit = (per_page_amount * page) - per_page_amount
+        page = int(page)
+    # Get Transaction history
+    transactfull = db.session\
+        .query(Xmr_Transactions)\
+        .filter(Xmr_Transactions.user_id == current_user.id)\
+        .order_by(Xmr_Transactions.id.desc())\
+        .limit(per_page_amount).offset(offset_limit)
+
+    transactions_list = Xmr_Transactions_Schema(many=True)
+    return jsonify(transactions_list.dump(transactfull)), 200
+
 
 
 @wallet_xmr.route('/receive', methods=['GET'])

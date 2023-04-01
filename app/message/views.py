@@ -41,22 +41,36 @@ def message_markasread(post_id):
     })
 
 
-@message.route('/count', methods=['GET'])
+@message.route('/count/<int:post_id>', methods=['GET'])
 @login_required
-def message_count():
+def message_count(post_id):
     """
     Counts the number of messages a user has
     :return:
     """
+    get_msg_post = db.session \
+        .query(Message_Chat) \
+        .filter(or_(Message_Chat.user_one_uuid == current_user.uuid,
+                Message_Chat.user_two_uuid == current_user.uuid,
+                Message_Chat.mod_uuid == current_user.uuid,
 
+                    )
+                ) \
+        .filter(Message_Chat.post_id == post_id) \
+        .first()
+        
+    if get_msg_post is None:
+        return jsonify({"error": "Error: Unauthorized"})
+    
     get_count = db.session \
         .query(Message_Chat) \
         .filter(or_(Message_Chat.user_one_uuid == current_user.uuid,
                     Message_Chat.user_two_uuid == current_user.uuid)) \
+        .filter(Message_Chat.post_id == post_id) \
         .count()
 
     return jsonify({
-        "get_count": get_count,
+        "count": get_count,
     })
 
 
@@ -98,13 +112,28 @@ def message_msg(post_id):
     return jsonify(msg_schema.dump(get_msg_post))
 
 
-@message.route('/main/comment/<int:post_id>', methods=['GET'])
+
+
+
+
+@message.route('/main/comment/<int:post_id>/<int:page>', methods=['GET'])
 @login_required
-def message_msg_comments(post_id):
+def message_msg_comments(post_id, page):
     """
     Returns the comments of the main post by the post id
     :return:
     """
+    per_page_amount = 25
+    if page is None:
+        offset_limit = 0
+        page = 1
+    elif page == 1:
+        offset_limit = 0
+        page = 1
+    else:
+        offset_limit = (per_page_amount * page) - per_page_amount
+        page = int(page)
+
 
     if current_user.admin_role >= 5:
         get_msg_post = db.session \
@@ -130,7 +159,9 @@ def message_msg_comments(post_id):
         .query(Message_Chat) \
         .filter(Message_Chat.post_id == post_id) \
         .order_by(Message_Chat.timestamp.desc()) \
-        .all()
+        .limit(per_page_amount).offset(offset_limit)
+        
+        
     comments_schema = Message_Chat_Schema(many=True)
     return jsonify(comments_schema.dump(get_msg_post_comments))
 
