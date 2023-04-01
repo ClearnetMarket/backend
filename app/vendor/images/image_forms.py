@@ -20,118 +20,116 @@ base_url_local = 'http://localhost:5000/common/item/'
 
 def deleteimg_noredirect(id, img):
 
-    try:
-        vendoritem = db.session\
-            .query(Item_MarketItem)\
-            .filter_by(id=id)\
-            .first()
-        if vendoritem:
-            if vendoritem.vendor_id == current_user.id:
-                try:
-                    specific_folder = str(vendoritem.uuid)
-                    getimagesubfolder = itemlocation(x=id)
-                    spacer = '/'
 
-                    pathtofile = str(UPLOADED_FILES_DEST_ITEM + spacer +
-                                     getimagesubfolder + spacer + specific_folder + spacer + img)
-                    file_extension = ".jpg"
-                    ext1 = '_225x'
-                    ext2 = '_500x'
-                    file0 = str(pathtofile + file_extension)
-                    file1 = str(pathtofile + ext1 + file_extension)
-                    file2 = str(pathtofile + ext2 + file_extension)
-                    if len(img) > 20:
+    vendoritem = db.session\
+        .query(Item_MarketItem)\
+        .filter_by(id=id)\
+        .first()
+    if vendoritem:
+        if vendoritem.vendor_id == current_user.id:
+            try:
+                specific_folder = str(vendoritem.uuid)
+                getimagesubfolder = itemlocation(x=id)
+                spacer = '/'
 
-                        if vendoritem.image_one == img:
-                            vendoritem.image_one = None
-                            db.session.add(vendoritem)
-                            db.session.commit()
-                            try:
-                                os.remove(file0)
-                            except Exception:
-                                pass
-                            try:
-                                os.remove(file1)
-                            except Exception:
-                                pass
-                            try:
-                                os.remove(file2)
-                            except Exception:
-                                pass
+                pathtofile = str(UPLOADED_FILES_DEST_ITEM + spacer +
+                                    getimagesubfolder + spacer + specific_folder + spacer + img)
+                file_extension = ".jpg"
+                ext1 = '_225x'
+                ext2 = '_500x'
+                file0 = str(pathtofile + file_extension)
+                file1 = str(pathtofile + ext1 + file_extension)
+                file2 = str(pathtofile + ext2 + file_extension)
+                if len(img) > 20:
 
-                        elif vendoritem.image_two == img:
-                            vendoritem.image_two = None
-                            db.session.add(vendoritem)
-                            db.session.commit()
-                            try:
-                                os.remove(file0)
-                            except Exception:
-                                pass
-                            try:
-                                os.remove(file1)
-                            except Exception:
-                                pass
-                            try:
-                                os.remove(file2)
-                            except Exception:
-                                pass
-                        elif vendoritem.image_three == img:
-                            vendoritem.image_three = None
-                            db.session.add(vendoritem)
-                            db.session.commit()
-                            try:
-                                os.remove(file0)
-                            except Exception:
-                                pass
-                            try:
-                                os.remove(file1)
-                            except Exception:
-                                pass
-                            try:
-                                os.remove(file2)
-                            except Exception:
-                                pass
-                        elif vendoritem.image_four == img:
-                            vendoritem.image_four = None
-                            db.session.add(vendoritem)
-                            db.session.commit()
-                            try:
-                                os.remove(file0)
-                            except Exception:
-                                pass
-                            try:
-                                os.remove(file1)
-                            except Exception:
-                                pass
-                            try:
-                                os.remove(file2)
-                            except Exception:
-                                pass
-                        elif vendoritem.image_five == img:
-                            vendoritem.image_five = None
-                            db.session.add(vendoritem)
-                            db.session.commit()
-                            try:
-                                os.remove(file0)
-                            except Exception:
-                                pass
-                            try:
-                                os.remove(file1)
-                            except Exception:
-                                pass
-                            try:
-                                os.remove(file2)
-                            except Exception:
-                                pass
-                        else:
+                    if vendoritem.image_one == img:
+                        vendoritem.image_one = None
+                        db.session.add(vendoritem)
+                        db.session.commit()
+                        try:
+                            os.remove(file0)
+                        except Exception:
                             pass
-                except Exception:
-                    pass
-            else:
+                        try:
+                            os.remove(file1)
+                        except Exception:
+                            pass
+                        try:
+                            os.remove(file2)
+                        except Exception:
+                            pass
+
+                    elif vendoritem.image_two == img:
+                        vendoritem.image_two = None
+                        db.session.add(vendoritem)
+                        db.session.commit()
+                        try:
+                            os.remove(file0)
+                        except Exception:
+                            pass
+                        try:
+                            os.remove(file1)
+                        except Exception:
+                            pass
+                        try:
+                            os.remove(file2)
+                        except Exception:
+                            pass
+                    elif vendoritem.image_three == img:
+                        vendoritem.image_three = None
+                        db.session.add(vendoritem)
+                        db.session.commit()
+                        try:
+                            os.remove(file0)
+                        except Exception:
+                            pass
+                        try:
+                            os.remove(file1)
+                        except Exception:
+                            pass
+                        try:
+                            os.remove(file2)
+                        except Exception:
+                            pass
+                    elif vendoritem.image_four == img:
+                        vendoritem.image_four = None
+                        db.session.add(vendoritem)
+                        db.session.commit()
+                        try:
+                            os.remove(file0)
+                        except Exception:
+                            pass
+                        try:
+                            os.remove(file1)
+                        except Exception:
+                            pass
+                        try:
+                            os.remove(file2)
+                        except Exception:
+                            pass
+                    elif vendoritem.image_five == img:
+                        vendoritem.image_five = None
+                        db.session.add(vendoritem)
+                        db.session.commit()
+                        try:
+                            os.remove(file0)
+                        except Exception:
+                            pass
+                        try:
+                            os.remove(file1)
+                        except Exception:
+                            pass
+                        try:
+                            os.remove(file2)
+                        except Exception:
+                            pass
+                    else:
+                        pass
+            except Exception:
                 pass
         else:
             pass
-    except:
+    else:
         pass
 
 

@@ -362,15 +362,14 @@ def vendor_orders_put_online(uuid):
     check_if_allowed = put_online_allowed(item=get_item)
     if check_if_allowed is not True:
         return jsonify({
-            'success': "Info success",
-            'status': check_if_allowed
+            'success': "Item is Online",
         })
 
     get_item.online = 1
 
     db.session.add(get_item)
     db.session.commit()
-    return jsonify({'success': 'success'})
+    return jsonify({'success': 'Item is online'})
 
 
 @vendororders.route('/offline/<string:uuid>', methods=['GET'])
@@ -391,7 +390,7 @@ def vendor_orders_put_offline(uuid):
     db.session.add(get_item)
     db.session.commit()
 
-    return jsonify({'success': 'success'})
+    return jsonify({'success': 'Item is offline'})
 
 
 @vendororders.route('/notification/dispute/<string:uuid>', methods=['POST'])

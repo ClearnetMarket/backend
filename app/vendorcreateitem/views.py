@@ -119,7 +119,6 @@ def create_item_main(uuid):
     shipinfo2 = f'Takes {shipping_2_days} days for {shipping_2_price}{currency_symbol}'
     shipinfo3 = f'Takes {shipping_3_days} days for {shipping_3_price}{currency_symbol}'
 
- 
     # Category
     if request.json["category_id_0"] == '':
         return jsonify({"error": 'Error:  Could not find category' })
@@ -130,9 +129,9 @@ def create_item_main(uuid):
         .query(Category_Categories)\
         .filter(Category_Categories.value == category)\
         .first()
+        
     category_value = get_category_query.value
     category_name = get_category_query.name
-
 
     currency_list = db.session\
         .query(Query_Country)\
@@ -205,9 +204,9 @@ def create_item_images(uuid):
         .filter_by(api_key=api_key)\
         .first()
     see_if_user_allowed = db.session\
-                              .query(Item_MarketItem)\
-                              .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == get_user.id)\
-                              .first()
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == uuid, Item_MarketItem.vendor_id == get_user.id)\
+        .first()
     if see_if_user_allowed is None:
         return jsonify({"error": 'Error: Unauthorized'}), 200
 
@@ -230,7 +229,7 @@ def create_item_images(uuid):
     try:
         mkdir_p(directoryifitemlisting)
     except:
-        print("error1")
+
         pass
     try:
         image_main = request.files['image_main']
@@ -374,7 +373,6 @@ def create_item():
     createnewitemtemp = Item_MarketItem(
         created=now,
         node=1,
-
         vendor_name=current_user.username,
         vendor_id=current_user.id,
         vendor_uuid=current_user.uuid,

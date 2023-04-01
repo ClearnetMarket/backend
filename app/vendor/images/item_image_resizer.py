@@ -41,7 +41,7 @@ def convertimage_225(newfullpathfilename, root, file):
     # test to see if already done
     seeifexists = os.path.exists(renamed_file)
     if seeifexists is True:
-        pass
+        print("IMAGE EXISTS!")
     else:
         # creates new basename
         print("")
@@ -77,7 +77,7 @@ def convertimage_500(newfullpathfilename, root, file):
     # test to see if already done
     seeifexists = os.path.exists(renamed_file)
     if seeifexists is True:
-        pass
+        print("IMAGE EXISTS!")
     else:
         # creates new basename
         print("")
