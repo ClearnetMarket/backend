@@ -15,7 +15,7 @@ class Item_ReportedList(db.Model):
                    autoincrement=True,
                    unique=True,
                    nullable=False)
-    item_id = db.Column(db.Integer)
+    item_uuid = db.Column(db.String(140))
     user_who_reported_id = db.Column(db.Integer)
 
 

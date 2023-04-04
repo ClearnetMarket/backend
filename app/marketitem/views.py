@@ -113,7 +113,7 @@ def marketitem_item_report(item_id):
     # add user who reported
     
     new_reported = Item_ReportedList(
-        item_id=item_for_sale.id,
+        item_uuid=item_for_sale.uuid,
         user_who_reported_id=current_user.id
     )
     
@@ -147,6 +147,7 @@ def marketitem_item_check_user_reported(item_id):
     see_if_user_already_reported = db.session\
         .query(Item_ReportedList)\
         .filter(Item_ReportedList.user_who_reported_id == current_user.id)\
+        .filter(Item_ReportedList.item_uuid == item_id)\
         .count()
     print(see_if_user_already_reported)
     if see_if_user_already_reported == 0:
