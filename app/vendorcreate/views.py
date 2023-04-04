@@ -156,10 +156,11 @@ def vendorcreate_clone_item(uuid):
         shipping_info_3=vendoritem.shipping_info_3,
         shipping_price_3=vendoritem.shipping_price_3,
         shipping_day_3=vendoritem.shipping_day_3,
-        view_count=vendoritem.view_count,
-        item_rating=vendoritem.item_rating,
-        review_count=vendoritem.review_count,
-        total_sold=vendoritem.total_sold,
+        view_count=0,
+        item_rating=0,
+        review_count=0,
+        total_sold=0,
+        reported_count=0,
     )
     # image item to dabase but dont commit yet ..
     db.session.add(item)

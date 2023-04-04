@@ -2,9 +2,12 @@ from flask import jsonify
 from flask_login import current_user
 from app.marketitem import marketitem
 from app import db
-
+from flask_login import login_required, current_user
 # models
-from app.classes.item import Item_MarketItem, Item_MarketItem_Schema
+from app.classes.item import\
+    Item_MarketItem,\
+    Item_MarketItem_Schema,\
+    Item_ReportedList
 from app.classes.admin import Admin_Flagged
 
 
@@ -29,7 +32,7 @@ def marketitem_item_main(item_id):
 @marketitem.route('/item/flagged/<string:item_id>', methods=['GET'])
 def marketitem_item_flagged(item_id):
     """
-    Grabs stats of the vendor
+    Sees if item is in admin flagged cateogry
     :return:
     """
     flagged_item = db.session\
@@ -84,3 +87,71 @@ def marketitem_add_view(item_uuid):
     return jsonify({
         "success": "success",
         "item_title": item_for_sale.item_title})
+
+
+@marketitem.route('/report/<string:item_id>', methods=['POST'])
+@login_required
+def marketitem_item_report(item_id):
+    """
+    Used for reporting an item from the red button on item page
+    :return:
+    """
+    item_for_sale = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == item_id)\
+        .first()
+    if not item_for_sale:
+        jsonify({"error": "Error:  No Item exists"}), 200
+        
+    see_if_user_already_reported = db.session\
+        .query(Item_ReportedList)\
+        .filter(Item_ReportedList.user_who_reported_id == current_user.id)\
+        .count()
+    if see_if_user_already_reported != 0:
+        jsonify({"error": "You have already reported this item."}), 200
+        
+    # add user who reported
+    
+    new_reported = Item_ReportedList(
+        item_id=item_for_sale.id,
+        user_who_reported_id=current_user.id
+    )
+    
+    db.session.add(new_reported)
+    # add current item report count
+    current_reports = item_for_sale.reported_count
+    new_reports_amount = current_reports + 1
+    item_for_sale.reported_count = new_reports_amount
+    db.session.add(item_for_sale)
+    db.session.commit()
+    
+    
+    return jsonify({
+        "success": "success" })
+
+
+@marketitem.route('/check-report/<string:item_id>', methods=['get'])
+@login_required
+def marketitem_item_check_user_reported(item_id):
+    """
+    Used for reporting an item from the red button on item page
+    :return:
+    """
+    item_for_sale = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.uuid == item_id)\
+        .first()
+    if not item_for_sale:
+        return jsonify({"error": "Error:  No Item exists"}), 200
+
+    see_if_user_already_reported = db.session\
+        .query(Item_ReportedList)\
+        .filter(Item_ReportedList.user_who_reported_id == current_user.id)\
+        .count()
+    print(see_if_user_already_reported)
+    if see_if_user_already_reported == 0:
+        return jsonify({"error": "You have already reported this item."}), 200
+
+    if see_if_user_already_reported != 0:
+        return jsonify({"success": see_if_user_already_reported}), 200
+

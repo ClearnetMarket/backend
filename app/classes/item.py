@@ -6,6 +6,19 @@ def get_uuid_item():
     return uuid4().hex
 
 
+class Item_ReportedList(db.Model):
+    __tablename__ = 'item_reported'
+    __bind_key__ = 'clearnet'
+    __table_args__ = {"schema": "public"}
+    id = db.Column(db.Integer,
+                   primary_key=True,
+                   autoincrement=True,
+                   unique=True,
+                   nullable=False)
+    item_id = db.Column(db.Integer)
+    user_who_reported_id = db.Column(db.Integer)
+
+
 class Item_ItemtoDelete(db.Model):
     __tablename__ = 'item_to_delete'
     __bind_key__ = 'clearnet'
@@ -102,6 +115,8 @@ class Item_MarketItem(db.Model):
     item_rating = db.Column(db.DECIMAL(20, 2))
     review_count = db.Column(db.INTEGER)
     total_sold = db.Column(db.INTEGER)
+    
+    reported_count = db.Column(db.INTEGER)
     
 
     def __str__(self):

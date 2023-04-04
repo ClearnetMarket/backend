@@ -419,7 +419,8 @@ def create_item():
         item_rating=0,
         review_count=0,
         online=0,
-        total_sold=0
+        total_sold=0,
+        reported_count=0,
     )
     db.session.add(createnewitemtemp)
     db.session.commit()
