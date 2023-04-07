@@ -1057,17 +1057,17 @@ def finalize():
 
     if see_if_address is not True:
         return jsonify({'error': see_if_address}), 200
-    print("1111")
+   
     # make order
     create_order = checkout_make_order()
     if create_order is not True:
         return jsonify({'error': 'Error Creating Order'}), 200
-    print("22222")
+    
     # send coin painment
     check_payment = checkout_make_payment()
     if check_payment is not True:
         return jsonify({'error': 'Error with Payment. Not enough Funds.'}), 200
-    print("3333")
+  
     checkout_clear_shopping_cart(current_user.id)
     db.session.commit()
 
@@ -1247,19 +1247,16 @@ def checkout_make_payment():
     current_cart_total_bch = Decimal(cart_total.bch_total_price)
     if current_cart_total_bch > 0:
         if Decimal(userwallet_bch.currentbalance) <= current_cart_total_bch:
-            print("123213*********")
             return False
 
     current_cart_total_btc = Decimal(cart_total.btc_total_price)
     if current_cart_total_btc > 0:
         if Decimal(userwallet_btc.currentbalance) <= current_cart_total_btc:
-            print("4444*********")
             return False
 
     current_cart_total_xmr = Decimal(cart_total.xmr_total_price)
     if current_cart_total_xmr > 0:
         if Decimal(userwallet_xmr.currentbalance) <= current_cart_total_xmr:
-            print("22*********")
             return False
 
     # get the orders

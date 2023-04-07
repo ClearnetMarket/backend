@@ -149,7 +149,6 @@ def marketitem_item_check_user_reported(item_id):
         .filter(Item_ReportedList.user_who_reported_id == current_user.id)\
         .filter(Item_ReportedList.item_uuid == item_id)\
         .count()
-    print(see_if_user_already_reported)
     if see_if_user_already_reported == 0:
         return jsonify({"error": "You have already reported this item."}), 200
 

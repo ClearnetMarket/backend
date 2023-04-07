@@ -186,7 +186,6 @@ class Auth_User(UserMixin, db.Model):
         try:
             data = s.loads(token)
         except Exception as e:
-            print(str(e))
             return False
         if data.get('confirm') != self.id:
             return False

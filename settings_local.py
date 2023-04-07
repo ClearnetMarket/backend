@@ -41,14 +41,17 @@ class ApplicationConfig:
     SECRET_KEY = "youwillneverguessthiskeycia"
 
     # sessions
-    SESSION_COOKIE_NAME = "freeport_session"
-    SESSION_COOKIE_SECURE = False
-    SESSION_COOKIE_HTTPONLY = True
-    REMEMBER_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_NAME = "CSRFTOKEN"
+    SESSION_PROTECTION = "strong"
     SESSION_COOKIE_SAMESITE = "Strict"
+    # NEED SSL for this to work or be True!!!
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_HTTPONLY = False
+    REMEMBER_COOKIE_HTTPONLY = False
     SESSION_PERMANENT = False
     SESSION_USE_SIGNER = True
 
+    
     # redis config
     SESSION_TYPE = "redis"
     SESSION_REDIS = redis.from_url("redis://redis:6379")
