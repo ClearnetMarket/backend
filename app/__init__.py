@@ -10,7 +10,6 @@ from flask_login import LoginManager
 from sqlalchemy.orm import sessionmaker
 from werkzeug.routing import BaseConverter
 import decimal
-from flask_wtf.csrf import CSRFProtect
 from config import load_config
 from datetime import datetime
 
@@ -74,8 +73,7 @@ bcrypt = Bcrypt(app)
 server_session = Session(app)
 ma = Marshmallow(app)
 mail = Mail(app)
-if ApplicationConfig.CURRENT_SETTINGS == 'PRODUCTION':
-    csrf = CSRFProtect(app)
+
 
 
 login_manager = LoginManager(app)
@@ -85,7 +83,6 @@ login_manager.anonymous_user = "Guest"
 
 @login_manager.request_loader
 def load_user_from_request(request):
-
     from app.classes.auth import Auth_User
     # first, try to log in using the api_key url arg
     api_key = request.args.get('api_key')
@@ -119,10 +116,6 @@ api_main = {
                       'Access-Control-Request-Method', 'Access-Control-Request-Headers']
 }
 cors = CORS(app,  supports_credentials=True, resources={r'/*': api_main})
-
-
-
-
 
 
 # bind a function after each request, even if an exception is encountered.
