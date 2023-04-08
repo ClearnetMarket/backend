@@ -21,17 +21,3 @@ def static_from_root():
 def index():
     return jsonify({"success": "Api is online"}), 200
 
-@app.after_request
-@app.route('/csrf', methods=['GET'])
-def get_csrf_after(response):
-
-    token = generate_csrf()
-    response.headers.set('CSRFTOKEN', token)
-    return response
-
-
-@app.route('/csrf/request', methods=['GET'])
-def get_csrf():
-    token = generate_csrf()
-    response = {"CSRFTOKEN" : token}
-    return response

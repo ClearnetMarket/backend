@@ -46,16 +46,16 @@ def check_session():
     Checks auth token to ensure user is authenticated
     """
     api_key = request.headers.get('Authorization')
- 
+
     if not api_key:
         return jsonify({"error": "Error:  Could not Authorize User"}), 401
 
     api_key = api_key.replace('bearer ', '', 1)
 
     user_exists = db.session\
-                      .query(Auth_User)\
-                      .filter(Auth_User.api_key == api_key)\
-                      .first() is not None
+        .query(Auth_User)\
+        .filter(Auth_User.api_key == api_key)\
+        .first() is not None
     if not user_exists:
         return jsonify({"error": "Error: User not found"}), 401
 
@@ -80,7 +80,6 @@ def check_session():
                  },
         'token': user.api_key
     }), 200
-
 
 
 @auth.route("/amiconfirmed", methods=["GET"])
@@ -126,16 +125,17 @@ def login():
     password = request.json["password"]
 
     user = db.session\
-               .query(Auth_User)\
-               .filter_by(username=username)\
-               .first() is not None
+        .query(Auth_User)\
+        .filter(Auth_User.username==username)\
+        .first()
+        
     if not user:
         return jsonify({"error": "Error: Unauthorized"}), 200
+    # issue a lock so user has to redo the password
+    
+    if user.locked == 10:
+        return jsonify({"locked": "Account is locked"}), 200
 
-    user = db.session\
-        .query(Auth_User)\
-        .filter_by(username=username)\
-        .first()
 
     if not bcrypt.check_password_hash(user.password_hash, password):
 
@@ -169,7 +169,6 @@ def login():
                  },
         'token': user.api_key
     }), 200
-
 
 
 @auth.route("/register", methods=["POST"])
@@ -214,7 +213,7 @@ def register_user():
         email=email,
         password_hash=hashed_password,
         member_since=now,
-        wallet_pin=0000, # took out pin for easier signup
+        wallet_pin=0000,  # took out pin for easier signup
         profileimage='user-unknown.png',
         bio=None,
         api_key=key,
@@ -421,19 +420,17 @@ def account_seed():
 def confirm_seed():
 
     user = db.session\
-            .query(Auth_User) \
-            .filter(Auth_User.id == current_user.id)\
-            .first()
-
+        .query(Auth_User) \
+        .filter(Auth_User.id == current_user.id)\
+        .first()
 
     userseed = db.session\
-                .query(Auth_AccountSeedWords) \
-                .filter(Auth_AccountSeedWords.user_id == user.id)\
-                .first()
+        .query(Auth_AccountSeedWords) \
+        .filter(Auth_AccountSeedWords.user_id == user.id)\
+        .first()
 
     if userseed is None:
         return jsonify({"error": "Error: Seed does not exist"}), 200
-
 
     word0 = str(request.json["word0"]).replace(" ", "")
     word1 = str(request.json["word1"]).replace(" ", "")
@@ -466,13 +463,12 @@ def confirm_seed():
 @auth.route('/unlock-account', methods=['POST'])
 def retrieve_seed_to_unlock_account():
 
-
     word0 = request.json["word0"].replace(" ", "")
     word1 = request.json["word1"].replace(" ", "")
-    word2 = request.json["word3"].replace(" ", "")
-    word3 = request.json["word4"].replace(" ", "")
-    word4 = request.json["word5"].replace(" ", "")
-    word5 = request.json["word6"].replace(" ", "")
+    word2 = request.json["word2"].replace(" ", "")
+    word3 = request.json["word3"].replace(" ", "")
+    word4 = request.json["word4"].replace(" ", "")
+    word5 = request.json["word5"].replace(" ", "")
 
     # match the seed to the user
     userseed = db.session\
@@ -500,7 +496,20 @@ def retrieve_seed_to_unlock_account():
     login_user(user)
     current_user.is_authenticated()
     current_user.is_active()
-    return jsonify({'success': 'Error: Account Unlocked'}), 200
+    return jsonify({
+            "login": True,
+            'user': {'user_id': user.uuid,
+                    'user_name': user.display_name,
+                     'user_email': user.email,
+                     'profile_image': user.profileimage,
+                    'country': user.country,
+                     'currency': user.currency,
+                    'admin_role': user.admin_role,
+                     'token': user.api_key,
+                    'confirmed': user.confirmed,
+                    },
+            'token':  user.api_key
+        }), 200
 
 
 @auth.route('/change-password', methods=['POST'])
@@ -508,7 +517,7 @@ def retrieve_seed_to_unlock_account():
 def change_password():
 
 
-    new_password = request.json["password"]
+    new_password = request.json["new_password"]
     new_password_confirm = request.json["password_confirm"]
 
     user = db.session\
@@ -519,40 +528,15 @@ def change_password():
     if str(new_password) != str(new_password_confirm):
         return jsonify({"error": "Error: Incorrect Passwords"}), 200
 
-    hashed_password = bcrypt.generate_password_hash(new_password)
+    hashed_password = bcrypt.generate_password_hash(
+        new_password).decode('utf8')
     user.password_hash = hashed_password
     user.passwordpinallowed = 0
     db.session.add(user)
     db.session.commit()
     return jsonify({"success": "success"}), 200
 
-@auth.route('/change-pin', methods=['POST'])
-@login_required
-def change_pin():
 
-    old_pin = request.json["old_pin"]
-    new_pin = request.json["new_pin"]
-    password = request.json["password"]
-
-    user = db.session\
-        .query(Auth_User) \
-        .filter(Auth_User.id == current_user.id) \
-        .first()
-
-    if user.passwordpinallowed != 1:
-        return jsonify({"error": "Must unlock account to change password"}), 200
-    if not bcrypt.check_password_hash(user.password, password):
-        return jsonify({"error": "Unauthorized"}), 200
-    if not bcrypt.check_password_hash(user.wallet_pin, old_pin):
-        return jsonify({"error": "Unauthorized"}), 200
-
-    hashed_pin = bcrypt.generate_password_hash(new_pin)
-    user.wallet_pin = hashed_pin
-    user.passwordpinallowed = 0
-    db.session.add(user)
-    db.session.commit()
-
-    return jsonify({"success": "success"}), 200
 
 
 @auth.route("/vacation-on", methods=["POST"])
@@ -648,6 +632,7 @@ def change_profile_info():
 
     return jsonify({"success": "Success"}), 200
 
+
 @auth.route('/userbio', methods=['GET'])
 @login_required
 def user_profile_info():
@@ -692,14 +677,13 @@ def create_profile_image(uuid):
     mkdir_p(directory_user_profile)
     image_main = request.files['image_main']
     image1(formdata=image_main,
-            user=user,
-            directory_user_profile=directory_user_profile)
+           user=user,
+           directory_user_profile=directory_user_profile)
 
     db.session.add(user)
     db.session.commit()
 
     return jsonify({"success": 'success'})
-
 
 
 @auth.route('/delete-profile/<string:uuid>/<string:imagename>', methods=['DELETE'])
@@ -716,7 +700,7 @@ def delete_item_images(uuid, imagename):
         .query(Auth_User)\
         .filter_by(id=current_user.id)\
         .first()
-   
+
     if user is None:
         return jsonify({"error": 'Large Error'})
     if len(imagename) < 10:
@@ -739,7 +723,6 @@ def delete_item_images(uuid, imagename):
     ext_1 = '_225x.jpg'
     file0 = pathtofile + ".jpg"
     file1 = pathtofile + ext_1
-
 
     os.remove(file0)
     os.remove(file1)
@@ -767,8 +750,8 @@ def user_image_server(uuid):
 
     return jsonify(
         {"success": "success",
-        "status": user_image.profileimage
-        }
+         "status": user_image.profileimage
+         }
     ), 200
 
 
@@ -788,18 +771,18 @@ def user_image_url(uuid):
         "status": user_image.profileimage_url_250}), 200
 
 
-
-
 def send_password_reset_email(user_email):
     """
     This creates the email that is sent out to the users
     """
     now = datetime.utcnow()
-    password_reset_serializer = URLSafeTimedSerializer(ApplicationConfig.SECRET_KEY)
+    password_reset_serializer = URLSafeTimedSerializer(
+        ApplicationConfig.SECRET_KEY)
 
     password_reset_url = url_for(
         'auth.reset_with_token',
-        token=password_reset_serializer.dumps(user_email, salt='password-reset-salt'),
+        token=password_reset_serializer.dumps(
+            user_email, salt='password-reset-salt'),
         _external=True)
 
     user = db.session\
@@ -810,7 +793,7 @@ def send_password_reset_email(user_email):
                                   user=user,
                                   now=now,
                                   password_reset_url=password_reset_url)
-    send_email('Password Reset Requested', [user_email],'', lostpwdtemp)
+    send_email('Password Reset Requested', [user_email], '', lostpwdtemp)
 
 
 @auth.route('/lost-password', methods=['POST'])
@@ -828,15 +811,18 @@ def retrievepassword():
     send_password_reset_email(user_email=user.email)
     return jsonify({"success": 'If email exists a password has been sent.'}), 200
 
-@auth.route('/resetpassword/<token>', methods=[ "POST"])
+
+@auth.route('/resetpassword/<token>', methods=["POST"])
 def reset_with_token(token):
 
     new_password = request.json["new_password"]
     confirm_password = request.json["confirm_password"]
 
     try:
-        password_reset_serializer = URLSafeTimedSerializer(ApplicationConfig.SECRET_KEY)
-        email = password_reset_serializer.loads(token, salt='password-reset-salt', max_age=3600)
+        password_reset_serializer = URLSafeTimedSerializer(
+            ApplicationConfig.SECRET_KEY)
+        email = password_reset_serializer.loads(
+            token, salt='password-reset-salt', max_age=3600)
     except:
         return jsonify({"error": "Invalid link or it has expired"}), 200
 
@@ -864,14 +850,16 @@ def reset_with_token(token):
         {
             "success": "success",
             "status": token
-         }), 200
+        }), 200
 
 
 @auth.route('/unlock/<token>', methods=["POST"])
 def unlock_with_token(token):
 
-    password_reset_serializer = URLSafeTimedSerializer(ApplicationConfig.SECRET_KEY)
-    email = password_reset_serializer.loads(token, salt='password-reset-salt', max_age=3600)
+    password_reset_serializer = URLSafeTimedSerializer(
+        ApplicationConfig.SECRET_KEY)
+    email = password_reset_serializer.loads(
+        token, salt='password-reset-salt', max_age=3600)
 
     user = db.session\
         .query(Auth_User)\
@@ -893,8 +881,10 @@ def unlock_with_token(token):
 @auth.route('/confirm/<token>', methods=["POST"])
 def confirm_account_with_token(token):
 
-    password_reset_serializer = URLSafeTimedSerializer(ApplicationConfig.SECRET_KEY)
-    email = password_reset_serializer.loads(token, salt='password-reset-salt', max_age=3600)
+    password_reset_serializer = URLSafeTimedSerializer(
+        ApplicationConfig.SECRET_KEY)
+    email = password_reset_serializer.loads(
+        token, salt='password-reset-salt', max_age=3600)
 
     user = db.session\
         .query(Auth_User)\
@@ -911,11 +901,14 @@ def confirm_account_with_token(token):
     db.session.commit()
     return jsonify({"success": "Account is confirmed"}), 200
 
+
 @auth.route('/confirm/<token>', methods=["POST"])
 def reconfirm_account_with_token(token):
 
-    password_reset_serializer = URLSafeTimedSerializer(ApplicationConfig.SECRET_KEY)
-    email = password_reset_serializer.loads(token, salt='password-reset-salt', max_age=3600)
+    password_reset_serializer = URLSafeTimedSerializer(
+        ApplicationConfig.SECRET_KEY)
+    email = password_reset_serializer.loads(
+        token, salt='password-reset-salt', max_age=3600)
 
     user = db.session\
         .query(Auth_User)\
@@ -955,10 +948,12 @@ def resendconfirmation():
         return jsonify({"error": "Account is already confirmed"}), 200
 
     # login user
-    password_reset_serializer = URLSafeTimedSerializer(ApplicationConfig.SECRET_KEY)
+    password_reset_serializer = URLSafeTimedSerializer(
+        ApplicationConfig.SECRET_KEY)
     confirm_account_url = url_for(
         'users.confirm_account_with_token',
-        token=password_reset_serializer.dumps(user.email, salt='password-reset-salt'),
+        token=password_reset_serializer.dumps(
+            user.email, salt='password-reset-salt'),
         _external=True)
     accountreg = render_template('/email/welcome.html',
                                  user=user.user_name,

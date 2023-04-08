@@ -107,9 +107,17 @@ def marketitem_item_report(item_id):
         .query(Item_ReportedList)\
         .filter(Item_ReportedList.user_who_reported_id == current_user.id)\
         .count()
-    if see_if_user_already_reported != 0:
+    if see_if_user_already_reported:
         jsonify({"error": "You have already reported this item."}), 200
         
+    # check if person who reported is owner prevent accidents
+    see_if_reporter_is_owner = db.session\
+        .query(Item_MarketItem)\
+        .filter(Item_MarketItem.vendor_id == current_user.id)\
+        .first()
+    if see_if_reporter_is_owner:
+        return jsonify({"error": "You cant report this item."}), 200
+
     # add user who reported
     
     new_reported = Item_ReportedList(
@@ -137,21 +145,25 @@ def marketitem_item_check_user_reported(item_id):
     Used for reporting an item from the red button on item page
     :return:
     """
+    # check if item exists
     item_for_sale = db.session\
         .query(Item_MarketItem)\
         .filter(Item_MarketItem.uuid == item_id)\
         .first()
     if not item_for_sale:
         return jsonify({"error": "Error:  No Item exists"}), 200
+    
 
+    
+    # see if user already reported
     see_if_user_already_reported = db.session\
         .query(Item_ReportedList)\
         .filter(Item_ReportedList.user_who_reported_id == current_user.id)\
         .filter(Item_ReportedList.item_uuid == item_id)\
         .count()
+    
     if see_if_user_already_reported == 0:
         return jsonify({"error": "You have already reported this item."}), 200
 
-    if see_if_user_already_reported != 0:
-        return jsonify({"success": see_if_user_already_reported}), 200
+    return jsonify({"success": see_if_user_already_reported}), 200
 

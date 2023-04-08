@@ -535,6 +535,7 @@ def vendorcreateitem_get_item_category_list():
     category_list = db.session\
         .query(Category_Categories)\
         .order_by(Category_Categories.name.asc())\
+        .filter(Category_Categories.id != 0)\
         .all()
     category_schema = Category_Categories_Schema(many=True)
 

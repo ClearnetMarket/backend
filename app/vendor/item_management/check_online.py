@@ -1,7 +1,6 @@
 
 def put_online_allowed(item):
 
-
     if item.item_title:
         # check item has a title
         if len(item.item_title) <= 6:
@@ -50,26 +49,20 @@ def put_online_allowed(item):
     # check if shipping info specified
     # free shipping
     if item.shipping_free is True:
-        if len(item.shipping_info_0) > 3:
-            pass
-        else:
+        if len(item.shipping_info_0) < 3:
             return 'Free Shipping needs a better description'
 
     # check if shipping info specified
     # shipping two
    
     if item.shipping_two is True:
-        if len(item.shipping_info_2) > 3:
-            pass
-        else:
+        if len(item.shipping_info_2) < 3:
             return 'Shipping Two needs a better description'
 
     # check if shipping info specified
     # shipping three
     if item.shipping_three is True:
-        if len(item.shipping_info_3) > 3:
-            pass
-        else:
+        if len(item.shipping_info_3) < 3:
             return 'Shipping Three needs a better description'
 
     return True

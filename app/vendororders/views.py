@@ -360,9 +360,10 @@ def vendor_orders_put_online(uuid):
         .filter(Item_MarketItem.uuid == uuid) \
         .first()
     check_if_allowed = put_online_allowed(item=get_item)
+    print(check_if_allowed)
     if check_if_allowed is not True:
         return jsonify({
-            'success': "Item is Online",
+            'error': check_if_allowed,
         })
 
     get_item.online = 1
