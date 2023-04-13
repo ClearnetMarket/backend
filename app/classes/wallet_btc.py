@@ -9,7 +9,7 @@ class Btc_Prices(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     price = db.Column(db.DECIMAL(50, 2))
     currency_id = db.Column(db.INTEGER)
-    percent_change_twentyfour = db.Column(db.DECIMAL(50, 2))
+    percent_change_twentyfour = db.Column(db.INTEGER)
 
 
 class Btc_Prices_Schema(ma.SQLAlchemyAutoSchema):

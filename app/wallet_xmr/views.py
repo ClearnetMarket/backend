@@ -18,6 +18,23 @@ from app.classes.wallet_xmr import\
 # end models
 
 
+@wallet_xmr.route('/price/change', methods=['GET'])
+def xmr_price_from_user_currency():
+    """
+    This will return 1 or 0 showing off psotivew or negative 24 hours
+     Returns an integer 
+     1 = positive
+     0 = negative
+    :return:
+    """
+    get_price_xmr = db.session.query(Xmr_Prices).get(1)
+    the_change = get_price_xmr.percent_change_twentyfour
+    print("xmr change")
+    return jsonify({
+        "success": "success",
+        "change": the_change})
+
+
 @wallet_xmr.route('/price/usd', methods=['GET'])
 def xmr_price_anonymous():
     """

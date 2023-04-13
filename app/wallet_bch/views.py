@@ -17,6 +17,22 @@ from app.classes.wallet_bch import\
 # end models
 
 
+@wallet_bch.route('/price/change', methods=['GET'])
+def bch_price_from_user_currency():
+    """
+    This will return 1 or 0 showing off psotivew or negative 24 hours
+     Returns an integer 
+     1 = positive
+     0 = negative
+    :return:
+    """
+    get_price_bch = db.session.query(Bch_Prices).get(1)
+    the_change = get_price_bch.percent_change_twentyfour
+
+    return jsonify({
+        "success": "success",
+        "change": the_change})
+    
 @wallet_bch.route('/price/usd', methods=['GET'])
 def bch_price_anonymous():
     """

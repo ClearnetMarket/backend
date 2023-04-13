@@ -17,6 +17,23 @@ from app.classes.wallet_btc import \
 # end models
 
 
+@wallet_btc.route('/price/change', methods=['GET'])
+def btc_price_from_user_currency():
+    """
+    This will return 1 or 0 showing off psotivew or negative 24 hours
+     Returns an integer 
+     1 = positive
+     0 = negative
+    :return:
+    """
+    get_price_btc = db.session.query(Btc_Prices).get(1)
+    the_change = get_price_btc.percent_change_twentyfour
+
+    return jsonify({
+        "success": "success",
+        "change": the_change})
+    
+    
 @wallet_btc.route('/price/usd', methods=['GET'])
 def btc_price_anonymous():
     """
