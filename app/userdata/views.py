@@ -64,6 +64,32 @@ def userdata_country_currency():
                     'currency': currency_name
                     })
 
+@userdata.route('/country-currency/<string:uuid>', methods=['GET'])
+def userdata_country_currency_no_login(uuid):
+    """
+    Returns all info about a user
+    :return:
+    """
+    get_user = db.session.query(Auth_User).filter(Auth_User.uuid == uuid).first()
+    currency = db.session\
+        .query(Query_Currency)\
+        .filter(get_user.currency == Query_Currency.value)\
+        .first()
+    if currency is None:
+        return jsonify({'error': 'Error: Currency not Found'})
+    currency_name = currency.symbol
+    country = db.session\
+        .query(Query_Country)\
+        .filter(get_user.country == Query_Country.value)\
+        .first()
+    if currency is None:
+        return jsonify({'error': 'Error: Country not Found'})
+    countryname = country.name
+    return jsonify({'success': "Info success",
+                    'country': countryname,
+                    'currency': currency_name
+                    })
+    
 
 @userdata.route('/user-info/<string:user_uuid>', methods=['GET'])
 def userdata_home(user_uuid):

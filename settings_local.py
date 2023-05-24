@@ -57,14 +57,14 @@ class ApplicationConfig:
     SESSION_REDIS = redis.from_url("redis://redis:6379")
 
     # CORS
-    ORIGIN_URL = "http://localhost:8080"
+    ORIGIN_URL = "http://localhost:5173"
     CORS_SEND_WILDCARD = False
     CORS_SUPPORT_CREDENTIALS = True
     CORS_EXPOSE_HEADERS = None
     CORS_ALLOW_HEADERS = "*"
     CORS_ORIGIN_WHITELIST = ['http://localhost',
                              'http://localhost:5000',
-                             'localhost:8080']
+                             'localhost:5173']
 
 
 
