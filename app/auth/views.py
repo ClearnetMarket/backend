@@ -32,6 +32,8 @@ from app.classes.auth import \
     Auth_User, \
     Auth_UserFees, \
     Auth_AccountSeedWords
+from app.classes.notifications import Notification_Notifications
+
 
 from app.wallet_bch.wallet_bch_work import bch_create_wallet
 from app.wallet_btc.wallet_btc_work import btc_create_wallet
@@ -240,6 +242,16 @@ def register_user():
     db.session.add(new_user)
     db.session.flush()
 
+    # create Welcome Notification
+    
+    newmessage = Notification_Notifications(
+        username=new_user.username,
+        user_uuid=new_user.uuid,
+        timestamp=now,
+        message="Welcome to Freeport!",
+        read=0
+
+    )
     # create user stats
     stats = Profile_StatisticsUser(
         user_name=new_user.username,
@@ -316,6 +328,7 @@ def register_user():
                             )
 
     db.session.add(setfees)
+    db.session.add(newmessage)
     db.session.add(browserhistory)
     db.session.add(stats)
     db.session.add(newcart)
