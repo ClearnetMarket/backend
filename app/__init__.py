@@ -171,6 +171,9 @@ app.register_blueprint(main_blueprint, url_prefix='/main')
 from .common import common as common_blueprint
 app.register_blueprint(common_blueprint, url_prefix='/common')
 
+from .payment import payment as payment_blueprint
+app.register_blueprint(payment_blueprint, url_prefix='/payment')
+
 from .auth import auth as auth_blueprint
 app.register_blueprint(auth_blueprint, url_prefix='/auth')
 

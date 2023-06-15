@@ -116,7 +116,7 @@ def vendor_vendor_feedback(vendor_uuid, page):
         .filter(Feedback_Feedback.vendor_uuid==vendor_uuid)\
         .filter(Feedback_Feedback.type_of_feedback==1)\
         .filter(Feedback_Feedback.author_uuid!=vendor_uuid)\
-        .order_by(Feedback_Feedback.timestamp.asc())\
+        .order_by(Feedback_Feedback.timestamp.desc())\
         .limit(per_page_amount).offset(offset_limit)
 
     vendor_schema = Feedback_Feedback_Schema(many=True)

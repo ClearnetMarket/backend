@@ -1276,10 +1276,12 @@ def checkout_make_payment():
             .query(Item_MarketItem) \
             .filter(Item_MarketItem.uuid == order.item_uuid) \
             .first()
+        # put item offline
+        checkoutput_item_offline(itemid=get_item.uuid)
 
         # update the order to notify vendor
         order.incart = 0
-        order.vendor_user_name = get_item.vendor_name
+        order.vendor_user_name = get_item.vendor_display_name
         order.vendor_id = get_item.vendor_id
         order.vendor_uuid = get_item.vendor_uuid
         order.overall_status = 1
@@ -1387,9 +1389,9 @@ def checkout_make_payment():
             title_of_item=order.title_of_item,
             order_uuid=order.uuid,
             item_uuid=order.item_uuid,
-            customer_name=order.customer_user_name,
-            customer_uuid=order.customer_uuid,
-            vendor_name=order.vendor_user_name,
+            customer_name=current_user.display_name,
+            customer_uuid=current_user.uuid,
+            vendor_name=get_item.vendor_display_name,
             vendor_uuid=order.vendor_uuid,
             vendor_comment=None,
             type_of_feedback=1,
@@ -1403,11 +1405,12 @@ def checkout_make_payment():
         # create a review for customer
         add_new_feedback_for_vendor = Feedback_Feedback(
             timestamp=datetime.utcnow(),
+            title_of_item=order.title_of_item,
             order_uuid=order.uuid,
             item_uuid=order.item_uuid,
             customer_name=order.customer_user_name,
             customer_uuid=order.customer_uuid,
-            vendor_name=order.vendor_user_name,
+            vendor_name=get_item.vendor_display_name,
             vendor_uuid=order.vendor_uuid,
             vendor_comment=None,
             type_of_feedback=1,

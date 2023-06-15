@@ -1,17 +1,16 @@
-
-from decimal import Decimal
-from operator import or_
 from flask import request, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import or_
 from datetime import  timedelta
+from decimal import Decimal
+from operator import or_
 from app.orders import orders
 from app import db
 from app.common.notification import create_notification
 # models
 from app.classes.user_orders import User_Orders, User_Orders_Schema
 from app.classes.feedback import Feedback_Feedback
-from app.classes.profile import Profile_StatisticsVendor
+from app.classes.profile import Profile_StatisticsVendor, Profile_StatisticsUser
 from app.wallet_btc.wallet_btc_work import finalize_order_btc
 from app.wallet_bch.wallet_bch_work import finalize_order_bch
 from app.wallet_xmr.wallet_xmr_work import finalize_order_xmr
@@ -39,7 +38,7 @@ def get_user_orders(page):
     user_orders = db.session \
         .query(User_Orders) \
         .filter(User_Orders.customer_id == current_user.id) \
-        .order_by(User_Orders.created.asc()) \
+        .order_by(User_Orders.created.desc()) \
         .limit(per_page_amount).offset(offset_limit)
 
     item_schema = User_Orders_Schema(many=True)
@@ -151,7 +150,6 @@ def order_feedback_score(uuid):
     except Exception:
         return jsonify({"error": "Error"}), 200
 
-
     get_order = db.session \
         .query(User_Orders) \
         .filter(User_Orders.customer_id == current_user.id) \
@@ -176,12 +174,14 @@ def order_feedback_score(uuid):
     # set feedback to nearest integer
 
     # feedback exists just add the review
-    get_order.type_of_feedback = vendor_rating
-    get_order.author_uuid = current_user.uuid
-    get_order.vendor_feedback = 1
+    get_feedback.type_of_feedback = 1
     get_feedback.vendor_rating = vendorrating
-    db.session.add(get_order)
+        
+    get_order.author_uuid = current_user.uuid
+    get_order.vendor_feedback = vendor_rating
 
+    
+    db.session.add(get_order)
     db.session.add(get_feedback)
     db.session.flush()
 
@@ -217,6 +217,7 @@ def order_feedback_review(uuid):
         .filter(Feedback_Feedback.author_uuid == current_user.uuid) \
         .filter(Feedback_Feedback.order_uuid == uuid) \
         .first()
+        
     # if order exists else
     get_stats_vendor = db.session\
         .query(Profile_StatisticsVendor)\
@@ -225,11 +226,13 @@ def order_feedback_review(uuid):
     if get_order is None:
         return jsonify({"error": "Error:  Order not found"}), 200
 
+
+    
     # Add stats
     vendor_current_review_count = get_stats_vendor.total_reviews
     vendor_new_amount = vendor_current_review_count + 1
     get_stats_vendor.total_reviews = vendor_new_amount
-    db.session.add()
+    db.session.add(get_stats_vendor)
 
     # feedback exists just add the review
     get_order.review_of_vendor = review_by_user
@@ -240,6 +243,9 @@ def order_feedback_review(uuid):
 
     # update feedback
     get_feedback.review_of_vendor = review_by_user
+    # update feedback with title
+    get_feedback.title_of_item = get_order.title_of_item
+    
     db.session.add(get_feedback)
 
     db.session.commit()
@@ -252,14 +258,14 @@ def order_feedback_review(uuid):
 def order_vendor_feedback_score(uuid):
     """
     VENDOR
-    Post feedback  given by vendor
+    Post feedback given by vendor
     # type of feedback = 2
     :return:
     """
 
     # get the request json
-    if request.json["rating"]:
-        customer_rating = request.json["rating"]
+    if request.json["customerrating"]:
+        customer_rating = request.json["customerrating"]
     else:
         return jsonify({"error": "error getting rating"}), 200
 
@@ -277,8 +283,8 @@ def order_vendor_feedback_score(uuid):
 
     # if order exists else
     get_stats_buyer = db.session\
-        .query(Profile_StatisticsVendor)\
-        .filter(Profile_StatisticsVendor.user_uuid == current_user.uuid)\
+        .query(Profile_StatisticsUser)\
+        .filter(Profile_StatisticsUser.user_uuid == current_user.uuid)\
         .first()
 
     # if order exists
@@ -294,7 +300,7 @@ def order_vendor_feedback_score(uuid):
     buyer_current_review_count = get_stats_buyer.total_reviews
     vendor_new_amount = buyer_current_review_count + 1
     get_stats_buyer.total_reviews = vendor_new_amount
-    db.session.add()
+    db.session.add(get_stats_buyer)
 
     # modify order
     get_order.author_uuid = current_user.uuid
@@ -303,12 +309,13 @@ def order_vendor_feedback_score(uuid):
 
     # add the review
     get_feedback.customer_rating = customerrating
+    # type of feedback is 2 for query on user profile
+    get_feedback.type_of_feedback = 2
+    
     db.session.add(get_feedback)
 
     # if both conditions are met set it as review added
     # this ensures proper review is added not just half
-
-
     create_notification(username=get_order.vendor_user_name,
                  user_uuid=get_order.vendor_uuid,
                  msg="Your have a new feedback."
@@ -335,7 +342,6 @@ def order_vendor_feedback_review(uuid):
     # type of feedback = 2
     :return:
     """
-
     try:
         if request:
             review_by_user = request.json["review"]
@@ -421,7 +427,7 @@ def get_order_feedback(uuid):
     })
 
 
-@orders.route('/feedback/get/vendor/<string:uuid>', methods=['GET'])
+@orders.route('/feedback/vendor/<string:uuid>', methods=['GET'])
 @login_required
 def get_order_feedback_vendor(uuid):
     """
@@ -434,11 +440,13 @@ def get_order_feedback_vendor(uuid):
         .filter(User_Orders.uuid == uuid) \
         .first()
 
+
     get_feedback = db.session \
         .query(Feedback_Feedback) \
         .filter(Feedback_Feedback.author_uuid == current_user.uuid) \
         .filter(Feedback_Feedback.order_uuid == uuid) \
         .first()
+
     if get_order is None:
         return jsonify({"error": "Error: Order not Found"}), 200
 
@@ -446,14 +454,15 @@ def get_order_feedback_vendor(uuid):
         return jsonify({"error": 'Error: Feedback not found'})
 
     if get_feedback.customer_rating == None:
-        rated = 'None'
+        rated = False
     else:
-        rated = 'success'
+        rated = True
 
     return jsonify({
-        "success": rated,
+        "success": 'success',
         "customer_rating": get_feedback.customer_rating,
         "review": get_feedback.review_of_customer,
+        "rated": rated,
     })
 
 
@@ -539,7 +548,7 @@ def mark_order_finalized(uuid):
 
     get_order.overall_status = 10
 
-    notification(username=get_order.vendor_user_name,
+    create_notification(username=get_order.vendor_user_name,
                  user_uuid=get_order.vendor_uuid,
                  msg="Your order has been marked as finalized."
                  )
@@ -569,7 +578,7 @@ def mark_order_request_cancel(uuid):
 
     get_order.overall_status = 6
 
-    notification(username=get_order.vendor_user_name,
+    create_notification(username=get_order.vendor_user_name,
                  user_uuid=get_order.vendor_uuid,
                  msg="A customer has requested to cancel an order."
                  )

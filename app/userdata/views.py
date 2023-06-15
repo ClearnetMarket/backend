@@ -241,18 +241,30 @@ def userdata_get_address():
     })
 
 
-@userdata.route('/user-feedback/<string:user_uuid>', methods=['GET'])
-def userdata_get_all_feedback(user_uuid):
+@userdata.route('/user-feedback/<string:user_uuid>/<int:page>', methods=['GET'])
+def userdata_get_all_feedback(user_uuid, page):
     """
     Grabs all feedback from a user
     :return:
     """
+    per_page_amount = 10
+    if page is None:
+        offset_limit = 0
+        page = 1
+    elif page == 1:
+        offset_limit = 0
+        page = 1
+    else:
+        offset_limit = (per_page_amount * page) - per_page_amount
+        page = int(page)
+        
+        
     user_feedback = db.session\
         .query(Feedback_Feedback)\
         .filter_by(customer_uuid=user_uuid)\
         .filter_by(type_of_feedback=2)\
         .order_by(Feedback_Feedback.timestamp.desc())\
-        .limit(10)
+        .limit(per_page_amount).offset(offset_limit)
 
     user_schema = Feedback_Feedback_Schema(many=True)
     return jsonify(user_schema.dump(user_feedback))

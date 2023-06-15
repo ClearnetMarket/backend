@@ -85,6 +85,7 @@ def vendor_orders_waiting_on_accepted():
         .query(User_Orders) \
         .filter_by(vendor_id=current_user.id) \
         .filter_by(overall_status=1) \
+        .order_by(User_Orders.created.desc())\
         .all()
 
     vendor_orders_schema = User_Orders_Schema(many=True)
@@ -154,6 +155,7 @@ def vendor_orders_waiting_on_shipment():
         .query(User_Orders) \
         .filter_by(vendor_id=current_user.id) \
         .filter_by(overall_status=2) \
+        .order_by(User_Orders.created.desc())\
         .all()
 
     vendor_orders_schema = User_Orders_Schema(many=True)
@@ -168,6 +170,7 @@ def vendor_orders_mark_as_shipped(orderuuid):
         .query(User_Orders) \
         .filter_by(vendor_id=current_user.id) \
         .filter_by(uuid=orderuuid) \
+        .order_by(User_Orders.created.desc())\
         .first()
     vendor_order.overall_status=3
     vendor_order.date_shipped = datetime.utcnow()
@@ -190,6 +193,7 @@ def vendor_orders_shipped():
         .query(User_Orders) \
         .filter_by(vendor_id=current_user.id) \
         .filter(or_(User_Orders.overall_status==3, User_Orders.overall_status==4))\
+        .order_by(User_Orders.created.desc())\
         .all()
 
     user_order_info = User_Orders_Schema(many=True)
@@ -204,6 +208,7 @@ def vendor_orders_finalized():
         .query(User_Orders) \
         .filter_by(vendor_id=current_user.id) \
         .filter_by(overall_status=10) \
+        .order_by(User_Orders.created.desc())\
         .all()
 
     vendor_orders_schema = User_Orders_Schema(many=True)
@@ -218,6 +223,7 @@ def vendor_orders_waiting_on_cancel():
         .query(User_Orders) \
         .filter_by(vendor_id=current_user.id) \
         .filter_by(overall_status=6) \
+        .order_by(User_Orders.created.desc())\
         .all()
     vendor_orders_schema = User_Orders_Schema(many=True)
     return jsonify(vendor_orders_schema.dump(vendor_orders))
@@ -231,6 +237,7 @@ def vendor_orders_disputed():
         .query(User_Orders) \
         .filter(User_Orders.vendor_id==current_user.id) \
         .filter_by(overall_status=8) \
+        .order_by(User_Orders.created.desc())\
         .all()
 
     vendor_orders_schema = User_Orders_Schema(many=True)
@@ -288,8 +295,7 @@ def vendor_orders_add_tracking():
 @vendororders.route('/tracking/get/<string:order_uuid>', methods=['GET'])
 @login_required
 def vendor_orders_get_tracking(order_uuid):
-
-
+    
     tracking_data = db.session\
         .query(User_Orders_Tracking) \
         .filter_by(vendor_uuid=current_user.uuid) \
@@ -311,7 +317,7 @@ def vendor_orders_get_tracking(order_uuid):
 def vendor_orders_add_vendor_feedback(order_uuid):
     """
       this function adds feedback for customer
-    - vendor gives a review for the customer
+      vendor gives a review for the customer
     """
 
     get_item_rating = request.json["item_rating"]

@@ -18,12 +18,16 @@ def image_forsale_file(uuid, filename):
         .query(Item_MarketItem)\
         .filter(Item_MarketItem.uuid == uuid)\
         .first()
+    try:
+        getimagesubfolder = itemlocation(x=get_item_id.id)
 
-    getimagesubfolder = itemlocation(x=get_item_id.id)
 
+    except:
+        getimagesubfolder = '1'
     directory_of_file = UPLOADED_FILES_DEST_ITEM
 
     thefile = os.path.join(getimagesubfolder, uuid, filename)
+    
 
     return send_from_directory(directory=directory_of_file, path=thefile, as_attachment=False)
 

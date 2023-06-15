@@ -5,7 +5,7 @@ from datetime import datetime
 class Auth_User(db.Model):
     __tablename__ = 'auth_users'
     __bind_key__ = 'clearnet'
-    __table_args__ = {"schema": "public"}
+    __table_args__ = {"schema": "public", 'extend_existing': True}
 
     id = db.Column(db.Integer,
                    autoincrement=True,
