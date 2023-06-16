@@ -134,6 +134,7 @@ def vendor_vendor_feedback_count(vendor_uuid):
         .query(Feedback_Feedback)\
         .filter(Feedback_Feedback.vendor_uuid == vendor_uuid)\
         .filter(Feedback_Feedback.type_of_feedback == 1)\
+        .filter(Feedback_Feedback.review_of_vendor != None)\
         .filter(Feedback_Feedback.author_uuid != vendor_uuid)\
         .count()
 

@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import or_
-from datetime import  timedelta
+from datetime import  timedelta, datetime
 from decimal import Decimal
 from operator import or_
 from app.orders import orders
@@ -14,7 +14,7 @@ from app.classes.profile import Profile_StatisticsVendor, Profile_StatisticsUser
 from app.wallet_btc.wallet_btc_work import finalize_order_btc
 from app.wallet_bch.wallet_bch_work import finalize_order_bch
 from app.wallet_xmr.wallet_xmr_work import finalize_order_xmr
-
+from app.classes.vendor import Vendor_Notification
 
 @orders.route('/<int:page>', methods=['GET'])
 @login_required
@@ -33,7 +33,6 @@ def get_user_orders(page):
     else:
         offset_limit = (per_page_amount * page) - per_page_amount
         page = int(page)
-        
         
     user_orders = db.session \
         .query(User_Orders) \
@@ -200,6 +199,8 @@ def order_feedback_review(uuid):
     # type of feedback = 1
     :return:
     """
+    
+    now = datetime.utcnow()
     if request.json["review"]:
         review_by_user = request.json["review"]
     else:
@@ -225,8 +226,6 @@ def order_feedback_review(uuid):
         .first()
     if get_order is None:
         return jsonify({"error": "Error:  Order not found"}), 200
-
-
     
     # Add stats
     vendor_current_review_count = get_stats_vendor.total_reviews
@@ -245,6 +244,22 @@ def order_feedback_review(uuid):
     get_feedback.review_of_vendor = review_by_user
     # update feedback with title
     get_feedback.title_of_item = get_order.title_of_item
+    
+    create_notification(username=get_order.vendor_user_name,
+                        user_uuid=get_order.vendor_uuid,
+                        msg="Your have a new feedback."
+                        )
+    new_notice_vendor = Vendor_Notification(
+            dateadded=now,
+            user_id=get_order.vendor_id,
+            new_feedback=1,
+            new_disputes=0,
+            new_orders=0,
+            new_returns=0,
+        )
+
+    db.session.add(new_notice_vendor)
+        
     
     db.session.add(get_feedback)
 
@@ -373,7 +388,6 @@ def order_vendor_feedback_review(uuid):
 
     get_order.author_uuid = current_user.uuid
     get_order.review_of_customer = review_by_user
-
     db.session.add(get_order)
 
     # feedback exists just add the review
@@ -470,7 +484,6 @@ def get_order_feedback_vendor(uuid):
 @login_required
 def mark_order_disputed(uuid):
     """
-
     :return:
     """
 

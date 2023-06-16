@@ -117,8 +117,8 @@ def vendor_orders_reject(orderuuid):
         .filter_by(uuid=orderuuid) \
         .filter_by(vendor_uuid=current_user.uuid)\
         .first()
-    db.session.delete(vendor_order)
-
+   
+    vendor_order.overall_status = 11
     # return order amount from escrow back to user
     if vendor_order.digital_currency == 1:
         btc_refund_rejected_user(
@@ -298,10 +298,8 @@ def vendor_orders_get_tracking(order_uuid):
     
     tracking_data = db.session\
         .query(User_Orders_Tracking) \
-        .filter_by(vendor_uuid=current_user.uuid) \
         .filter_by(order_uuid=order_uuid) \
         .first()
-
     if tracking_data is None:
         return jsonify({'error': "Error:  Could not find tracking"})
 
