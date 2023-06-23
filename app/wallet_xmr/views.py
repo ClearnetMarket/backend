@@ -29,7 +29,6 @@ def xmr_price_from_user_currency():
     """
     get_price_xmr = db.session.query(Xmr_Prices).get(1)
     the_change = get_price_xmr.percent_change_twentyfour
-    print("xmr change")
     return jsonify({
         "success": "success",
         "change": the_change})

@@ -448,7 +448,7 @@ def checkoutput_item_offline(itemid):
         .first()
 
     # turn off if item is less than one
-    if getitem.item_count == 0:
+    if getitem.item_count == 1:
         getitem.online = 0
         db.session.add(getitem)
 

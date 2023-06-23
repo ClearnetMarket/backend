@@ -296,12 +296,13 @@ def bch_send_coin_to_escrow(amount, user_id, order_uuid):
     :param user_id:
     :return:
     """
+  
     a = bch_check_balance(user_id=user_id, amount=amount)
     if a != 1:
         pass
     else:
-
         type_transaction = 4
+       
         userswallet = db.session\
             .query(Bch_Wallet)\
             .filter_by(user_id=user_id)\
@@ -310,6 +311,7 @@ def bch_send_coin_to_escrow(amount, user_id, order_uuid):
         amounttomod = Decimal(amount)
         newbalance = Decimal(curbal) - Decimal(amounttomod)
         userswallet.currentbalance = newbalance
+     
         db.session.add(userswallet)
 
         bch_add_transaction(category=type_transaction,

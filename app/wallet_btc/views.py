@@ -114,7 +114,7 @@ def btc_balance_plus_unconfirmed():
 @login_required
 def btc_transactions(page):
 
-    per_page_amount = 50
+    per_page_amount = 25
     if page is None:
         offset_limit = 0
         page = 1
@@ -147,10 +147,9 @@ def btc_transactions_count():
         .query(Btc_TransactionsBtc)\
         .filter(Btc_TransactionsBtc.user_id == current_user.id)\
         .order_by(Btc_TransactionsBtc.id.desc())\
-        .limit(50)
+        .count()
 
-    transactions_list = Btc_TransactionsBtc_Schema(many=True)
-    return jsonify(transactions_list.dump(transactfull)), 200
+    return jsonify({"count": transactfull}), 200
 
 
 @wallet_btc.route('/receive', methods=['GET'])

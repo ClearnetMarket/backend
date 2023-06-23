@@ -151,9 +151,7 @@ def bch_transactions_count():
         .filter(Bch_WalletTransactions.user_id == current_user.id)\
         .order_by(Bch_WalletTransactions.id.desc())\
         .count()
-
-    transactions_list = Bch_WalletTransactions_Schema(many=True)
-    return jsonify(transactions_list.dump(transactfull)), 200
+    return jsonify({"count": transactfull}), 200
 
 
 @wallet_bch.route('/receive', methods=['GET'])

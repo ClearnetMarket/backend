@@ -259,8 +259,6 @@ def order_feedback_review(uuid):
         )
 
     db.session.add(new_notice_vendor)
-        
-    
     db.session.add(get_feedback)
 
     db.session.commit()
